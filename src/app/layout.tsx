@@ -1,23 +1,18 @@
 import type { Metadata } from "next";
-import { Fraunces, Newsreader, Syne } from "next/font/google";
+import { Inter, PT_Serif } from "next/font/google";
 import "./globals.css";
 
-const syne = Syne({
-  variable: "--font-brand",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  variable: "--font-display",
-  subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
-  display: "swap",
-});
-
-const newsreader = Newsreader({
+const inter = Inter({
   variable: "--font-body",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const ptSerif = PT_Serif({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -46,9 +41,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${syne.variable} ${fraunces.variable} ${newsreader.variable} h-full scroll-smooth antialiased`}
+      className={`${inter.variable} ${ptSerif.variable} h-full scroll-smooth antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-background text-foreground">{children}</body>
+      <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
+        {children}
+      </body>
     </html>
   );
 }

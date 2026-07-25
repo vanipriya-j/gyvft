@@ -11,20 +11,20 @@ export const metadata = {
 
 export default function ForOrganisationsPage() {
   const offers = [
-    "Employee onboarding kits that carry origin stories and values",
-    "Founder, leadership, and institutional milestone keepsakes",
+    "Employee onboarding kits with origin stories and values",
+    "Leadership and institutional milestone keepsakes",
     "Event merchandise with editorial substance",
-    "Alumni, customer, partner, and community story programmes",
+    "Alumni, partner, and community story programmes",
   ];
 
   return (
-    <div className="gift-shell">
+    <div className="editorial-shell">
       <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:py-28">
         <MotionReveal>
           <SectionIntro
-            copy="GYVFT helps organisations turn culture, memory, and moments into merchandise and gifts people actually keep."
             eyebrow="For organisations"
-            title="Not swag. Story-led objects with a reason to exist."
+            title="Not swag. Story-led objects."
+            copy="Turn culture, memory, and moments into merchandise and gifts people keep."
           />
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <ButtonLink href="/become-a-merch-partner">Make us your merch partner</ButtonLink>
@@ -32,17 +32,17 @@ export default function ForOrganisationsPage() {
               Upload a brief
             </ButtonLink>
           </div>
-          <ul className="mt-10 space-y-4">
+          <ul className="mt-10 space-y-3">
             {offers.map((offer) => (
-              <li className="flex gap-3 text-lg leading-7 text-ink/72" key={offer}>
-                <span aria-hidden="true" className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-coral" />
+              <li className="flex gap-3 text-base leading-7 text-muted-text" key={offer}>
+                <span aria-hidden="true" className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-olive" />
                 <span>{offer}</span>
               </li>
             ))}
           </ul>
         </MotionReveal>
         <MotionReveal delay={0.12}>
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-[var(--shadow-soft)]">
+          <div className="relative aspect-[4/5] overflow-hidden border border-border">
             <Image
               alt={publicMedia.organisations.kit.alt}
               className="object-cover"
@@ -57,8 +57,8 @@ export default function ForOrganisationsPage() {
         <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-3">
           {[
             ["Editorial", "We clarify the narrative before designing the object."],
-            ["Production", "We scope quantities, budgets, timelines, and fulfilment paths early."],
-            ["Continuity", "We can become a recurring partner for seasonal and milestone needs."],
+            ["Production", "Quantities, budgets, timelines, and fulfilment — scoped early."],
+            ["Continuity", "A recurring partner for seasonal and milestone needs."],
           ].map(([title, copy]) => (
             <MotionReveal key={title}>
               <div>

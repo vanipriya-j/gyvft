@@ -2,28 +2,46 @@
 
 :root {
   color-scheme: light;
-  /* Gift-atelier palette: blush ivory, espresso, coral, saffron, jade */
-  --background: #fff1e8;
-  --foreground: #1a1412;
-  --paper: #fff8f2;
-  --paper-deep: #f3d9c8;
-  --ink: #1a1412;
-  --ink-soft: #3b2d28;
-  --coral: #ef5a45;
-  --coral-deep: #c93d2c;
-  --saffron: #f0a202;
-  --jade: #1f7a6a;
-  --blush: #ffd6c9;
-  --plum: #5c2a3a;
-  --line: rgba(26, 20, 18, 0.14);
-  --shadow-soft: 0 28px 80px rgba(26, 20, 18, 0.14);
-  --shadow-pop: 0 18px 50px rgba(239, 90, 69, 0.22);
-  --radius-large: 2rem;
+  /* Aarla-extracted cream / olive / warm earth tokens */
+  --background: #f6f1e8;
+  --surface: #efe7da;
+  --text: #2b2b2b;
+  --muted-text: #6a635a;
+  --olive: #70715b;
+  --olive-dark: #4a3429;
+  --border: rgba(43, 43, 43, 0.12);
+  --warm-neutral: #efe7da;
+
+  /* Semantic aliases used across the public site */
+  --foreground: var(--text);
+  --paper: #fbf7f0;
+  --paper-deep: var(--surface);
+  --ink: var(--text);
+  --ink-soft: #3d342c;
+  --line: var(--border);
+  --shadow-soft: 0 24px 60px rgba(43, 43, 43, 0.08);
+  --shadow-pop: 0 18px 40px rgba(74, 52, 41, 0.16);
+  --radius-large: 1.25rem;
+
+  /* Map legacy accent class names to the olive/earth system */
+  --coral: var(--olive);
+  --coral-deep: var(--olive-dark);
+  --saffron: #9a8f6a;
+  --jade: var(--olive);
+  --blush: var(--surface);
+  --plum: var(--olive-dark);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-muted-text: var(--muted-text);
+  --color-olive: var(--olive);
+  --color-olive-dark: var(--olive-dark);
+  --color-border: var(--border);
+  --color-warm-neutral: var(--warm-neutral);
   --color-paper: var(--paper);
   --color-paper-deep: var(--paper-deep);
   --color-ink: var(--ink);
@@ -34,65 +52,59 @@
   --color-jade: var(--jade);
   --color-blush: var(--blush);
   --color-plum: var(--plum);
-  /* Back-compat aliases used by existing form/studio public shells */
-  --color-copper: var(--coral);
-  --color-copper-deep: var(--coral-deep);
-  --color-sage: var(--jade);
-  --color-mist: var(--blush);
+  --color-copper: var(--olive);
+  --color-copper-deep: var(--olive-dark);
+  --color-sage: var(--olive);
+  --color-mist: var(--surface);
   --font-sans: var(--font-body);
-  --font-serif: var(--font-body);
+  --font-serif: var(--font-display);
   --font-display: var(--font-display);
-  --font-brand: var(--font-brand);
+  --font-brand: var(--font-display);
 }
 
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 8% 0%, rgba(239, 90, 69, 0.18), transparent 28rem),
-    radial-gradient(circle at 92% 8%, rgba(240, 162, 2, 0.18), transparent 26rem),
-    radial-gradient(circle at 70% 90%, rgba(31, 122, 106, 0.12), transparent 24rem),
-    linear-gradient(160deg, #fff8f2 0%, #fff1e8 48%, #ffe4d6 100%);
+    radial-gradient(circle at 12% 0%, rgba(112, 113, 91, 0.08), transparent 26rem),
+    radial-gradient(circle at 88% 12%, rgba(74, 52, 41, 0.05), transparent 22rem),
+    linear-gradient(180deg, #fbf7f0 0%, var(--background) 42%, #f0e8da 100%);
   color: var(--foreground);
-  font-family: var(--font-body), Georgia, "Times New Roman", serif;
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: rgba(239, 90, 69, 0.28);
+  background: rgba(112, 113, 91, 0.28);
 }
 
 a {
   text-underline-offset: 0.18em;
 }
 
-.gift-shell {
+.gift-shell,
+.editorial-shell {
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(240, 162, 2, 0.12), transparent 18rem),
-    radial-gradient(circle at 80% 0%, rgba(239, 90, 69, 0.1), transparent 16rem);
+    radial-gradient(circle at 18% 12%, rgba(112, 113, 91, 0.07), transparent 18rem),
+    radial-gradient(circle at 82% 0%, rgba(239, 231, 218, 0.9), transparent 16rem);
 }
 
 .texture-dot {
-  background-image: radial-gradient(rgba(26, 20, 18, 0.08) 0.8px, transparent 0.8px);
-  background-size: 14px 14px;
-}
-
-.hero-collage-frame {
-  box-shadow: var(--shadow-soft);
-  border: 3px solid rgba(255, 248, 242, 0.72);
+  background-image: radial-gradient(rgba(43, 43, 43, 0.06) 0.7px, transparent 0.7px);
+  background-size: 16px 16px;
 }
 
 .paper-panel {
-  border: 1px solid var(--line);
-  background: rgba(255, 248, 242, 0.86);
+  border: 1px solid var(--border);
+  background: rgba(251, 247, 240, 0.9);
   box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(10px);
 }
 
-.ink-band {
+.ink-band,
+.ink-gradient {
   background:
-    radial-gradient(circle at 15% 20%, rgba(239, 90, 69, 0.34), transparent 22rem),
-    radial-gradient(circle at 85% 10%, rgba(240, 162, 2, 0.22), transparent 20rem),
-    linear-gradient(135deg, #1a1412 0%, #2b1b22 45%, #14352f 100%);
+    radial-gradient(circle at 18% 20%, rgba(112, 113, 91, 0.28), transparent 20rem),
+    linear-gradient(145deg, #202202 0%, #2b2b2b 48%, #4a3429 100%);
 }
 
 .focus-ring {
@@ -101,23 +113,13 @@ a {
 }
 
 .focus-ring:focus-visible {
-  outline-color: var(--coral);
+  outline-color: var(--olive);
 }
 
 .font-brand {
-  font-family: var(--font-brand), var(--font-display), Georgia, serif;
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
 }
 
-/* Preserve older class names used across public pages */
-.editorial-shell {
-  background-image:
-    radial-gradient(circle at 20% 20%, rgba(240, 162, 2, 0.12), transparent 18rem),
-    radial-gradient(circle at 80% 0%, rgba(239, 90, 69, 0.1), transparent 16rem);
-}
-
-.ink-gradient {
-  background:
-    radial-gradient(circle at 15% 20%, rgba(239, 90, 69, 0.34), transparent 22rem),
-    radial-gradient(circle at 85% 10%, rgba(240, 162, 2, 0.22), transparent 20rem),
-    linear-gradient(135deg, #1a1412 0%, #2b1b22 45%, #14352f 100%);
+.font-display {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
 }

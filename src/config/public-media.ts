@@ -1,76 +1,63 @@
 /**
  * Central image registry for the public website.
- *
- * Replace these temporary Unsplash placeholders with owned GYVFT assets later.
- * Keep keys stable so page components do not need structural edits.
+ * Paths point to locally hosted, optimised assets under public/images/aarla-source/.
+ * See IMAGE_SOURCES.md for provenance and usage notes.
  */
+const base = "/images/aarla-source/optimized";
+
 export const publicMedia = {
   hero: {
-    book: {
-      src: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=1200&q=80",
-      alt: "Open hardcover book with warm paper pages",
-    },
-    giftBox: {
-      src: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=1200&q=80",
-      alt: "Wrapped gift box with ribbon",
-    },
-    merchandise: {
-      src: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=1200&q=80",
-      alt: "Folded apparel and merchandise textures",
-    },
-    framed: {
-      src: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=1200&q=80",
-      alt: "Framed illustrated art print",
-    },
-    keepsake: {
-      src: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?auto=format&fit=crop&w=1200&q=80",
-      alt: "Ribbon and keepsake packaging details",
+    atmosphere: {
+      src: `${base}/street-madras-coffee.jpg`,
+      alt: "Warm street gathering with people sharing coffee and conversation",
     },
   },
-  expressions: {
-    books: {
-      src: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=1400&q=80",
-      alt: "Stack of richly coloured hardback books",
-    },
+  become: {
     gifts: {
-      src: "https://images.unsplash.com/photo-1607345366928-199ea26cfe3e?auto=format&fit=crop&w=1400&q=80",
-      alt: "Gift wrap, paper, and ribbon textures",
+      src: `${base}/gift-tumbler-bowl.jpg`,
+      alt: "Green metal tumbler and bowl arranged as a gift set",
+    },
+    books: {
+      src: `${base}/remember-drawing.jpg`,
+      alt: "Illustrated scene of a grandmother and child drawing together",
     },
     merch: {
-      src: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=1400&q=80",
-      alt: "Soft textile merchandise close-up",
-    },
-    events: {
-      src: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=1400&q=80",
-      alt: "Celebration table styling with florals and objects",
-    },
-    culture: {
-      src: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?auto=format&fit=crop&w=1400&q=80",
-      alt: "Gallery wall of framed artworks",
-    },
-    celebrations: {
-      src: "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=1400&q=80",
-      alt: "Festive celebration details with colour and texture",
+      src: `${base}/merch-nourish-kit.jpg`,
+      alt: "Soft bag, bottle, and tiffin arranged as a merchandise kit",
     },
   },
-  textures: {
-    paper: {
-      src: "https://images.unsplash.com/photo-1604186838328-41f2f0af3d3a?auto=format&fit=crop&w=1600&q=80",
-      alt: "Handmade paper texture",
+  worlds: {
+    celebrate: {
+      src: `${base}/celebrate-gathering.jpg`,
+      alt: "People gathered in a warmly lit doorway",
     },
-    ribbon: {
-      src: "https://images.unsplash.com/photo-1513201099705-a9746e1e201f?auto=format&fit=crop&w=1200&q=80",
-      alt: "Satin ribbon close-up",
+    remember: {
+      src: `${base}/remember-drawing.jpg`,
+      alt: "Illustrated grandmother and child drawing together",
     },
-    box: {
-      src: "https://images.unsplash.com/photo-1512909006721-3d6018887383?auto=format&fit=crop&w=1200&q=80",
-      alt: "Open gift box with soft tissue",
+    honour: {
+      src: `${base}/honour-performance.jpg`,
+      alt: "Classical dance performance with ghungroos in the foreground",
+    },
+    belong: {
+      src: `${base}/street-madras-coffee.jpg`,
+      alt: "Community gathering on a warm street",
+    },
+    build: {
+      src: `${base}/merch-nourish-kit.jpg`,
+      alt: "Curated kit of everyday objects made to share",
+    },
+  },
+  transformation: {
+    feature: {
+      src: `${base}/honour-performance.jpg`,
+      alt: "A performance moment that becomes a keepable story object",
     },
   },
   organisations: {
     kit: {
-      src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1400&q=80",
-      alt: "Curated product kit and packaging",
+      src: `${base}/merch-nourish-kit.jpg`,
+      alt: "Bag, bottle, and tiffin kit for organisational merchandise",
     },
   },
 } as const;

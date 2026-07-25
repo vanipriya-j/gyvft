@@ -3,8 +3,8 @@ import {
   FinalCtaSection,
   ForOrganisationsSection,
   HowItWorksSection,
-  TellUsYourStorySection,
-  VisualExamplesSection,
+  StoryTransformationSection,
+  StoryWorldsSection,
   WhatStoryCanBecomeSection,
 } from "@/components/public/sections";
 
@@ -13,8 +13,8 @@ export default function HomePage() {
     <>
       <Hero />
       <WhatStoryCanBecomeSection />
-      <VisualExamplesSection />
-      <TellUsYourStorySection />
+      <StoryWorldsSection />
+      <StoryTransformationSection />
       <ForOrganisationsSection />
       <HowItWorksSection />
       <FinalCtaSection />
