@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
   defaultConsent,
   getConsentSnapshotKey,
@@ -18,12 +18,15 @@ function subscribeToConsent(notify: () => void) {
   };
 }
 
+function subscribeNoop() {
+  return () => {};
+}
+
 export function useConsent() {
-  // useEffect mount gate — never SSR the banner, avoiding localStorage hydration mismatches.
-  const [isLoaded, setIsLoaded] = useState(false);
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+  // Client-only mount flag via useSyncExternalStore:
+  // server snapshot is false, so the banner is never SSR'd and cannot
+  // hydrate-mismatch against a localStorage-backed hasChoice.
+  const isLoaded = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   const snapshotKey = useSyncExternalStore(
     subscribeToConsent,
