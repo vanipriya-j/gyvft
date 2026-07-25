@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
+import { BrandLogo } from "@/components/public/BrandLogo";
 import { ButtonLink } from "@/components/ui/button";
 import { publicMedia } from "@/config/public-media";
 
@@ -25,14 +26,14 @@ export function Hero() {
 
       <div className="relative mx-auto flex min-h-[calc(100svh-4.5rem)] max-w-7xl items-end px-5 pb-16 pt-24 lg:items-center lg:px-8 lg:pb-24 lg:pt-20">
         <div className="max-w-2xl">
-          <motion.p
-            className="font-display text-sm tracking-[0.28em] text-olive-dark"
+          <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 14 }}
             animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
           >
-            GYVFT
-          </motion.p>
+            <BrandLogo className="sm:hidden" height={36} priority />
+            <BrandLogo className="hidden sm:block" height={48} priority />
+          </motion.div>
           <motion.h1
             className="mt-4 font-display text-5xl leading-[1.02] tracking-[-0.02em] text-ink sm:text-6xl lg:text-7xl"
             initial={reduceMotion ? false : { opacity: 0, y: 18 }}

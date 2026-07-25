@@ -6,6 +6,12 @@
 const base = "/images/aarla-source/optimized";
 
 export const publicMedia = {
+  brand: {
+    logo: {
+      src: "/images/brand/gyvft-logo.png",
+      alt: "GYVFT",
+    },
+  },
   hero: {
     atmosphere: {
       src: `${base}/street-madras-coffee.jpg`,
