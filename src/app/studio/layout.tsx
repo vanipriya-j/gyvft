@@ -12,7 +12,7 @@ export default async function StudioLayout({ children }: { children: React.React
     const requiredProfile = await requireStudioUser();
     profile = (await getCurrentProfile()) ?? requiredProfile;
   } catch (error) {
-    if (error instanceof AppError && error.code === "UNAUTHORIZED") {
+    if (error instanceof AppError && (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN")) {
       redirect(`/studio/login?next=${encodeURIComponent(nextPath)}`);
     }
     throw error;
