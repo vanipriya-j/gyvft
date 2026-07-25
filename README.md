@@ -657,9 +657,13 @@ Current retry behavior:
 - Webhook failures set `webhook_deliveries.next_retry_at` with exponential backoff up to 60 minutes and increment `attempt_number` until `max_attempts`.
 - Storage failures write integration logs and preserve the opportunity.
 
-Current limitation:
+Scheduled retry processors:
 
-- The repo does not currently include a cron route or worker that scans `next_retry_at` and replays pending/failed deliveries. Add a scheduled processor before relying on automatic retries in production.
+- `vercel.json` defines two Vercel Cron Jobs:
+  - `/api/cron/webhooks` daily at 03:00 UTC
+  - `/api/cron/email-retries` daily at 03:15 UTC
+- These schedules are Hobby-plan compatible (once per day). On Pro you can increase frequency later.
+- Both endpoints require `Authorization: Bearer $CRON_SECRET`.
 
 ## First-run production setup flow
 
