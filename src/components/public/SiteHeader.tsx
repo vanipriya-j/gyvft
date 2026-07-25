@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 
 const nav = [
+  { href: "/why-gyvft", label: "Why GYVFT" },
+  { href: "/stories", label: "Stories" },
   { href: "/tell-your-story", label: "Tell your story" },
   { href: "/for-organisations", label: "For organisations" },
   { href: "/upload-a-brief", label: "Upload a brief" },
