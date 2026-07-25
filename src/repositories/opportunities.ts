@@ -1,3 +1,4 @@
+import "server-only";
 import type { Sql } from "postgres";
 import { getSql } from "@/lib/database/client";
 import type {

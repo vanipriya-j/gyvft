@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "crypto";
-import type { JSONValue } from "postgres";
+import type { JSONValue, Sql } from "postgres";
 import { getSql, withTransaction } from "@/lib/database/client";
 import { AppError } from "@/lib/errors/app-error";
 import { logger } from "@/lib/logging/logger";
@@ -48,18 +48,57 @@ async function saveSubmission(
   formKey: string,
   payload: unknown,
   idempotencyKey: string,
+  db: Sql = getSql(),
 ) {
-  const sql = getSql();
-  await sql`
+  await db`
     INSERT INTO opportunity_submissions (opportunity_id, form_key, payload, idempotency_key)
     VALUES (
       ${opportunityId}::uuid,
       ${formKey},
-      ${sql.json(payload as JSONValue)},
+      ${db.json(payload as JSONValue)},
       ${idempotencyKey}
     )
     ON CONFLICT (idempotency_key) DO NOTHING
   `;
+}
+
+export function buildLeadTrackingPayloads(options: {
+  opportunity: Opportunity;
+  eventName: string;
+  eventId: string;
+  correlationId: string;
+  toEmail: string;
+  attribution?: AttributionSnapshot;
+  consentAdvertising?: boolean;
+  consentAnalytics?: boolean;
+}) {
+  return {
+    analytics: {
+      eventName: options.eventName,
+      eventId: options.eventId,
+      correlationId: options.correlationId,
+      anonymousVisitorId: options.attribution?.anonymousVisitorId,
+      sessionId: options.attribution?.sessionId,
+      opportunityId: options.opportunity.id,
+      contactId: options.opportunity.contact_id,
+      sourceRoute: options.opportunity.source,
+      deviceCategory: options.attribution?.deviceCategory,
+      consentAnalytics: options.consentAnalytics,
+      consentAdvertising: options.consentAdvertising,
+      properties: {
+        intent_type: options.opportunity.intent_type,
+        source: options.opportunity.source,
+      },
+    },
+    meta: {
+      eventName: mapMetaEvent(options.eventName),
+      eventId: options.eventId,
+      opportunityId: options.opportunity.id,
+      consentAdvertising: Boolean(options.consentAdvertising),
+      email: options.toEmail,
+      correlationId: options.correlationId,
+    },
+  };
 }
 
 async function runSecondaryEffects(options: {
@@ -77,25 +116,10 @@ async function runSecondaryEffects(options: {
   submissionForAi?: Record<string, unknown>;
 }) {
   const secondaryErrors: Array<{ step: string; message: string }> = [];
+  const trackingPayloads = buildLeadTrackingPayloads(options);
 
   try {
-    await recordAnalyticsEvent({
-      eventName: options.eventName,
-      eventId: options.eventId,
-      correlationId: options.correlationId,
-      anonymousVisitorId: options.attribution?.anonymousVisitorId,
-      sessionId: options.attribution?.sessionId,
-      opportunityId: options.opportunity.id,
-      contactId: options.opportunity.contact_id,
-      sourceRoute: options.opportunity.source,
-      deviceCategory: options.attribution?.deviceCategory,
-      consentAnalytics: options.consentAnalytics,
-      consentAdvertising: options.consentAdvertising,
-      properties: {
-        intent_type: options.opportunity.intent_type,
-        source: options.opportunity.source,
-      },
-    });
+    await recordAnalyticsEvent(trackingPayloads.analytics);
   } catch (error) {
     secondaryErrors.push({
       step: "analytics_event",
@@ -160,14 +184,7 @@ async function runSecondaryEffects(options: {
   }
 
   try {
-    await sendConversionEvent({
-      eventName: mapMetaEvent(options.eventName),
-      eventId: options.eventId,
-      opportunityId: options.opportunity.id,
-      consentAdvertising: Boolean(options.consentAdvertising),
-      email: options.toEmail,
-      correlationId: options.correlationId,
-    });
+    await sendConversionEvent(trackingPayloads.meta);
   } catch (error) {
     secondaryErrors.push({
       step: "meta_capi",
@@ -341,7 +358,7 @@ export async function submitStoryOpportunity(input: StoryFormInput) {
       `;
     }
 
-    await saveSubmission(created.id, "tell_your_story", input, input.idempotency_key);
+    await saveSubmission(created.id, "tell_your_story", input, input.idempotency_key, tx);
     await createActivity(
       {
         opportunityId: created.id,
@@ -467,7 +484,7 @@ export async function submitPartnerOpportunity(input: PartnerFormInput) {
       `;
     }
 
-    await saveSubmission(created.id, "merch_partner", input, input.idempotency_key);
+    await saveSubmission(created.id, "merch_partner", input, input.idempotency_key, tx);
     await createActivity(
       {
         opportunityId: created.id,
@@ -562,7 +579,7 @@ export async function submitDiscoveryRequest(input: DiscoveryFormInput) {
       tx,
     );
 
-    await saveSubmission(created.id, "book_discovery", input, input.idempotency_key);
+    await saveSubmission(created.id, "book_discovery", input, input.idempotency_key, tx);
     await createActivity(
       {
         opportunityId: created.id,

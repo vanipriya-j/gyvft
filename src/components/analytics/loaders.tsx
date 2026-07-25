@@ -7,6 +7,24 @@ type LoaderProps = {
   advertising: boolean;
 };
 
+export function shouldLoadMetaPixel(input: {
+  advertising: boolean;
+  pixelId?: string;
+}): boolean {
+  return Boolean(input.advertising && input.pixelId);
+}
+
+export function shouldLoadClarity(input: {
+  analytics: boolean;
+  projectId?: string;
+  pathname?: string;
+}): boolean {
+  const pathname =
+    input.pathname ??
+    (typeof window === "undefined" ? "" : window.location.pathname);
+  return Boolean(input.analytics && input.projectId && !pathname.startsWith("/studio"));
+}
+
 export function GTMLoader({ analytics }: LoaderProps) {
   const id = process.env.NEXT_PUBLIC_GTM_ID;
   if (!analytics || !id) return null;
@@ -43,7 +61,7 @@ export function GA4Loader({ analytics }: LoaderProps) {
 
 export function MetaPixelLoader({ advertising }: LoaderProps) {
   const id = process.env.NEXT_PUBLIC_META_PIXEL_ID;
-  if (!advertising || !id) return null;
+  if (!shouldLoadMetaPixel({ advertising, pixelId: id })) return null;
   return (
     <Script id="gyvft-meta-pixel" strategy="afterInteractive">
       {`
@@ -64,7 +82,7 @@ export function MetaPixelLoader({ advertising }: LoaderProps) {
 
 export function ClarityLoader({ analytics }: LoaderProps) {
   const id = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
-  if (!analytics || !id) return null;
+  if (!shouldLoadClarity({ analytics, projectId: id })) return null;
   return (
     <Script id="gyvft-clarity" strategy="afterInteractive">
       {`

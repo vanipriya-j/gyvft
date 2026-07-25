@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { canConfigureSecretIntegrations, canManageIntegrations } from "@/lib/auth/roles";
 import { requireStudioUser } from "@/lib/auth/session";
 import { encryptSecret } from "@/lib/encryption/secrets";
+import { AppError } from "@/lib/errors/app-error";
 import {
   updateTrackingRule,
   upsertIntegrationConfig,
@@ -52,13 +53,13 @@ function collectSecrets(formData: FormData): Array<{ secretName: string; plainte
 export async function saveIntegrationAction(formData: FormData) {
   const profile = await requireStudioUser();
   if (!canManageIntegrations(profile.role)) {
-    throw new Error("You do not have permission to manage integrations");
+    throw new AppError("FORBIDDEN", "You do not have permission to manage integrations");
   }
   const provider = value(formData, "provider");
   const displayName = value(formData, "displayName") || provider;
   const secrets = collectSecrets(formData);
   if (secrets.length > 0 && !canConfigureSecretIntegrations(profile.role)) {
-    throw new Error("Only owners can update integration secrets");
+    throw new AppError("FORBIDDEN", "Only owners can update integration secrets");
   }
 
   await upsertIntegrationConfig({
@@ -85,7 +86,7 @@ export async function saveIntegrationAction(formData: FormData) {
 export async function updateTrackingRuleAction(formData: FormData) {
   const profile = await requireStudioUser();
   if (!canManageIntegrations(profile.role)) {
-    throw new Error("You do not have permission to manage tracking rules");
+    throw new AppError("FORBIDDEN", "You do not have permission to manage tracking rules");
   }
   await updateTrackingRule({
     eventName: value(formData, "eventName"),

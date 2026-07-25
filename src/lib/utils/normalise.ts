@@ -15,7 +15,8 @@ export function normaliseOrganisationName(name: string): string {
     .trim()
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function maskId(value: string | null | undefined, visible = 4): string {
