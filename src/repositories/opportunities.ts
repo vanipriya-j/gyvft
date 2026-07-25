@@ -170,6 +170,12 @@ export async function listOpportunities(
       CASE WHEN ${sort} = 'updated_at' AND ${sortDir} = 'desc' THEN updated_at END DESC,
       CASE WHEN ${sort} = 'target_date' AND ${sortDir} = 'asc' THEN target_date END ASC NULLS LAST,
       CASE WHEN ${sort} = 'target_date' AND ${sortDir} = 'desc' THEN target_date END DESC NULLS LAST,
+      CASE WHEN ${sort} = 'priority' AND ${sortDir} = 'asc' THEN
+        CASE priority WHEN 'low' THEN 1 WHEN 'medium' THEN 2 WHEN 'high' THEN 3 WHEN 'urgent' THEN 4 END
+      END ASC,
+      CASE WHEN ${sort} = 'priority' AND ${sortDir} = 'desc' THEN
+        CASE priority WHEN 'low' THEN 1 WHEN 'medium' THEN 2 WHEN 'high' THEN 3 WHEN 'urgent' THEN 4 END
+      END DESC,
       created_at DESC
     LIMIT ${limit} OFFSET ${offset}
   `;
