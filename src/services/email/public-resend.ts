@@ -12,28 +12,49 @@ export type PublicEmailAttachment = {
   contentType?: string;
 };
 
-function requireResendConfig() {
+function readRuntime(name: "RESEND_API_KEY" | "RESEND_FROM_EMAIL" | "RESEND_FROM_NAME" | "GYVFT_LEADS_EMAIL") {
+  const direct = process.env[name]?.trim();
+  if (direct) return direct;
   const env = getEnv();
-  const apiKey = env.RESEND_API_KEY?.trim();
-  const fromEmail = env.RESEND_FROM_EMAIL?.trim();
-  const fromName = (env.RESEND_FROM_NAME ?? "GYVFT").trim() || "GYVFT";
-  const leadsEmail = env.GYVFT_LEADS_EMAIL?.trim();
+  const value = env[name];
+  return typeof value === "string" ? value.trim() : undefined;
+}
 
-  if (!apiKey) {
-    throw new Error("RESEND_API_KEY is not configured");
-  }
-  if (!fromEmail) {
-    throw new Error("RESEND_FROM_EMAIL is not configured");
-  }
-  if (!leadsEmail) {
-    throw new Error("GYVFT_LEADS_EMAIL is not configured");
+export function getPublicResendConfigStatus() {
+  const apiKey = Boolean(readRuntime("RESEND_API_KEY"));
+  const fromEmail = Boolean(readRuntime("RESEND_FROM_EMAIL"));
+  const leadsEmail = Boolean(readRuntime("GYVFT_LEADS_EMAIL") || readRuntime("RESEND_FROM_EMAIL"));
+  return {
+    configured: apiKey && fromEmail && leadsEmail,
+    hasApiKey: apiKey,
+    hasFromEmail: fromEmail,
+    hasLeadsEmail: leadsEmail,
+  };
+}
+
+function requireResendConfig() {
+  const apiKey = readRuntime("RESEND_API_KEY");
+  const fromEmail = readRuntime("RESEND_FROM_EMAIL");
+  const fromName = readRuntime("RESEND_FROM_NAME") || "GYVFT";
+  // Fall back to from-address so one inbox env var is enough in simple setups.
+  const leadsEmail = readRuntime("GYVFT_LEADS_EMAIL") || fromEmail;
+
+  const missing = [
+    !apiKey ? "RESEND_API_KEY" : null,
+    !fromEmail ? "RESEND_FROM_EMAIL" : null,
+    !leadsEmail ? "GYVFT_LEADS_EMAIL" : null,
+  ].filter(Boolean);
+
+  if (missing.length) {
+    logger.error("Public Resend config incomplete", { missing });
+    throw new Error(`Missing email configuration: ${missing.join(", ")}`);
   }
 
   return {
-    apiKey,
-    fromEmail,
+    apiKey: apiKey!,
+    fromEmail: fromEmail!,
     fromName,
-    leadsEmail,
+    leadsEmail: leadsEmail!,
   };
 }
 
@@ -163,7 +184,6 @@ export function logAckFailure(formKey: string, error: unknown) {
   logger.warn("Visitor acknowledgement email failed", {
     formKey,
     message,
-    // Until aarla.in (or another domain) is verified, Resend only allows ack mail to the account owner.
     testingRecipientRestricted: isTestingRecipientRestriction(message),
     unverifiedDomain: isUnverifiedDomainError(message),
   });
