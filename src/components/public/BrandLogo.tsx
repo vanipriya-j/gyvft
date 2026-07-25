@@ -8,8 +8,8 @@ type BrandLogoProps = {
 };
 
 const LOGO_SRC = "/images/brand/gyvft-logo.png";
-const INTRINSIC_WIDTH = 902;
-const INTRINSIC_HEIGHT = 218;
+const INTRINSIC_WIDTH = 1384;
+const INTRINSIC_HEIGHT = 295;
 
 export function BrandLogo({ className, height = 28, priority = false }: BrandLogoProps) {
   const width = Math.round((height * INTRINSIC_WIDTH) / INTRINSIC_HEIGHT);
