@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { getEnv } from "@/config/env";
+import { hasSupabaseAdminConfig } from "@/config/env";
 import { createActivity } from "@/repositories/activities";
 import { createOrMatchContact } from "@/repositories/contacts";
 import { recordAnalyticsEvent } from "@/repositories/events";
@@ -162,8 +162,7 @@ export async function submitBriefUploadAction(formData: FormData): Promise<Actio
       },
     });
 
-    const env = getEnv();
-    if (env.NEXT_PUBLIC_SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (hasSupabaseAdminConfig()) {
       try {
         await storeBriefFile({ file, opportunityId: opportunity.id });
       } catch (error) {

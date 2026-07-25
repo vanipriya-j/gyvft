@@ -30,7 +30,8 @@ beforeAll(() => {
 beforeEach(async () => {
   await resetDatabase();
   process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321";
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key";
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_test_key";
+  delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 });
 
 describe("studio session requirements", () => {

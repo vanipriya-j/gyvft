@@ -129,9 +129,10 @@ GYVFT uses Supabase for Auth and Storage. The app also connects directly to Post
 1. Create a Supabase project.
 2. Set these environment variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `DATABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...` from Settings → API Keys)
+   - `SUPABASE_SECRET_KEY` (`sb_secret_...` from Settings → API Keys)
+   - `DATABASE_URL` (Session Pooler URI recommended for Vercel)
+   - Legacy fallback only: `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`
 3. In Supabase Auth settings:
    - Set the Site URL to the production app URL, for example `https://gyvft.com`.
    - Add redirect URLs:
@@ -139,11 +140,23 @@ GYVFT uses Supabase for Auth and Storage. The app also connects directly to Post
      - `https://gyvft.com/studio/login`
      - Local equivalents during development, for example `http://localhost:3000/studio/reset-password`.
    - Disable public signup. Studio access should be invitation/admin controlled.
-4. Create the private Storage bucket:
+4. Create / verify the private Storage bucket:
    - Bucket name: `opportunity-briefs`
    - Public access: disabled/private
+   - Migration `20260725000003_storage.sql` attempts to create this bucket when the Supabase `storage` schema exists; still verify it in the Dashboard.
 
-The migrations in this repo create database tables and RLS policies. They do not create the Supabase Storage bucket.
+### Supabase API keys (publishable / secret)
+
+Supabase deprecated the legacy JWT `anon` and `service_role` keys. This app prefers:
+
+| Role | Env var | Dashboard value |
+| --- | --- | --- |
+| Public / Auth client | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` |
+| Server admin / Storage | `SUPABASE_SECRET_KEY` | `sb_secret_...` |
+
+Find them under **Project Settings → API Keys → Publishable and secret API keys**. Newer projects may only expose these keys.
+
+Legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` still work as temporary fallbacks if the new keys are unset, but new deployments should not use them.
 
 ## 5. Database migrations
 
@@ -422,7 +435,7 @@ Required setup:
 
 - Bucket: `opportunity-briefs`
 - Visibility: private
-- Runtime key: `SUPABASE_SERVICE_ROLE_KEY`
+- Runtime key: `SUPABASE_SECRET_KEY` (legacy fallback: `SUPABASE_SERVICE_ROLE_KEY`)
 
 Allowed brief file types:
 
@@ -526,8 +539,10 @@ From `.env.example`:
 | `IS_PRODUCTION` | Recommended | Server | Extra production guard. `true`/`1` enables production checks. |
 | `DATABASE_URL` | Yes | Server | Postgres connection string for migrations and runtime database access. |
 | `NEXT_PUBLIC_SUPABASE_URL` | Production yes | Public | Supabase project URL. Required for Auth and browser Supabase client. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Production yes | Public | Supabase anon key. Required for Auth. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Production yes | Server | Service role key for owner creation, storage, and server-side admin operations. |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production yes | Public | Supabase publishable key (`sb_publishable_...`). Required for Auth/browser client. |
+| `SUPABASE_SECRET_KEY` | Production yes | Server | Supabase secret key (`sb_secret_...`) for owner creation, storage, and admin operations. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Legacy fallback | Public | Deprecated JWT anon key. Used only if publishable key is unset. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Legacy fallback | Server | Deprecated JWT service_role key. Used only if secret key is unset. |
 | `INTEGRATION_ENCRYPTION_KEY` | Required for Studio secrets | Server | At least 32 characters. Encrypts Studio-managed integration secrets. |
 | `RESEND_API_KEY` | Optional fallback | Server | Resend API key when no Studio encrypted secret exists. |
 | `RESEND_FROM_EMAIL` | Recommended | Server | Default sending address. |
@@ -571,7 +586,7 @@ The owner script never prints the password. Use the invitation email if sent, or
 
 Check:
 
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`)
 - Private bucket `opportunity-briefs`
 - File extension, MIME type, and size
 - `/studio/integration-logs` for `supabase_storage` failures
@@ -594,7 +609,7 @@ Confirm the session user has a matching active `profiles` row and the correct ro
 
 - Disable public signup in Supabase Auth.
 - Configure Auth Site URL and reset redirect URLs.
-- Keep `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, `OPENAI_API_KEY`, `RESEND_API_KEY`, `META_ACCESS_TOKEN`, `INTEGRATION_ENCRYPTION_KEY`, and `CRON_SECRET` server-only.
+- Keep `SUPABASE_SECRET_KEY`, `DATABASE_URL`, `OPENAI_API_KEY`, `RESEND_API_KEY`, `META_ACCESS_TOKEN`, `INTEGRATION_ENCRYPTION_KEY`, and `CRON_SECRET` server-only.
 - Use a high-entropy `INTEGRATION_ENCRYPTION_KEY` of at least 32 characters.
 - Create `opportunity-briefs` as a private bucket.
 - Verify RLS migrations are applied.
@@ -648,7 +663,7 @@ Current limitation:
 
 ## First-run production setup flow
 
-1. Create the Supabase project and copy the project URL, anon key, service role key, and Postgres connection string.
+1. Create the Supabase project and copy the project URL, publishable key (`sb_publishable_...`), secret key (`sb_secret_...`), and Session Pooler Postgres connection string.
 2. Configure Supabase Auth Site URL and redirect URLs; disable public signup.
 3. Create the private `opportunity-briefs` Storage bucket.
 4. Create the Vercel project, attach the production domain, and set `NEXT_PUBLIC_APP_URL`.

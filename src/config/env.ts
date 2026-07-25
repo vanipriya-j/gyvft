@@ -4,7 +4,19 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
+  /** Preferred public Supabase key (`sb_publishable_...`). */
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
+  /** Preferred server Supabase key (`sb_secret_...`). */
+  SUPABASE_SECRET_KEY: z.string().min(1).optional(),
+  /**
+   * @deprecated Legacy JWT anon key. Use NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.
+   * Kept temporarily as a fallback during migration.
+   */
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
+  /**
+   * @deprecated Legacy JWT service_role key. Use SUPABASE_SECRET_KEY.
+   * Kept temporarily as a fallback during migration.
+   */
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   DATABASE_URL: z.string().min(1).optional(),
   INTEGRATION_ENCRYPTION_KEY: z.string().min(32).optional(),
@@ -52,7 +64,15 @@ export function requireDatabaseUrl(): string {
 
 export function hasSupabaseConfig(): boolean {
   const env = getEnv();
-  return Boolean(env.NEXT_PUBLIC_SUPABASE_URL && env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const publishable =
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return Boolean(env.NEXT_PUBLIC_SUPABASE_URL && publishable);
+}
+
+export function hasSupabaseAdminConfig(): boolean {
+  const env = getEnv();
+  const secret = env.SUPABASE_SECRET_KEY ?? env.SUPABASE_SERVICE_ROLE_KEY;
+  return Boolean(env.NEXT_PUBLIC_SUPABASE_URL && secret);
 }
 
 /**
