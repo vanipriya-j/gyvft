@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/webhooks",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/cron/email-retries",
-      "schedule": "*/10 * * * *"
+      "schedule": "15 3 * * *"
     }
   ]
 }
