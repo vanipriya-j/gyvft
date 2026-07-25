@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/webhooks",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/email-retries",
+      "schedule": "*/10 * * * *"
+    }
+  ]
+}
