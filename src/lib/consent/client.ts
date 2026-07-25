@@ -13,6 +13,9 @@ export type ConsentState = {
 
 export type ConsentSnapshot = Pick<ConsentState, "analytics" | "advertising" | "version">;
 
+/** In-memory fallback when localStorage is unavailable or throws. */
+let memoryConsent: ConsentState | null = null;
+
 export function defaultConsent(): ConsentState {
   return {
     necessary: true,
@@ -23,10 +26,28 @@ export function defaultConsent(): ConsentState {
   };
 }
 
+function readStorageRaw(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Stable external-store snapshot for useSyncExternalStore. */
+export function getConsentSnapshotKey(): string {
+  if (typeof window === "undefined") return "default";
+  const raw = readStorageRaw();
+  if (raw) return raw;
+  if (memoryConsent) return JSON.stringify(memoryConsent);
+  return "default";
+}
+
 export function readConsent(): ConsentState {
   if (typeof window === "undefined") return defaultConsent();
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return defaultConsent();
+  const raw = readStorageRaw();
+  if (!raw) return memoryConsent ?? defaultConsent();
   try {
     const parsed = JSON.parse(raw) as Partial<ConsentState>;
     return {
@@ -37,7 +58,7 @@ export function readConsent(): ConsentState {
       updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : new Date().toISOString(),
     };
   } catch {
-    return defaultConsent();
+    return memoryConsent ?? defaultConsent();
   }
 }
 
@@ -49,14 +70,22 @@ export function writeConsent(input: { analytics: boolean; advertising: boolean }
     version: CONSENT_VERSION,
     updatedAt: new Date().toISOString(),
   };
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  window.dispatchEvent(new CustomEvent<ConsentState>("gyvft:consent", { detail: next }));
+  memoryConsent = next;
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // Private mode / blocked storage — keep memory copy so the banner can still dismiss.
+    }
+    window.dispatchEvent(new CustomEvent<ConsentState>("gyvft:consent", { detail: next }));
+  }
   return next;
 }
 
 export function hasStoredConsent(): boolean {
   if (typeof window === "undefined") return false;
-  return window.localStorage.getItem(STORAGE_KEY) !== null;
+  if (readStorageRaw() !== null) return true;
+  return memoryConsent !== null;
 }
 
 export function toConsentSnapshot(consent: ConsentState): ConsentSnapshot {
@@ -65,4 +94,16 @@ export function toConsentSnapshot(consent: ConsentState): ConsentSnapshot {
     advertising: consent.advertising,
     version: consent.version,
   };
+}
+
+/** Test helper — clears both storage and memory fallback. */
+export function resetConsentForTests() {
+  memoryConsent = null;
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  }
 }

@@ -40,6 +40,17 @@ test("rejecting consent prevents Meta and Clarity script injection", async ({ pa
   await expect(page.locator("#gyvft-clarity")).toHaveCount(0);
 });
 
+test("consent banner dismisses and stays dismissed after reload", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByText("Privacy choices")).toBeVisible();
+  await page.getByRole("button", { name: /Accept all/i }).click();
+  await expect(page.getByText("Privacy choices")).toHaveCount(0);
+
+  await page.reload();
+  await expect(page.getByText("Privacy choices")).toHaveCount(0);
+});
+
 test.skip("logout flow with mocked authenticated Studio session", async ({ page }) => {
   await page.goto("/studio");
   await page.getByRole("button", { name: /Log out/i }).click();

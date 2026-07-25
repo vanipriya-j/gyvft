@@ -1,39 +1,52 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
   defaultConsent,
-  hasStoredConsent,
+  getConsentSnapshotKey,
   readConsent,
   writeConsent,
 } from "@/lib/consent/client";
 
-function consentSnapshotKey(): string {
-  if (typeof window === "undefined") return "default";
-  return window.localStorage.getItem("gyvft.consent.v1") ?? "default";
+function subscribeToConsent(notify: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("gyvft:consent", notify);
+  window.addEventListener("storage", notify);
+  return () => {
+    window.removeEventListener("gyvft:consent", notify);
+    window.removeEventListener("storage", notify);
+  };
+}
+
+function subscribeNoop() {
+  return () => {};
 }
 
 export function useConsent() {
+  // Client-only mount flag via useSyncExternalStore:
+  // server snapshot is false, so the banner is never SSR'd and cannot
+  // hydrate-mismatch against a localStorage-backed hasChoice.
+  const isLoaded = useSyncExternalStore(subscribeNoop, () => true, () => false);
+
   const snapshotKey = useSyncExternalStore(
-    (notify) => {
-      window.addEventListener("gyvft:consent", notify);
-      window.addEventListener("storage", notify);
-      return () => {
-        window.removeEventListener("gyvft:consent", notify);
-        window.removeEventListener("storage", notify);
-      };
-    },
-    consentSnapshotKey,
+    subscribeToConsent,
+    getConsentSnapshotKey,
     () => "default",
   );
+
   const consent = useMemo(
     () => (snapshotKey === "default" ? defaultConsent() : readConsent()),
     [snapshotKey],
   );
 
-  const save = (input: { analytics: boolean; advertising: boolean }) => {
+  const save = useCallback((input: { analytics: boolean; advertising: boolean }) => {
     writeConsent(input);
-  };
+  }, []);
 
-  return { consent, hasChoice: hasStoredConsent(), isLoaded: true, save };
+  return {
+    consent,
+    hasChoice: isLoaded && snapshotKey !== "default",
+    isLoaded,
+    save,
+  };
 }

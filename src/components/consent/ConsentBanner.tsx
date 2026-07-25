@@ -8,13 +8,22 @@ import { ConsentPreferences } from "./ConsentPreferences";
 export function ConsentBanner() {
   const { hasChoice, isLoaded, save } = useConsent();
   const [showPreferences, setShowPreferences] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
-  if (!isLoaded || hasChoice) return null;
+  if (!isLoaded || hasChoice || dismissed) return null;
+
+  const choose = (input: { analytics: boolean; advertising: boolean }) => {
+    save(input);
+    setDismissed(true);
+  };
 
   return (
     <div className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-4xl rounded-[1.5rem] border border-ink/15 bg-paper/95 p-5 shadow-2xl backdrop-blur md:bottom-6">
       {showPreferences ? (
-        <ConsentPreferences onClose={() => setShowPreferences(false)} />
+        <ConsentPreferences
+          onClose={() => setShowPreferences(false)}
+          onSaved={() => setDismissed(true)}
+        />
       ) : (
         <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
           <div>
@@ -28,8 +37,8 @@ export function ConsentBanner() {
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-            <Button onClick={() => save({ analytics: true, advertising: true })}>Accept all</Button>
-            <Button onClick={() => save({ analytics: false, advertising: false })} variant="secondary">
+            <Button onClick={() => choose({ analytics: true, advertising: true })}>Accept all</Button>
+            <Button onClick={() => choose({ analytics: false, advertising: false })} variant="secondary">
               Reject optional
             </Button>
             <Button onClick={() => setShowPreferences(true)} variant="ghost">
