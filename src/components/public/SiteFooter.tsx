@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/public/BrandLogo";
 
 const links = [
   { href: "/privacy", label: "Privacy" },
@@ -13,7 +14,7 @@ export function SiteFooter() {
     <footer className="border-t border-border bg-surface text-ink">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 md:grid-cols-[1.3fr_1fr] lg:px-8">
         <div>
-          <p className="font-display text-3xl tracking-[0.04em]">GYVFT</p>
+          <BrandLogo height={40} />
           <p className="mt-3 max-w-md font-display text-xl italic text-olive-dark">
             Your story. Our telling.
           </p>

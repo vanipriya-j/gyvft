@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/public/BrandLogo";
 import { ButtonLink } from "@/components/ui/button";
 
 const nav = [
@@ -17,8 +18,8 @@ export function SiteHeader() {
         aria-label="Primary navigation"
         className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 lg:px-8"
       >
-        <Link className="group inline-flex items-baseline gap-3" href="/">
-          <span className="font-display text-xl tracking-[0.04em] text-ink">GYVFT</span>
+        <Link className="group inline-flex items-center gap-3" href="/">
+          <BrandLogo height={28} priority />
           <span className="hidden text-sm text-muted-text transition group-hover:text-olive-dark sm:inline">
             Your story. Our telling.
           </span>

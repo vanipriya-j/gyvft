@@ -113,3 +113,12 @@ Both are available via Google Fonts and are reused in GYVFT through `next/font/g
 | Border | light warm line on cream | `--border` |
 
 Shopify theme CSS was **not** copied wholesale; values were extracted into GYVFT semantic tokens.
+
+## Brand logo
+
+| Field | Value |
+| --- | --- |
+| Asset | GYVFT wordmark with red bow on the letter Y |
+| Production path | `/images/brand/gyvft-logo.png` |
+| Treatment | Transparent PNG for cream surfaces |
+| Usage | Header, footer, homepage hero brand mark |
