@@ -254,11 +254,13 @@ export async function submitPublicLead(input: {
       replyTo,
       attachments: input.attachment ? [input.attachment] : undefined,
     });
-  } catch {
+  } catch (error) {
+    // Keep visitor-facing copy generic; detailed reason is logged server-side without PII.
+    const detail = error instanceof Error ? error.message : "unknown";
     throw new AppError(
       "INTEGRATION_ERROR",
       "We could not send your submission just now. Please try again.",
-      { expose: true },
+      { expose: true, details: detail },
     );
   }
 
