@@ -8,11 +8,11 @@ export const metadata = {
 
 export default function TellYourStoryPage() {
   return (
-    <section className="gift-shell px-5 py-16 lg:px-8">
+    <section className="editorial-shell px-5 py-16 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <SectionIntro
-            copy="This seven-step form saves a draft in your browser and helps us understand the story, audience, format, timing, and contact details."
+            copy="Seven short steps. Drafts save in your browser. Tell us the story, audience, format, and timing."
             eyebrow="Tell your story"
             title="Start with what matters."
           />

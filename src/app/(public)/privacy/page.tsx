@@ -18,9 +18,9 @@ export default function PrivacyPage() {
 function PolicyPage({ title, sections }: { title: string; sections: string[] }) {
   return (
     <section className="mx-auto max-w-4xl px-5 py-24 lg:px-8">
-      <p className="text-sm font-semibold uppercase tracking-[0.28em] text-coral-deep">GYVFT</p>
+      <p className="text-xs font-medium uppercase tracking-[0.28em] text-olive">GYVFT</p>
       <h1 className="mt-4 font-display text-5xl text-ink">{title}</h1>
-      <div className="mt-8 space-y-5 text-lg leading-8 text-ink/72">
+      <div className="mt-8 space-y-5 text-lg leading-8 text-muted-text">
         {sections.map((section) => (
           <p key={section}>{section}</p>
         ))}

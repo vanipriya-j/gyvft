@@ -50,8 +50,8 @@ export default async function LandingPageRoute({ params }: PageProps) {
       <main className="editorial-shell">
         <section className="ink-gradient px-5 py-24 text-paper lg:px-8">
           <div className="mx-auto max-w-7xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-copper">GYVFT</p>
-            <h1 className="mt-6 max-w-5xl font-display text-6xl font-semibold leading-none tracking-[-0.06em] md:text-8xl">
+            <p className="text-xs font-medium uppercase tracking-[0.28em] text-saffron">GYVFT</p>
+            <h1 className="mt-6 max-w-5xl font-display text-5xl leading-[1.05] tracking-[-0.02em] md:text-7xl">
               {readString(hero?.content.title) ?? data.page.internal_name}
             </h1>
             <p className="mt-6 max-w-2xl text-xl leading-8 text-paper/72">

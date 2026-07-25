@@ -8,13 +8,13 @@ export const metadata = {
 
 export default function UploadBriefPage() {
   return (
-    <section className="gift-shell px-5 py-16 lg:px-8">
+    <section className="editorial-shell px-5 py-16 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <SectionIntro
-            copy="If you already have a deck, mandate, or notes, upload them with contact details. We will create the opportunity even when storage is temporarily unavailable."
+            copy="Already have a deck or notes? Upload them with your contact details. We’ll find the story inside."
             eyebrow="Upload a brief"
-            title="Send the practical details. We will find the story inside them."
+            title="Send the practical details."
           />
         </div>
         <BriefUploadForm />

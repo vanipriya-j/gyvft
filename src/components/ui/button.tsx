@@ -6,15 +6,15 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "dark";
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-coral text-paper shadow-[0_16px_40px_rgba(201,61,44,0.28)] hover:bg-coral-deep",
+    "bg-olive-dark text-paper shadow-[0_12px_28px_rgba(74,52,41,0.18)] hover:bg-[#3a291f]",
   secondary:
-    "border border-ink/20 bg-paper/80 text-ink hover:border-coral/50 hover:bg-paper",
+    "border border-ink/15 bg-paper/70 text-ink hover:border-olive/45 hover:bg-paper",
   ghost: "text-ink hover:bg-ink/5",
   dark: "bg-ink text-paper hover:bg-ink-soft",
 };
 
 const base =
-  "focus-ring inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold tracking-wide transition duration-200 disabled:pointer-events-none disabled:opacity-50";
+  "focus-ring inline-flex min-h-11 items-center justify-center rounded-md px-6 py-2.5 text-sm font-medium tracking-wide transition duration-200 disabled:pointer-events-none disabled:opacity-50";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;

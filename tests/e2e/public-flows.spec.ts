@@ -10,8 +10,8 @@ test("homepage loads with GYVFT brand and CTAs", async ({ page }) => {
 
   await expect(page.getByText("GYVFT").first()).toBeVisible();
   await expect(page.getByRole("heading", { name: /Your story\. Our telling\./i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Tell us your story/i })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Make us your merch partner/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Tell us your story/i }).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: /Make us your merch partner/i }).first()).toBeVisible();
 });
 
 test("unauthenticated Studio redirects to login", async ({ page }) => {
@@ -24,7 +24,12 @@ test("story form multi-step UI renders", async ({ page }) => {
   await page.goto("/tell-your-story");
 
   await expect(page.getByText("Step 1 of 7")).toBeVisible();
-  await expect(page.getByLabel("What story should we help tell?")).toBeVisible();
+  await expect(page.getByText("What story should we help tell?")).toBeVisible();
+  await expect(
+    page.getByRole("textbox", {
+      name: /Share the people, place, milestone, or memory/i,
+    }),
+  ).toBeVisible();
 });
 
 test("rejecting consent prevents Meta and Clarity script injection", async ({ page }) => {
