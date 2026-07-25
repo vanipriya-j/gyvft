@@ -23,6 +23,8 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
   RESEND_FROM_NAME: z.string().optional(),
+  /** Inbox for public lead notification emails (public site does not require a database). */
+  GYVFT_LEADS_EMAIL: z.string().email().optional(),
   OPENAI_API_KEY: z.string().optional(),
   META_ACCESS_TOKEN: z.string().optional(),
   META_DATASET_ID: z.string().optional(),

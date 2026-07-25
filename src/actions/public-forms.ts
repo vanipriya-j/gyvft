@@ -1,22 +1,11 @@
 "use server";
 
 import { z } from "zod";
-import { hasSupabaseAdminConfig } from "@/config/env";
-import { createActivity } from "@/repositories/activities";
-import { createOrMatchContact } from "@/repositories/contacts";
-import { recordAnalyticsEvent } from "@/repositories/events";
-import { createOrMatchOrganisation } from "@/repositories/organisations";
-import { createOpportunity, findByIdempotencyKey } from "@/repositories/opportunities";
-import { createIntegrationLog } from "@/services/integrations/logs";
-import {
-  submitDiscoveryRequest,
-  submitPartnerOpportunity,
-  submitStoryOpportunity,
-} from "@/services/opportunities/lead-capture";
-import { storeBriefFile } from "@/services/storage/briefs";
+import { AppError } from "@/lib/errors/app-error";
 import { discoveryFormSchema, type DiscoveryFormInput } from "@/lib/validation/discovery-form";
 import { partnerFormSchema, type PartnerFormInput } from "@/lib/validation/partner-form";
 import { storyFormSchema, type StoryFormInput } from "@/lib/validation/story-form";
+import { submitPublicLead } from "@/services/leads/submit-public-lead";
 
 type ActionResult =
   | { ok: true; opportunityId: string }
@@ -32,9 +21,19 @@ function fieldErrors(error: z.ZodError): Record<string, string[]> {
 }
 
 function messageFrom(error: unknown): string {
+  if (error instanceof AppError && error.expose) return error.message;
   if (error instanceof z.ZodError) return "Please check the highlighted fields.";
   if (error instanceof Error) return error.message;
   return "Something went wrong. Please try again.";
+}
+
+function omitMeta<T extends Record<string, unknown>>(input: T) {
+  const fields = { ...input };
+  delete fields.honeypot;
+  delete fields.idempotency_key;
+  delete fields.attribution;
+  delete fields.consent;
+  return fields;
 }
 
 export async function submitStoryAction(input: StoryFormInput): Promise<ActionResult> {
@@ -43,8 +42,14 @@ export async function submitStoryAction(input: StoryFormInput): Promise<ActionRe
     return { ok: false, message: messageFrom(parsed.error), fieldErrors: fieldErrors(parsed.error) };
   }
   try {
-    const result = await submitStoryOpportunity(parsed.data);
-    return { ok: true, opportunityId: result.opportunityId };
+    const result = await submitPublicLead({
+      formKey: "tell_your_story",
+      idempotencyKey: parsed.data.idempotency_key,
+      honeypot: parsed.data.honeypot,
+      fields: omitMeta(parsed.data),
+      attribution: parsed.data.attribution,
+    });
+    return { ok: true, opportunityId: result.submissionId };
   } catch (error) {
     return { ok: false, message: messageFrom(error) };
   }
@@ -56,8 +61,14 @@ export async function submitPartnerAction(input: PartnerFormInput): Promise<Acti
     return { ok: false, message: messageFrom(parsed.error), fieldErrors: fieldErrors(parsed.error) };
   }
   try {
-    const result = await submitPartnerOpportunity(parsed.data);
-    return { ok: true, opportunityId: result.opportunityId };
+    const result = await submitPublicLead({
+      formKey: "become_a_merch_partner",
+      idempotencyKey: parsed.data.idempotency_key,
+      honeypot: parsed.data.honeypot,
+      fields: omitMeta(parsed.data),
+      attribution: parsed.data.attribution,
+    });
+    return { ok: true, opportunityId: result.submissionId };
   } catch (error) {
     return { ok: false, message: messageFrom(error) };
   }
@@ -69,8 +80,14 @@ export async function submitDiscoveryAction(input: DiscoveryFormInput): Promise<
     return { ok: false, message: messageFrom(parsed.error), fieldErrors: fieldErrors(parsed.error) };
   }
   try {
-    const result = await submitDiscoveryRequest(parsed.data);
-    return { ok: true, opportunityId: result.opportunityId };
+    const result = await submitPublicLead({
+      formKey: "book_a_discovery",
+      idempotencyKey: parsed.data.idempotency_key,
+      honeypot: parsed.data.honeypot,
+      fields: omitMeta(parsed.data),
+      attribution: parsed.data.attribution,
+    });
+    return { ok: true, opportunityId: result.submissionId };
   } catch (error) {
     return { ok: false, message: messageFrom(error) };
   }
@@ -101,102 +118,33 @@ export async function submitBriefUploadAction(formData: FormData): Promise<Actio
     return { ok: false, message: "Please attach a brief file and contact details." };
   }
 
-  const metadataJson: unknown = JSON.parse(rawMetadata) as unknown;
+  let metadataJson: unknown;
+  try {
+    metadataJson = JSON.parse(rawMetadata) as unknown;
+  } catch {
+    return { ok: false, message: "Please attach a brief file and contact details." };
+  }
+
   const parsed = briefMetadataSchema.safeParse(metadataJson);
   if (!parsed.success) {
     return { ok: false, message: messageFrom(parsed.error), fieldErrors: fieldErrors(parsed.error) };
   }
-  if (parsed.data.honeypot) {
-    return { ok: false, message: "Submission rejected." };
-  }
 
   try {
-    const duplicate = await findByIdempotencyKey(parsed.data.idempotency_key);
-    if (duplicate) return { ok: true, opportunityId: duplicate.id };
-
-    let organisationId: string | null = null;
-    if (parsed.data.organisation_name?.trim()) {
-      const organisation = await createOrMatchOrganisation({
-        name: parsed.data.organisation_name,
-      });
-      organisationId = organisation.organisation.id;
-    }
-
-    const contact = await createOrMatchContact({
-      fullName: parsed.data.full_name,
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      organisationId,
-      designation: parsed.data.designation,
-      preferredContactMethod: parsed.data.preferred_contact_method,
-      source: "brief_upload",
-      communicationConsent: parsed.data.communication_consent,
-      marketingConsent: false,
-      consentVersion: parsed.data.consent?.version,
-    });
-
-    const opportunity = await createOpportunity({
-      storyTitle: parsed.data.brief_title,
-      intentType: "brief_upload",
-      relationshipType: "unknown",
-      source: "brief_upload",
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const result = await submitPublicLead({
       formKey: "upload_a_brief",
-      contactId: contact.contact.id,
-      organisationId,
-      budgetRange: parsed.data.budget_range,
-      targetDatePrecision: parsed.data.timeline,
-      locationNotes: parsed.data.brief_context,
       idempotencyKey: parsed.data.idempotency_key,
-    });
-
-    await createActivity({
-      opportunityId: opportunity.id,
-      contactId: contact.contact.id,
-      organisationId,
-      activityType: "form.submitted",
-      summary: "Brief uploaded",
-      metadata: {
-        form_key: "upload_a_brief",
-        filename: file.name,
-        byte_size: file.size,
+      honeypot: parsed.data.honeypot,
+      fields: omitMeta(parsed.data),
+      attribution: parsed.data.attribution,
+      attachment: {
+        filename: file.name || "brief-upload",
+        content: bytes,
+        contentType: file.type || undefined,
       },
     });
-
-    if (hasSupabaseAdminConfig()) {
-      try {
-        await storeBriefFile({ file, opportunityId: opportunity.id });
-      } catch (error) {
-        await createIntegrationLog({
-          provider: "supabase_storage",
-          operation: "upload_brief",
-          success: false,
-          sanitisedError: error instanceof Error ? error.message : "brief storage failed",
-          metadata: { opportunityId: opportunity.id },
-        });
-      }
-    } else {
-      await createIntegrationLog({
-        provider: "supabase_storage",
-        operation: "upload_brief",
-        success: false,
-        sanitisedError: "Supabase storage is not configured",
-        metadata: { opportunityId: opportunity.id },
-      });
-    }
-
-    await recordAnalyticsEvent({
-      eventName: "brief_upload_completed",
-      eventId: crypto.randomUUID(),
-      correlationId: crypto.randomUUID(),
-      opportunityId: opportunity.id,
-      contactId: contact.contact.id,
-      sourceRoute: "upload_a_brief",
-      consentAnalytics: parsed.data.consent?.analytics,
-      consentAdvertising: parsed.data.consent?.advertising,
-      properties: { source: "brief_upload" },
-    });
-
-    return { ok: true, opportunityId: opportunity.id };
+    return { ok: true, opportunityId: result.submissionId };
   } catch (error) {
     return { ok: false, message: messageFrom(error) };
   }
