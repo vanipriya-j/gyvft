@@ -12,6 +12,11 @@ const SENSITIVE_KEYS = [
   "ciphertext",
   "story_description",
   "payload",
+  "email",
+  "work_email",
+  "phone",
+  "full_name",
+  "name",
 ];
 
 function redact(value: unknown, depth = 0): unknown {
