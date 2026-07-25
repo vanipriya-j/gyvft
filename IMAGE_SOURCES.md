@@ -118,15 +118,14 @@ Shopify theme CSS was **not** copied wholesale; values were extracted into GYVFT
 
 | Field | Value |
 | --- | --- |
-| Asset | GYVFT wordmark with red bow on the letter Y |
-| Production path | `/images/brand/gyvft-logo.png` |
-| Treatment | Transparent PNG for cream surfaces |
-| Usage | Header, footer, homepage hero brand mark |
+| Asset | GYVFT master wordmark (uploaded) |
+| Production path | `/images/brand/GYVFT_3x.png` |
+| Treatment | Transparent PNG, 1500×1500 |
+| Usage | Header, footer, homepage hero via `BrandLogo` |
 
 | Field | Value |
 | --- | --- |
-| Asset | GYVFT mark (letter Y with red bow) |
-| Production path | `/images/brand/gyvft-mark.png` |
+| Asset | Derived wordmark crop / favicon mark |
+| Production paths | `/images/brand/gyvft-logo.png`, `/images/brand/gyvft-mark.png` |
 | App icons | `src/app/favicon.ico`, `src/app/icon.png`, `src/app/apple-icon.png` |
-| Treatment | Cropped from wordmark; cream background on favicon/apple icon |
-| Usage | Browser tab favicon and Apple touch icon |
+| Treatment | Cropped from `GYVFT_3x.png`; cream background on favicon/apple icon |
