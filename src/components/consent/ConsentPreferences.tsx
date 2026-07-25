@@ -7,15 +7,17 @@ import { useConsent } from "@/hooks/use-consent";
 
 type ConsentPreferencesProps = {
   onClose?: () => void;
+  onSaved?: () => void;
 };
 
-export function ConsentPreferences({ onClose }: ConsentPreferencesProps) {
+export function ConsentPreferences({ onClose, onSaved }: ConsentPreferencesProps) {
   const { consent, save } = useConsent();
   const [analytics, setAnalytics] = useState(consent.analytics);
   const [advertising, setAdvertising] = useState(consent.advertising);
 
-  const submit = () => {
-    save({ analytics, advertising });
+  const choose = (input: { analytics: boolean; advertising: boolean }) => {
+    save(input);
+    onSaved?.();
     onClose?.();
   };
 
@@ -50,14 +52,8 @@ export function ConsentPreferences({ onClose }: ConsentPreferencesProps) {
         </span>
       </label>
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button onClick={submit}>Save preferences</Button>
-        <Button
-          onClick={() => {
-            save({ analytics: false, advertising: false });
-            onClose?.();
-          }}
-          variant="secondary"
-        >
+        <Button onClick={() => choose({ analytics, advertising })}>Save preferences</Button>
+        <Button onClick={() => choose({ analytics: false, advertising: false })} variant="secondary">
           Reject optional
         </Button>
       </div>
