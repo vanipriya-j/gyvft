@@ -1,18 +1,23 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getEnv, hasSupabaseConfig } from "@/config/env";
 import { getSql } from "@/lib/database/client";
 import { AppError } from "@/lib/errors/app-error";
+import {
+  getSupabasePublishableKey,
+  getSupabaseUrl,
+  hasSupabasePublishableConfig,
+} from "@/lib/supabase/keys";
 import type { Profile, UserRole } from "@/types/domain";
 
 export async function createSupabaseServerClient() {
-  if (!hasSupabaseConfig()) {
+  const url = getSupabaseUrl();
+  const publishableKey = getSupabasePublishableKey();
+  if (!hasSupabasePublishableConfig() || !url || !publishableKey) {
     throw new AppError("INTERNAL_ERROR", "Supabase is not configured", { expose: false });
   }
-  const env = getEnv();
   const cookieStore = await cookies();
-  return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL!, env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+  return createServerClient(url, publishableKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -29,7 +34,7 @@ export async function createSupabaseServerClient() {
 }
 
 export async function getSessionUserId(): Promise<string | null> {
-  if (!hasSupabaseConfig()) return null;
+  if (!hasSupabasePublishableConfig()) return null;
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;

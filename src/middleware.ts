@@ -3,6 +3,13 @@ import { createServerClient } from "@supabase/ssr";
 
 const publicStudioPaths = new Set(["/studio/login", "/studio/forgot-password", "/studio/reset-password"]);
 
+function getPublishableKey(): string | undefined {
+  return (
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-studio-pathname", `${request.nextUrl.pathname}${request.nextUrl.search}`);
@@ -14,12 +21,12 @@ export async function middleware(request: NextRequest) {
   });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const publishableKey = getPublishableKey();
+  if (!supabaseUrl || !publishableKey) {
     return response;
   }
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+  const supabase = createServerClient(supabaseUrl, publishableKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();

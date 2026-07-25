@@ -24,13 +24,14 @@ async function main() {
 
   const sql = postgres(databaseUrl, { max: 1 });
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secretKey =
+    process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   let userId: string;
   let invited = false;
 
-  if (supabaseUrl && serviceRole) {
-    const admin = createClient(supabaseUrl, serviceRole, {
+  if (supabaseUrl && secretKey) {
+    const admin = createClient(supabaseUrl, secretKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
     const tempPassword = randomBytes(24).toString("base64url");
