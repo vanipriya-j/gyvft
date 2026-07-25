@@ -1,14 +1,23 @@
-import { EditorialCtaSection, HowItWorksSection, StoryCategoriesSection, StoryOutputsSection } from "@/components/public/sections";
 import { Hero } from "@/components/public/Hero";
+import {
+  FinalCtaSection,
+  ForOrganisationsSection,
+  HowItWorksSection,
+  TellUsYourStorySection,
+  VisualExamplesSection,
+  WhatStoryCanBecomeSection,
+} from "@/components/public/sections";
 
 export default function HomePage() {
   return (
     <>
       <Hero />
-      <StoryCategoriesSection />
-      <StoryOutputsSection />
+      <WhatStoryCanBecomeSection />
+      <VisualExamplesSection />
+      <TellUsYourStorySection />
+      <ForOrganisationsSection />
       <HowItWorksSection />
-      <EditorialCtaSection />
+      <FinalCtaSection />
     </>
   );
 }
