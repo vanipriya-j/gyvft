@@ -2,18 +2,22 @@
 
 :root {
   color-scheme: light;
-  --background: #f6efe3;
-  --foreground: #071626;
-  --paper: #fbf7ee;
-  --paper-deep: #e9dcc8;
-  --ink: #071626;
-  --ink-soft: #20344a;
-  --copper: #b66a45;
-  --copper-deep: #7e3f2d;
-  --sage: #65715e;
-  --mist: #d8e0dd;
-  --line: rgba(7, 22, 38, 0.16);
-  --shadow-soft: 0 24px 90px rgba(7, 22, 38, 0.16);
+  /* Gift-atelier palette: blush ivory, espresso, coral, saffron, jade */
+  --background: #fff1e8;
+  --foreground: #1a1412;
+  --paper: #fff8f2;
+  --paper-deep: #f3d9c8;
+  --ink: #1a1412;
+  --ink-soft: #3b2d28;
+  --coral: #ef5a45;
+  --coral-deep: #c93d2c;
+  --saffron: #f0a202;
+  --jade: #1f7a6a;
+  --blush: #ffd6c9;
+  --plum: #5c2a3a;
+  --line: rgba(26, 20, 18, 0.14);
+  --shadow-soft: 0 28px 80px rgba(26, 20, 18, 0.14);
+  --shadow-pop: 0 18px 50px rgba(239, 90, 69, 0.22);
   --radius-large: 2rem;
 }
 
@@ -24,53 +28,71 @@
   --color-paper-deep: var(--paper-deep);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
-  --color-copper: var(--copper);
-  --color-copper-deep: var(--copper-deep);
-  --color-sage: var(--sage);
-  --color-mist: var(--mist);
+  --color-coral: var(--coral);
+  --color-coral-deep: var(--coral-deep);
+  --color-saffron: var(--saffron);
+  --color-jade: var(--jade);
+  --color-blush: var(--blush);
+  --color-plum: var(--plum);
+  /* Back-compat aliases used by existing form/studio public shells */
+  --color-copper: var(--coral);
+  --color-copper-deep: var(--coral-deep);
+  --color-sage: var(--jade);
+  --color-mist: var(--blush);
   --font-sans: var(--font-body);
   --font-serif: var(--font-body);
   --font-display: var(--font-display);
+  --font-brand: var(--font-brand);
 }
 
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 10% 8%, rgba(182, 106, 69, 0.22), transparent 30rem),
-    radial-gradient(circle at 86% 2%, rgba(101, 113, 94, 0.18), transparent 28rem),
-    linear-gradient(135deg, #fbf7ee 0%, #f6efe3 42%, #e9dcc8 100%);
+    radial-gradient(circle at 8% 0%, rgba(239, 90, 69, 0.18), transparent 28rem),
+    radial-gradient(circle at 92% 8%, rgba(240, 162, 2, 0.18), transparent 26rem),
+    radial-gradient(circle at 70% 90%, rgba(31, 122, 106, 0.12), transparent 24rem),
+    linear-gradient(160deg, #fff8f2 0%, #fff1e8 48%, #ffe4d6 100%);
   color: var(--foreground);
-  font-family: var(--font-body), Georgia, serif;
+  font-family: var(--font-body), Georgia, "Times New Roman", serif;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: rgba(182, 106, 69, 0.28);
+  background: rgba(239, 90, 69, 0.28);
 }
 
 a {
   text-underline-offset: 0.18em;
 }
 
-.editorial-shell {
+.gift-shell {
   background-image:
-    linear-gradient(rgba(7, 22, 38, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(7, 22, 38, 0.035) 1px, transparent 1px);
-  background-size: 44px 44px;
+    radial-gradient(circle at 20% 20%, rgba(240, 162, 2, 0.12), transparent 18rem),
+    radial-gradient(circle at 80% 0%, rgba(239, 90, 69, 0.1), transparent 16rem);
 }
 
-.ink-gradient {
-  background:
-    radial-gradient(circle at 18% 20%, rgba(182, 106, 69, 0.28), transparent 24rem),
-    radial-gradient(circle at 78% 16%, rgba(216, 224, 221, 0.18), transparent 30rem),
-    linear-gradient(130deg, #071626 0%, #0e2438 52%, #1f3036 100%);
+.texture-dot {
+  background-image: radial-gradient(rgba(26, 20, 18, 0.08) 0.8px, transparent 0.8px);
+  background-size: 14px 14px;
+}
+
+.hero-collage-frame {
+  box-shadow: var(--shadow-soft);
+  border: 3px solid rgba(255, 248, 242, 0.72);
 }
 
 .paper-panel {
   border: 1px solid var(--line);
-  background: rgba(251, 247, 238, 0.78);
+  background: rgba(255, 248, 242, 0.86);
   box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(14px);
+}
+
+.ink-band {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(239, 90, 69, 0.34), transparent 22rem),
+    radial-gradient(circle at 85% 10%, rgba(240, 162, 2, 0.22), transparent 20rem),
+    linear-gradient(135deg, #1a1412 0%, #2b1b22 45%, #14352f 100%);
 }
 
 .focus-ring {
@@ -79,5 +101,23 @@ a {
 }
 
 .focus-ring:focus-visible {
-  outline-color: var(--copper);
+  outline-color: var(--coral);
+}
+
+.font-brand {
+  font-family: var(--font-brand), var(--font-display), Georgia, serif;
+}
+
+/* Preserve older class names used across public pages */
+.editorial-shell {
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(240, 162, 2, 0.12), transparent 18rem),
+    radial-gradient(circle at 80% 0%, rgba(239, 90, 69, 0.1), transparent 16rem);
+}
+
+.ink-gradient {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(239, 90, 69, 0.34), transparent 22rem),
+    radial-gradient(circle at 85% 10%, rgba(240, 162, 2, 0.22), transparent 20rem),
+    linear-gradient(135deg, #1a1412 0%, #2b1b22 45%, #14352f 100%);
 }

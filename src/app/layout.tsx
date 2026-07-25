@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
-import { Fraunces, Source_Serif_4 } from "next/font/google";
+import { Fraunces, Newsreader, Syne } from "next/font/google";
 import "./globals.css";
+
+const syne = Syne({
+  variable: "--font-brand",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 const fraunces = Fraunces({
   variable: "--font-display",
@@ -9,7 +15,7 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
-const sourceSerif = Source_Serif_4({
+const newsreader = Newsreader({
   variable: "--font-body",
   subsets: ["latin"],
   display: "swap",
@@ -22,11 +28,11 @@ export const metadata: Metadata = {
     template: "%s — GYVFT",
   },
   description:
-    "Premium story-led keepsakes, merchandise, publications, films, and experiences for people and organisations.",
+    "We turn people, milestones and memories into gifts, books, merchandise and experiences.",
   openGraph: {
     title: "GYVFT — Your story. Our telling.",
     description:
-      "Premium story-led keepsakes, merchandise, publications, films, and experiences.",
+      "We turn people, milestones and memories into gifts, books, merchandise and experiences.",
     siteName: "GYVFT",
     type: "website",
   },
@@ -40,7 +46,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${sourceSerif.variable} h-full scroll-smooth antialiased`}
+      className={`${syne.variable} ${fraunces.variable} ${newsreader.variable} h-full scroll-smooth antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">{children}</body>
     </html>
