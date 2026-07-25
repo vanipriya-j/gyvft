@@ -122,3 +122,11 @@ Shopify theme CSS was **not** copied wholesale; values were extracted into GYVFT
 | Production path | `/images/brand/gyvft-logo.png` |
 | Treatment | Transparent PNG for cream surfaces |
 | Usage | Header, footer, homepage hero brand mark |
+
+| Field | Value |
+| --- | --- |
+| Asset | GYVFT mark (letter Y with red bow) |
+| Production path | `/images/brand/gyvft-mark.png` |
+| App icons | `src/app/favicon.ico`, `src/app/icon.png`, `src/app/apple-icon.png` |
+| Treatment | Cropped from wordmark; cream background on favicon/apple icon |
+| Usage | Browser tab favicon and Apple touch icon |
