@@ -1,7 +1,7 @@
 {
   "baseAssetPath": "/images/gyvft/homepage",
   "placements": [
-    {"section":"homepage-hero","asset":"01-home-hero.png"},
+    {"section":"homepage-hero","asset":"01-home-hero_01.png"},
     {"section":"gifts-keepsakes","asset":"02-gifts-keepsakes.png"},
     {"section":"books-publications","asset":"03-books-publications.png"},
     {"section":"merchandise-kits","asset":"04-merchandise-kits.png"},
