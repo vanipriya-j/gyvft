@@ -1,9 +1,11 @@
 /**
  * Central image registry for the public website.
- * Paths point to locally hosted, optimised assets under public/images/aarla-source/.
- * See IMAGE_SOURCES.md for provenance and usage notes.
+ * Paths follow docs/gyvft/homepage.json under /images/gyvft/homepage/.
+ * Until those files are present, pages fall back via PublicImage / legacy paths
+ * kept here as `fallbackSrc` for server components that need a guaranteed file.
  */
-const base = "/images/aarla-source/optimized";
+const base = "/images/gyvft/homepage";
+const legacy = "/images/aarla-source/optimized";
 
 export const publicMedia = {
   brand: {
@@ -14,56 +16,72 @@ export const publicMedia = {
   },
   hero: {
     atmosphere: {
-      src: `${base}/street-madras-coffee.jpg`,
-      alt: "Warm street gathering with people sharing coffee and conversation",
+      src: `${base}/01-home-hero.png`,
+      fallbackSrc: `${legacy}/street-madras-coffee.jpg`,
+      alt: "Warm gathering atmosphere for the GYVFT homepage hero",
     },
   },
   become: {
     gifts: {
-      src: `${base}/gift-tumbler-bowl.jpg`,
-      alt: "Green metal tumbler and bowl arranged as a gift set",
+      src: `${base}/02-gifts-keepsakes.png`,
+      fallbackSrc: `${legacy}/gift-tumbler-bowl.jpg`,
+      alt: "Gifts and keepsakes arranged as a story-led set",
     },
     books: {
-      src: `${base}/remember-drawing.jpg`,
-      alt: "Illustrated scene of a grandmother and child drawing together",
+      src: `${base}/03-books-publications.png`,
+      fallbackSrc: `${legacy}/remember-drawing.jpg`,
+      alt: "Books and publications made from memory",
     },
     merch: {
-      src: `${base}/merch-nourish-kit.jpg`,
-      alt: "Soft bag, bottle, and tiffin arranged as a merchandise kit",
+      src: `${base}/04-merchandise-kits.png`,
+      fallbackSrc: `${legacy}/merch-nourish-kit.jpg`,
+      alt: "Merchandise and kits that carry a story",
     },
   },
   worlds: {
     celebrate: {
-      src: `${base}/celebrate-gathering.jpg`,
-      alt: "People gathered in a warmly lit doorway",
+      src: `${base}/05-celebrate.png`,
+      fallbackSrc: `${legacy}/celebrate-gathering.jpg`,
+      alt: "Celebrate — joy made tangible",
     },
     remember: {
-      src: `${base}/remember-drawing.jpg`,
-      alt: "Illustrated grandmother and child drawing together",
+      src: `${base}/06-remember.png`,
+      fallbackSrc: `${legacy}/remember-drawing.jpg`,
+      alt: "Remember — family histories and private milestones",
     },
     honour: {
-      src: `${base}/honour-performance.jpg`,
-      alt: "Classical dance performance with ghungroos in the foreground",
+      src: `${base}/07-honour.png`,
+      fallbackSrc: `${legacy}/honour-performance.jpg`,
+      alt: "Honour — performance and devotion",
     },
     belong: {
-      src: `${base}/street-madras-coffee.jpg`,
-      alt: "Community gathering on a warm street",
+      src: `${base}/08-belong.png`,
+      fallbackSrc: `${legacy}/street-madras-coffee.jpg`,
+      alt: "Belong — community gathering",
     },
     build: {
-      src: `${base}/merch-nourish-kit.jpg`,
-      alt: "Curated kit of everyday objects made to share",
+      src: `${base}/09-build-together.png`,
+      fallbackSrc: `${legacy}/merch-nourish-kit.jpg`,
+      alt: "Build together — shared objects",
     },
   },
   transformation: {
     feature: {
-      src: `${base}/honour-performance.jpg`,
+      src: `${base}/10-performance-to-keepsake.png`,
+      fallbackSrc: `${legacy}/honour-performance.jpg`,
       alt: "A performance moment that becomes a keepable story object",
     },
   },
   organisations: {
+    home: {
+      src: `${base}/14-for-organisations.png`,
+      fallbackSrc: `${legacy}/merch-nourish-kit.jpg`,
+      alt: "For organisations — story-led merchandise",
+    },
     kit: {
-      src: `${base}/merch-nourish-kit.jpg`,
-      alt: "Bag, bottle, and tiffin kit for organisational merchandise",
+      src: `${base}/for-organisations.png`,
+      fallbackSrc: `${legacy}/merch-nourish-kit.jpg`,
+      alt: "Organisation merchandise and kits",
     },
   },
 } as const;
@@ -71,4 +89,5 @@ export const publicMedia = {
 export type PublicMediaImage = {
   src: string;
   alt: string;
+  fallbackSrc?: string;
 };

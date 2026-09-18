@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { PublicImage } from "@/components/public/PublicImage";
 import { ButtonLink } from "@/components/ui/button";
 import { MotionReveal } from "@/components/public/MotionReveal";
 import { SectionIntro } from "@/components/public/sections";
@@ -43,12 +43,9 @@ export default function ForOrganisationsPage() {
         </MotionReveal>
         <MotionReveal delay={0.12}>
           <div className="relative aspect-[4/5] overflow-hidden border border-border">
-            <Image
-              alt={publicMedia.organisations.kit.alt}
-              className="object-cover"
-              fill
+            <PublicImage
+              image={publicMedia.organisations.kit}
               sizes="(max-width: 1024px) 100vw, 40vw"
-              src={publicMedia.organisations.kit.src}
             />
           </div>
         </MotionReveal>
