@@ -17,7 +17,6 @@ export const publicMedia = {
   hero: {
     atmosphere: {
       src: `${base}/01-home-hero.png`,
-      fallbackSrc: `${legacy}/street-madras-coffee.jpg`,
       alt: "Warm gathering atmosphere for the GYVFT homepage hero",
     },
   },
