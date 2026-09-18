@@ -51,7 +51,7 @@ export default async function StoryDetailPage({ params }: PageProps) {
         <MotionReveal className="mt-6" delay={0.04}>
           <div className="relative aspect-[16/9] w-full overflow-hidden">
             {/* TODO: hero media path lives in src/content/stories.ts → story.hero.src */}
-            <StoryMedia media={story.hero} priority sizes="100vw" />
+            <StoryMedia media={story.hero} priority sizes="100vw" story={story} />
           </div>
         </MotionReveal>
         <MotionReveal className="mt-10 max-w-3xl" delay={0.08}>
@@ -91,7 +91,7 @@ export default async function StoryDetailPage({ params }: PageProps) {
                   <Link className="group block" href={`/stories/${item.slug}`}>
                     <article className="overflow-hidden border border-border bg-paper transition group-hover:border-olive/40">
                       <div className="relative aspect-[4/3]">
-                        <StoryMedia className="border-0" media={item.hero} sizes="33vw" />
+                        <StoryMedia className="border-0" media={item.hero} sizes="33vw" story={item} />
                       </div>
                       <div className="px-5 py-5">
                         <h3 className="font-display text-xl text-ink">{item.title}</h3>

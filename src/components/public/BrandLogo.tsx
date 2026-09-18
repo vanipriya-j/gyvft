@@ -7,9 +7,11 @@ type BrandLogoProps = {
   priority?: boolean;
 };
 
-const LOGO_SRC = "/images/brand/gyvft-logo.png";
-const INTRINSIC_WIDTH = 902;
-const INTRINSIC_HEIGHT = 218;
+/** Master brand asset uploaded at public/images/brand/GYVFT_3x.png */
+const LOGO_SRC = "/images/brand/GYVFT_3x.png";
+/** Content bbox aspect inside the square master (wordmark band). */
+const INTRINSIC_WIDTH = 1275;
+const INTRINSIC_HEIGHT = 312;
 
 export function BrandLogo({ className, height = 28, priority = false }: BrandLogoProps) {
   const width = Math.round((height * INTRINSIC_WIDTH) / INTRINSIC_HEIGHT);
@@ -17,7 +19,7 @@ export function BrandLogo({ className, height = 28, priority = false }: BrandLog
   return (
     <Image
       alt="GYVFT"
-      className={className}
+      className={`object-cover object-center ${className ?? ""}`.trim()}
       height={height}
       priority={priority}
       src={LOGO_SRC}
