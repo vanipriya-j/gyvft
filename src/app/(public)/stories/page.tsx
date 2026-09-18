@@ -58,6 +58,7 @@ export default function StoriesPage() {
                             className="border-0"
                             media={story.hero}
                             sizes="(max-width: 1280px) 50vw, 33vw"
+                            story={story}
                           />
                         </div>
                         <div className="flex flex-1 flex-col px-5 py-6">

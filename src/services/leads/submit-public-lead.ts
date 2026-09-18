@@ -13,6 +13,7 @@ import {
   sendPublicResendEmail,
   type PublicEmailAttachment,
 } from "@/services/email/public-resend";
+import { tryForwardLeadToAarlaStory } from "@/services/leads/aarla-story-leads";
 
 export type PublicFormKey =
   | "tell_your_story"
@@ -254,11 +255,18 @@ export async function submitPublicLead(input: {
       replyTo,
       attachments: input.attachment ? [input.attachment] : undefined,
     });
-  } catch {
+  } catch (error) {
+    // Keep visitor-facing copy generic; detailed reason is logged server-side without PII.
+    const detail = error instanceof Error ? error.message : "unknown";
+    const { logger } = await import("@/lib/logging/logger");
+    logger.error("Internal lead email failed", {
+      formKey: input.formKey,
+      message: detail,
+    });
     throw new AppError(
       "INTEGRATION_ERROR",
       "We could not send your submission just now. Please try again.",
-      { expose: true },
+      { expose: true, details: detail },
     );
   }
 
@@ -272,6 +280,17 @@ export async function submitPublicLead(input: {
   } catch (error) {
     logAckFailure(input.formKey, error);
   }
+
+  // Fail-open: CRM lead in Aarla OS must not block email delivery.
+  await tryForwardLeadToAarlaStory({
+    formKey: input.formKey,
+    idempotencyKey: input.idempotencyKey,
+    submittedAt,
+    fields: input.fields,
+    attribution: input.attribution,
+    referrer,
+    attachment: input.attachment,
+  });
 
   rememberIdempotentSubmission(input.idempotencyKey, submissionId);
   return { submissionId };

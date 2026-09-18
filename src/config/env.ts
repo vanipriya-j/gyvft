@@ -25,6 +25,15 @@ const envSchema = z.object({
   RESEND_FROM_NAME: z.string().optional(),
   /** Inbox for public lead notification emails (public site does not require a database). */
   GYVFT_LEADS_EMAIL: z.string().email().optional(),
+  /**
+   * Shared secret for Aarla OS "Your Story. Our Telling." lead intake.
+   * Same value as on Aarla OS. URL is hardcoded in the client.
+   */
+  STORY_LEADS_API_KEY: z.string().min(16).optional(),
+  /** Alias accepted by Aarla OS docs. */
+  GYVFT_LEADS_API_KEY: z.string().min(16).optional(),
+  /** @deprecated Prefer STORY_LEADS_API_KEY */
+  AARLA_STORY_LEADS_API_KEY: z.string().min(16).optional(),
   OPENAI_API_KEY: z.string().optional(),
   META_ACCESS_TOKEN: z.string().optional(),
   META_DATASET_ID: z.string().optional(),

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { PublicImage } from "@/components/public/PublicImage";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { publicMedia } from "@/config/public-media";
@@ -67,12 +67,10 @@ export function WhatStoryCanBecomeSection() {
             <MotionReveal delay={index * 0.06} key={item.title}>
               <article className="group overflow-hidden border border-border bg-paper">
                 <div className="relative aspect-[4/5] overflow-hidden">
-                  <Image
-                    alt={item.image.alt}
-                    className="object-cover transition duration-700 group-hover:scale-[1.03]"
-                    fill
+                  <PublicImage
+                    className="transition duration-700 group-hover:scale-[1.03]"
+                    image={item.image}
                     sizes="(max-width: 1024px) 100vw, 33vw"
-                    src={item.image.src}
                   />
                 </div>
                 <div className="px-5 py-6">
@@ -139,12 +137,10 @@ export function StoryWorldsSection() {
               >
                 <article className="group relative overflow-hidden border border-border bg-paper">
                   <div className={`relative ${wide ? "aspect-[16/10]" : "aspect-[4/5]"}`}>
-                    <Image
-                      alt={world.image.alt}
-                      className="object-cover transition duration-700 group-hover:scale-[1.03]"
-                      fill
+                    <PublicImage
+                      className="transition duration-700 group-hover:scale-[1.03]"
+                      image={world.image}
                       sizes="(max-width: 1280px) 50vw, 33vw"
-                      src={world.image.src}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#202202]/72 via-[#202202]/15 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 p-5 text-paper sm:p-6">
@@ -170,12 +166,9 @@ export function StoryTransformationSection() {
       <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14">
         <MotionReveal>
           <div className="relative aspect-[5/4] overflow-hidden border border-border">
-            <Image
-              alt={publicMedia.transformation.feature.alt}
-              className="object-cover"
-              fill
+            <PublicImage
+              image={publicMedia.transformation.feature}
               sizes="(max-width: 1024px) 100vw, 55vw"
-              src={publicMedia.transformation.feature.src}
             />
           </div>
         </MotionReveal>
@@ -210,12 +203,9 @@ export function ForOrganisationsSection() {
       <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
         <MotionReveal>
           <div className="relative aspect-[4/5] overflow-hidden border border-border">
-            <Image
-              alt={publicMedia.organisations.kit.alt}
-              className="object-cover"
-              fill
+            <PublicImage
+              image={publicMedia.organisations.home}
               sizes="(max-width: 1024px) 100vw, 45vw"
-              src={publicMedia.organisations.kit.src}
             />
           </div>
         </MotionReveal>
