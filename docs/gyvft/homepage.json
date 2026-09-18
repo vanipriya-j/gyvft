@@ -1,0 +1,17 @@
+{
+  "baseAssetPath": "/images/gyvft/homepage",
+  "placements": [
+    {"section":"homepage-hero","asset":"01-home-hero.png"},
+    {"section":"gifts-keepsakes","asset":"02-gifts-keepsakes.png"},
+    {"section":"books-publications","asset":"03-books-publications.png"},
+    {"section":"merchandise-kits","asset":"04-merchandise-kits.png"},
+    {"section":"celebrate","asset":"05-celebrate.png"},
+    {"section":"remember","asset":"06-remember.png"},
+    {"section":"honour","asset":"07-honour.png"},
+    {"section":"belong","asset":"08-belong.png"},
+    {"section":"build-together","asset":"09-build-together.png"},
+    {"section":"performance-to-keepsake","asset":"10-performance-to-keepsake.png"},
+    {"section":"for-organisations-home-section","asset":"14-for-organisations.png"},
+    {"section":"for-organisations-page-hero","asset":"for-organisations.png"}
+  ]
+}
