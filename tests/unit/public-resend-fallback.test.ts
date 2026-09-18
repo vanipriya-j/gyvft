@@ -20,6 +20,7 @@ vi.mock("@/config/env", () => ({
 describe("public resend unverified-domain fallback", () => {
   beforeEach(() => {
     sendMock.mockReset();
+    vi.resetModules();
   });
 
   it("retries with onboarding@resend.dev when the configured domain is unverified", async () => {
@@ -52,5 +53,33 @@ describe("public resend unverified-domain fallback", () => {
     expect(sendMock).toHaveBeenCalledTimes(2);
     expect(sendMock.mock.calls[0][0].from).toContain("aarla@aarla.in");
     expect(sendMock.mock.calls[1][0].from).toBe(`GYVFT by Aarla <${RESEND_TESTING_FROM_EMAIL}>`);
+  });
+});
+
+describe("public resend defaults", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    delete process.env.RESEND_API_KEY;
+    delete process.env.RESEND_FROM_EMAIL;
+    delete process.env.RESEND_FROM_NAME;
+    delete process.env.GYVFT_LEADS_EMAIL;
+  });
+
+  it("defaults the leads inbox to aarla@aarla.in when inbox env vars are unset", async () => {
+    vi.doMock("@/config/env", () => ({
+      getEnv: () => ({
+        RESEND_API_KEY: "re_test",
+        RESEND_FROM_EMAIL: undefined,
+        RESEND_FROM_NAME: undefined,
+        GYVFT_LEADS_EMAIL: undefined,
+      }),
+    }));
+
+    const { getPublicLeadsInbox, DEFAULT_PUBLIC_LEADS_EMAIL, getPublicResendConfigStatus } =
+      await import("@/services/email/public-resend");
+
+    expect(DEFAULT_PUBLIC_LEADS_EMAIL).toBe("aarla@aarla.in");
+    expect(getPublicLeadsInbox()).toBe("aarla@aarla.in");
+    expect(getPublicResendConfigStatus().leadsEmail).toBe("aarla@aarla.in");
   });
 });

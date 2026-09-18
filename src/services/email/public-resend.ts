@@ -6,6 +6,12 @@ import { logger } from "@/lib/logging/logger";
 /** Resend testing sender — works before a custom domain is verified. */
 export const RESEND_TESTING_FROM_EMAIL = "onboarding@resend.dev";
 
+/** Default inbox for all public form lead notifications. */
+export const DEFAULT_PUBLIC_LEADS_EMAIL = "aarla@aarla.in";
+
+/** Default From address once aarla.in is verified in Resend. */
+export const DEFAULT_PUBLIC_FROM_EMAIL = "aarla@aarla.in";
+
 export type PublicEmailAttachment = {
   filename: string;
   content: Buffer;
@@ -22,28 +28,30 @@ function readRuntime(name: "RESEND_API_KEY" | "RESEND_FROM_EMAIL" | "RESEND_FROM
 
 export function getPublicResendConfigStatus() {
   const apiKey = Boolean(readRuntime("RESEND_API_KEY"));
-  const fromEmail = Boolean(readRuntime("RESEND_FROM_EMAIL"));
-  const leadsEmail = Boolean(readRuntime("GYVFT_LEADS_EMAIL") || readRuntime("RESEND_FROM_EMAIL"));
+  const fromEmail = Boolean(readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_FROM_EMAIL);
+  const leadsEmail = Boolean(
+    readRuntime("GYVFT_LEADS_EMAIL") ||
+      readRuntime("RESEND_FROM_EMAIL") ||
+      DEFAULT_PUBLIC_LEADS_EMAIL,
+  );
   return {
     configured: apiKey && fromEmail && leadsEmail,
     hasApiKey: apiKey,
     hasFromEmail: fromEmail,
     hasLeadsEmail: leadsEmail,
+    leadsEmail: readRuntime("GYVFT_LEADS_EMAIL") || readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_LEADS_EMAIL,
   };
 }
 
 function requireResendConfig() {
   const apiKey = readRuntime("RESEND_API_KEY");
-  const fromEmail = readRuntime("RESEND_FROM_EMAIL");
-  const fromName = readRuntime("RESEND_FROM_NAME") || "GYVFT";
-  // Fall back to from-address so one inbox env var is enough in simple setups.
-  const leadsEmail = readRuntime("GYVFT_LEADS_EMAIL") || fromEmail;
+  const fromEmail = readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_FROM_EMAIL;
+  const fromName = readRuntime("RESEND_FROM_NAME") || "GYVFT by Aarla";
+  // Always deliver lead notifications to the Aarla inbox unless explicitly overridden.
+  const leadsEmail =
+    readRuntime("GYVFT_LEADS_EMAIL") || readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_LEADS_EMAIL;
 
-  const missing = [
-    !apiKey ? "RESEND_API_KEY" : null,
-    !fromEmail ? "RESEND_FROM_EMAIL" : null,
-    !leadsEmail ? "GYVFT_LEADS_EMAIL" : null,
-  ].filter(Boolean);
+  const missing = [!apiKey ? "RESEND_API_KEY" : null].filter(Boolean);
 
   if (missing.length) {
     logger.error("Public Resend config incomplete", { missing });
@@ -52,9 +60,9 @@ function requireResendConfig() {
 
   return {
     apiKey: apiKey!,
-    fromEmail: fromEmail!,
+    fromEmail,
     fromName,
-    leadsEmail: leadsEmail!,
+    leadsEmail,
   };
 }
 
