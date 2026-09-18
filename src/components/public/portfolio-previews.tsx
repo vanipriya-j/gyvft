@@ -50,7 +50,7 @@ export function StoriesPreviewSection() {
                 <article className="flex h-full flex-col overflow-hidden border border-border bg-paper transition group-hover:border-olive/40">
                   <div className="relative aspect-[4/3]">
                     {/* TODO: preview cards use story.hero from src/content/stories.ts */}
-                    <StoryMedia className="border-0" media={story.hero} sizes="33vw" />
+                    <StoryMedia className="border-0" media={story.hero} sizes="33vw" story={story} />
                   </div>
                   <div className="flex flex-1 flex-col px-5 py-5">
                     <h3 className="font-display text-2xl text-ink">{story.title}</h3>

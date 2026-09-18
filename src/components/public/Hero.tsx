@@ -8,17 +8,20 @@ import { publicMedia } from "@/config/public-media";
 
 export function Hero() {
   const reduceMotion = useReducedMotion();
+  const heroImage = publicMedia.hero.atmosphere;
+  // Client-safe: prefer known-on-disk fallback until gyvft homepage assets are present.
+  const heroSrc = heroImage.fallbackSrc ?? heroImage.src;
 
   return (
     <section className="relative isolate min-h-[calc(100svh-4.5rem)] overflow-hidden">
       <div className="absolute inset-0">
         <Image
-          alt={publicMedia.hero.atmosphere.alt}
+          alt={heroImage.alt}
           className="object-cover"
           fill
           priority
           sizes="100vw"
-          src={publicMedia.hero.atmosphere.src}
+          src={heroSrc}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#f6f1e8]/94 via-[#f6f1e8]/78 to-[#f6f1e8]/28" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#f6f1e8]/70 via-transparent to-[#f6f1e8]/35" />

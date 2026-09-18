@@ -29,6 +29,25 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async redirects() {
+    return [
+      {
+        source: "/stories/dancer-gift-sets",
+        destination: "/stories/various-dance-schools",
+        permanent: true,
+      },
+      {
+        source: "/stories/sishyakulam",
+        destination: "/stories/various-music-schools",
+        permanent: true,
+      },
+      {
+        source: "/stories/barclays-team-award-badges",
+        destination: "/stories/natwest-team-event-badges",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
