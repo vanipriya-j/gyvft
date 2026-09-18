@@ -26,12 +26,14 @@ const envSchema = z.object({
   /** Inbox for public lead notification emails (public site does not require a database). */
   GYVFT_LEADS_EMAIL: z.string().email().optional(),
   /**
-   * Aarla OS "Your Story. Our Telling." inbound leads API.
-   * Shared secret with Aarla OS `STORY_LEADS_API_KEY`.
+   * Shared secret for Aarla OS "Your Story. Our Telling." lead intake.
+   * Same value as on Aarla OS. URL is hardcoded in the client.
    */
+  STORY_LEADS_API_KEY: z.string().min(16).optional(),
+  /** Alias accepted by Aarla OS docs. */
+  GYVFT_LEADS_API_KEY: z.string().min(16).optional(),
+  /** @deprecated Prefer STORY_LEADS_API_KEY */
   AARLA_STORY_LEADS_API_KEY: z.string().min(16).optional(),
-  /** Defaults to https://aarla-os.vercel.app/api/integrations/story/leads */
-  AARLA_STORY_LEADS_URL: z.string().url().optional(),
   OPENAI_API_KEY: z.string().optional(),
   META_ACCESS_TOKEN: z.string().optional(),
   META_DATASET_ID: z.string().optional(),

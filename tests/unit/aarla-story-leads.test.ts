@@ -6,16 +6,16 @@ vi.stubGlobal("fetch", fetchMock);
 
 vi.mock("@/config/env", () => ({
   getEnv: () => ({
-    AARLA_STORY_LEADS_API_KEY: "test-aarla-story-leads-key-32chars",
-    AARLA_STORY_LEADS_URL: "https://aarla-os.example/api/integrations/story/leads",
+    STORY_LEADS_API_KEY: "test-aarla-story-leads-key-32chars",
   }),
 }));
 
 describe("aarla story leads forwarder", () => {
   beforeEach(() => {
     fetchMock.mockReset();
-    process.env.AARLA_STORY_LEADS_API_KEY = "test-aarla-story-leads-key-32chars";
-    process.env.AARLA_STORY_LEADS_URL = "https://aarla-os.example/api/integrations/story/leads";
+    process.env.STORY_LEADS_API_KEY = "test-aarla-story-leads-key-32chars";
+    delete process.env.AARLA_STORY_LEADS_API_KEY;
+    delete process.env.AARLA_STORY_LEADS_URL;
     vi.resetModules();
   });
 
@@ -54,7 +54,7 @@ describe("aarla story leads forwarder", () => {
     expect(payload.attachment).toBeUndefined();
   });
 
-  it("posts with Bearer and HMAC headers", async () => {
+  it("posts to the hardcoded Aarla OS URL with Bearer and HMAC", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 201,
@@ -67,9 +67,8 @@ describe("aarla story leads forwarder", () => {
         }),
     });
 
-    const { forwardLeadToAarlaStory, buildAarlaStoryLeadPayload } = await import(
-      "@/services/leads/aarla-story-leads"
-    );
+    const { forwardLeadToAarlaStory, buildAarlaStoryLeadPayload, AARLA_STORY_LEADS_URL } =
+      await import("@/services/leads/aarla-story-leads");
 
     const payload = buildAarlaStoryLeadPayload({
       formKey: "book_a_discovery",
@@ -88,7 +87,8 @@ describe("aarla story leads forwarder", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toContain("/api/integrations/story/leads");
+    expect(url).toBe(AARLA_STORY_LEADS_URL);
+    expect(url).toBe("https://aarla-os.vercel.app/api/integrations/story/leads");
     const headers = init.headers as Record<string, string>;
     expect(headers.Authorization).toMatch(/^Bearer /);
     expect(headers["X-Aarla-Timestamp"]).toMatch(/^\d+$/);

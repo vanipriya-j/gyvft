@@ -10,7 +10,8 @@ export type AarlaStoryFormKey =
   | "book_a_discovery"
   | "upload_a_brief";
 
-export const DEFAULT_AARLA_STORY_LEADS_URL =
+/** Hardcoded Aarla OS production intake URL for Your Story. Our Telling. */
+export const AARLA_STORY_LEADS_URL =
   "https://aarla-os.vercel.app/api/integrations/story/leads";
 
 type AttributionLike = {
@@ -80,19 +81,25 @@ export type AarlaStoryLeadResult = {
   created?: boolean;
 };
 
-function readRuntime(name: "AARLA_STORY_LEADS_URL" | "AARLA_STORY_LEADS_API_KEY") {
-  const direct = process.env[name]?.trim();
+function readApiKey() {
+  const direct =
+    process.env.STORY_LEADS_API_KEY?.trim() ||
+    process.env.GYVFT_LEADS_API_KEY?.trim() ||
+    process.env.AARLA_STORY_LEADS_API_KEY?.trim();
   if (direct) return direct;
   const env = getEnv();
-  const value = env[name];
-  return typeof value === "string" ? value.trim() : undefined;
+  return (
+    env.STORY_LEADS_API_KEY?.trim() ||
+    env.GYVFT_LEADS_API_KEY?.trim() ||
+    env.AARLA_STORY_LEADS_API_KEY?.trim() ||
+    undefined
+  );
 }
 
 export function getAarlaStoryLeadsConfig() {
-  const url = readRuntime("AARLA_STORY_LEADS_URL") || DEFAULT_AARLA_STORY_LEADS_URL;
-  const apiKey = readRuntime("AARLA_STORY_LEADS_API_KEY");
+  const apiKey = readApiKey();
   return {
-    url,
+    url: AARLA_STORY_LEADS_URL,
     apiKey,
     configured: Boolean(apiKey),
   };
