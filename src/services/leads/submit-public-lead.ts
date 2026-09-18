@@ -13,6 +13,7 @@ import {
   sendPublicResendEmail,
   type PublicEmailAttachment,
 } from "@/services/email/public-resend";
+import { tryForwardLeadToAarlaStory } from "@/services/leads/aarla-story-leads";
 
 export type PublicFormKey =
   | "tell_your_story"
@@ -272,6 +273,17 @@ export async function submitPublicLead(input: {
   } catch (error) {
     logAckFailure(input.formKey, error);
   }
+
+  // Fail-open: CRM lead in Aarla OS must not block email delivery.
+  await tryForwardLeadToAarlaStory({
+    formKey: input.formKey,
+    idempotencyKey: input.idempotencyKey,
+    submittedAt,
+    fields: input.fields,
+    attribution: input.attribution,
+    referrer,
+    attachment: input.attachment,
+  });
 
   rememberIdempotentSubmission(input.idempotencyKey, submissionId);
   return { submissionId };
