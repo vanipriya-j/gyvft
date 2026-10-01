@@ -60,9 +60,13 @@ export const storyGroups: StoryGroup[] = [
 const CASE_BASE = "/images/gyvft/case-studies";
 
 function heroFor(slug: string, alt: string): StoryMedia {
-  const src = `${CASE_BASE}/${slug}/hero.png`;
+  return heroAsset(`${slug}/hero.png`, alt);
+}
+
+/** Hero from an existing on-disk asset path under /images/gyvft/case-studies/. */
+function heroAsset(relativePath: string, alt: string): StoryMedia {
   return {
-    src,
+    src: `${CASE_BASE}/${relativePath}`,
     alt,
     // Resolved at render time in StoryMedia (server) so this module stays client-safe.
     isPlaceholder: false,
@@ -117,35 +121,22 @@ export const stories: Story[] = [
       "Approve schools/products and supply more actual executions if available. Chalanam currently has logo evidence only.",
   },
   {
-    slug: "kumon-winner-gifts",
-    title: "Kumon Winner Gifts",
-    groupId: "building-communities",
-    status: "review",
-    summary: "Recognition gifts celebrating student achievement.",
-    introduction: "Recognition gifts celebrating student achievement.",
-    theStory: "Student achievement within a learning community asked to be recognised with care.",
-    ourInterpretation:
-      "We sought a gift that could mark accomplishment while remaining personal to the student.",
-    whatItBecame: "Recognition gifts for student achievement.",
-    hero: heroFor("kumon-winner-gifts", "Kumon winner gifts"),
-    reviewNote:
-      "Temporarily shares available Kumon imagery for staging. Confirm it is separate from Delegate Gifting before publication.",
-  },
-  {
     slug: "kumon-delegate-gifting",
-    title: "Kumon Delegate Gifting",
+    title: "Kumon Gifting",
     groupId: "building-communities",
     status: "ready",
-    summary: "Thoughtful delegate gifting for educators and learning communities.",
-    introduction: "Thoughtful delegate gifting for educators and learning communities.",
-    theStory: "Educators and learning communities gathered, and the occasion called for thoughtful gifting.",
+    summary: "Recognition and delegate gifting for Kumon educators and learning communities.",
+    introduction:
+      "A single Kumon gifting story covering student recognition gifts and thoughtful delegate hampers for educators and learning communities.",
+    theStory:
+      "Kumon occasions called for gifts that could mark student achievement and thank educators with the same care — objects shaped for the learning community, not generic conference swag.",
     ourInterpretation:
-      "We assembled a guest hamper around useful, considered objects rather than generic conference swag.",
+      "We assembled useful, considered keepsakes: recognition pieces for winners alongside guest hampers built around personalised stationery and useful objects.",
     whatItBecame:
-      "Delegate gifting including a personalised note card, elephant tray, Mayil 15×17-inch tote and Chennai magnet.",
-    hero: heroFor("kumon-delegate-gifting", "Kumon delegate gifting hamper"),
+      "Kumon gifting including recognition gifts for student achievement, plus delegate hampers with a personalised note card, elephant tray, Mayil 15×17-inch tote and Chennai magnet.",
+    hero: heroFor("kumon-delegate-gifting", "Kumon gifting hamper"),
     reviewNote:
-      "Retain the actual note card, elephant tray, Mayil 15×17-inch tote and Chennai magnet. Do not alter product proportions or place the Durai Adithya magnet inside Aarohana’s bag.",
+      "Canonical Kumon page (winner gifts merged here). Retain the actual note card, elephant tray, Mayil 15×17-inch tote and Chennai magnet. Do not alter product proportions or place the Durai Adithya magnet inside Aarohana’s bag.",
   },
   {
     slug: "various-music-schools",
@@ -169,7 +160,7 @@ export const stories: Story[] = [
     slug: "veeramakaliamman-temple-colouring-book",
     title: "Veeramakaliamman Temple Colouring Book",
     groupId: "institutions-heritage",
-    status: "reference-required",
+    status: "ready",
     summary: "Helping children experience a temple through illustration and creativity.",
     introduction: "Helping children experience a temple through illustration and creativity.",
     theStory: "A temple heritage asked to be opened gently to children through creativity.",
@@ -180,7 +171,6 @@ export const stories: Story[] = [
       "veeramakaliamman-temple-colouring-book",
       "Veeramakaliamman Temple colouring book",
     ),
-    referenceNeeded: "Final cover and representative interior spreads or project photographs.",
   },
   {
     slug: "pycon-2025-happyfox",
@@ -199,7 +189,7 @@ export const stories: Story[] = [
     slug: "photo-gauge-summer-care-pack",
     title: "Photo Gauge Summer Care Pack",
     groupId: "organisations-events",
-    status: "reference-required",
+    status: "ready",
     summary: "Seasonal employee appreciation.",
     introduction: "Seasonal employee appreciation.",
     theStory: "A team wanted a summer gesture of appreciation for the people behind the work.",
@@ -207,7 +197,6 @@ export const stories: Story[] = [
       "We shaped a seasonal pack around care and consideration rather than generic corporate gifting.",
     whatItBecame: "A summer care pack for employee appreciation.",
     hero: heroFor("photo-gauge-summer-care-pack", "Photo Gauge summer care pack"),
-    referenceNeeded: "Actual care-pack contents, packaging, insert card or presentation photographs.",
   },
   {
     slug: "natwest-team-event-badges",
@@ -227,15 +216,15 @@ export const stories: Story[] = [
     slug: "private-diwali-hampers",
     title: "Private Diwali Hampers",
     groupId: "seasonal-personal-gifting",
-    status: "reference-required",
+    status: "ready",
     summary: "Curated festive gifting built around people rather than products.",
     introduction: "Curated festive gifting built around people rather than products.",
     theStory: "A private Diwali moment called for gifting that felt personal to the people receiving it.",
     ourInterpretation:
       "We began with the relationships and the season, then curated a hamper around that feeling.",
     whatItBecame: "Private Diwali hampers built around people rather than products.",
-    hero: heroFor("private-diwali-hampers", "Private Diwali hampers"),
-    referenceNeeded: "Actual hamper contents, packaging, note card or recipient photographs.",
+    // Uploaded asset lives at diwali-gifting/hero.png — do not move or rename the file.
+    hero: heroAsset("diwali-gifting/hero.png", "Private Diwali hampers"),
   },
   {
     slug: "chinmay-brand-identity",
@@ -331,6 +320,7 @@ export const storySlugRedirects: Record<string, string> = {
   "dancer-gift-sets": "various-dance-schools",
   sishyakulam: "various-music-schools",
   "barclays-team-award-badges": "natwest-team-event-badges",
+  "kumon-winner-gifts": "kumon-delegate-gifting",
 };
 
 export function getStoryBySlug(slug: string): Story | undefined {
