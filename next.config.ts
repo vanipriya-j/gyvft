@@ -46,6 +46,11 @@ const nextConfig: NextConfig = {
         destination: "/stories/natwest-team-event-badges",
         permanent: true,
       },
+      {
+        source: "/stories/kumon-winner-gifts",
+        destination: "/stories/kumon-delegate-gifting",
+        permanent: true,
+      },
     ];
   },
   async headers() {

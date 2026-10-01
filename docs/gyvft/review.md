@@ -5,20 +5,19 @@
 | 1 | Thambi 100 | Ready | Existing site copy | Verify only |
 | 2 | Sruti 40 | Ready | Existing site copy | Verify only |
 | 3 | Various Dance Schools | Actual-reference contact sheet | New umbrella copy needed | Approve schools/products and supply more actual executions if available |
-| 4 | Kumon Winner Gifts | Shared Kumon review image | Existing site copy | Confirm it is separate from Delegate Gifting; otherwise merge/remove |
-| 5 | Kumon Delegate Gifting | Ready | Existing site copy | Verify only |
-| 6 | Various Music Schools | Actual-reference contact sheet | New umbrella copy needed | Verify product-to-school mappings and add omitted schools/products |
-| 7 | Veeramakaliamman Temple Colouring Book | Missing | Existing site copy | Supply cover/interiors or remove |
-| 8 | PyCon 2025 — HappyFox | Ready | Existing site copy | Verify only |
-| 9 | Photo Gauge Summer Care Pack | Missing | Existing site copy | Supply project images or remove |
-| 10 | NatWest Team Event Badges | Ready | Rename/rewrite from Barclays | Verify NatWest wording |
-| 11 | Private Diwali Hampers | Missing | Existing site copy | Supply project images or remove |
-| 12 | Chinmay — Brand Identity | Ready | New page copy needed | Supply/approve project narrative |
-| 13 | BITS 2001 Reunion Yearbook | Interim | New page copy needed | Replace image later if desired; approve scope |
-| 14 | TM Karthik — Crew Gifting | Ready | New page copy needed | Verify plays and recurring-gift framing |
-| 15 | Jannal Oram | Ready | New page copy needed | Supply/approve project narrative |
-| 16 | Root360 | Ready | New page copy needed | Supply/approve project narrative |
-| 17 | Cardiologist Visual Communication | Ready | New umbrella copy needed | Confirm whether to keep one page or split into two projects |
+| 4 | Kumon Gifting | Ready (`kumon-delegate-gifting/hero.png`) | Merged winner + delegate copy | Verify combined narrative; `/stories/kumon-winner-gifts` redirects here |
+| 5 | Various Music Schools | Actual-reference contact sheet | New umbrella copy needed | Verify product-to-school mappings and add omitted schools/products |
+| 6 | Veeramakaliamman Temple Colouring Book | Ready (`veeramakaliamman-temple-colouring-book/hero.png`) | Existing site copy | Verify only |
+| 7 | PyCon 2025 — HappyFox | Ready | Existing site copy | Verify only |
+| 8 | Photo Gauge Summer Care Pack | Ready (`photo-gauge-summer-care-pack/hero.png`) | Existing site copy | Verify only — must not reuse PyCon image |
+| 9 | NatWest Team Event Badges | Ready | Rename/rewrite from Barclays | Verify NatWest wording |
+| 10 | Private Diwali Hampers | Ready (`diwali-gifting/hero.png`) | Existing site copy | Verify only — must not reuse Thambi 100 image; asset folder is `diwali-gifting` |
+| 11 | Chinmay — Brand Identity | Ready | New page copy needed | Supply/approve project narrative |
+| 12 | BITS 2001 Reunion Yearbook | Interim | New page copy needed | Replace image later if desired; approve scope |
+| 13 | TM Karthik — Crew Gifting | Ready | New page copy needed | Verify plays and recurring-gift framing |
+| 14 | Jannal Oram | Ready | New page copy needed | Supply/approve project narrative |
+| 15 | Root360 | Ready | New page copy needed | Supply/approve project narrative |
+| 16 | Cardiologist Visual Communication | Ready | New umbrella copy needed | Confirm whether to keep one page or split into two projects |
 
 ## Music-school factual mapping
 
