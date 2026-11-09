@@ -3,6 +3,10 @@
 Downloaded from publicly available pages on [aarla.in](https://aarla.in) for local use only.  
 **Do not hotlink Aarla CDN URLs in production.** Assets live under `public/images/aarla-source/`.
 
+> **Current production imagery** prefers `public/images/gyvft/` (see `docs/gyvft/` and `docs/CODEX.md`).  
+> Homepage hero is **`/images/gyvft/homepage/01-home-hero_01.png`**, not the street-madras asset below.  
+> `aarla-source` files remain only as optional `fallbackSrc` for some homepage sections until every gyvft file is present.
+
 ## Inventory decision summary
 
 | Asset | Decision | Reason |
@@ -26,7 +30,7 @@ Downloaded from publicly available pages on [aarla.in](https://aarla.in) for loc
 | Source page | https://aarla.in/ |
 | Original URL | `https://cdn.shopify.com/s/files/1/0948/0626/0373/files/Street_Madras_Coffee.png?...` |
 | Depicts | Warm street gathering / café atmosphere |
-| GYVFT usage | Homepage hero background |
+| GYVFT usage | Legacy homepage atmosphere fallback only (hero now uses gyvft `01-home-hero_01.png`) |
 | Aarla branding | No |
 | Treatment | Optimised JPEG in `optimized/`; original PNG in `originals/` |
 | Production path | `/images/aarla-source/optimized/street-madras-coffee.jpg` |

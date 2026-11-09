@@ -4,13 +4,18 @@
 
 GYVFT is a Next.js application for public story-led lead capture and an authenticated internal Studio for managing opportunities, contacts, organisations, campaigns, landing pages, tasks, integrations, tracking, consent, and security settings.
 
+> **Agents (Codex / Cursor):** start with [`docs/CODEX.md`](docs/CODEX.md) for current product state and next work, then use this README for setup and ops. This app uses a custom Next.js build — read `node_modules/next/dist/docs/` and `AGENTS.md` before changing framework APIs.
+
 ## 1. Product architecture
 
 ### Public site
 
 Public routes live under `src/app/(public)` and include:
 
-- `/` - brand landing page.
+- `/` - brand landing page (hero image from `public/images/gyvft/homepage/`).
+- `/why-gyvft` - brand / positioning page.
+- `/stories` - storytelling portfolio listing.
+- `/stories/[slug]` - individual case-study pages (content in `src/content/stories.ts`).
 - `/tell-your-story` - story opportunity capture.
 - `/for-organisations` - organisation-facing public page.
 - `/become-a-merch-partner` - merch partnership capture.
@@ -19,7 +24,9 @@ Public routes live under `src/app/(public)` and include:
 - `/l/[slug]` - published campaign landing pages.
 - `/privacy`, `/cookies`, `/terms`, `/thank-you`.
 
-Public form actions validate with Zod, create or match CRM records, and create opportunities. Lead capture is designed to fail open for secondary integrations: the lead is preserved even if AI, email, Meta CAPI, storage, or webhooks fail.
+Public marketing imagery is inventory-driven via `docs/gyvft/` and files under `public/images/gyvft/`. See `docs/gyvft/IMPLEMENT.md`.
+
+Public form actions validate with Zod and send lead notification email through Resend (`src/services/email/public-resend.ts`, inbox defaults to `aarla@aarla.in`). After email, leads are forwarded fail-open to Aarla OS (`src/services/leads/aarla-story-leads.ts`, `STORY_LEADS_API_KEY`). When Studio/database is configured, forms also create or match CRM records and opportunities via `src/services/opportunities/lead-capture.ts`. Lead capture is designed to fail open for secondary integrations: the lead is preserved even if AI, email CRM forward, Meta CAPI, storage, or webhooks fail.
 
 ### Authentication
 
@@ -47,8 +54,11 @@ Roles are `owner`, `admin`, and `contributor`. Owners can manage users, secrets,
 
 The application keeps side effects behind service modules:
 
-- `src/services/opportunities/lead-capture.ts` - form submission orchestration.
-- `src/services/email/send.ts` - Resend transactional email.
+- `src/services/leads/submit-public-lead.ts` - public-site lead email + Aarla OS forward.
+- `src/services/email/public-resend.ts` - Resend for public forms (testing-sender fallback).
+- `src/services/leads/aarla-story-leads.ts` - HMAC Bearer POST to Aarla OS story leads API.
+- `src/services/opportunities/lead-capture.ts` - Studio CRM form submission orchestration.
+- `src/services/email/send.ts` - Resend transactional email (Studio / templates).
 - `src/services/ai/summary.ts` - OpenAI opportunity summary generation.
 - `src/services/meta/conversions.ts` - Meta Conversions API events.
 - `src/services/storage/briefs.ts` - Supabase Storage uploads and signed URLs.
@@ -63,14 +73,20 @@ Database access is centralised in `src/lib/database/client.ts` and repository mo
 src/app/                 Next.js App Router pages, layouts, API routes, middleware-facing UI
 src/actions/             Server actions for public forms and Studio workflows
 src/components/          Public, Studio, analytics, consent, and UI components
-src/config/              Runtime env schema and constants
+src/config/              Runtime env schema, constants, public media registry
+src/content/             Public storytelling portfolio (`stories.ts`)
 src/hooks/               Browser hooks for consent and attribution
 src/lib/                 Database, auth, Supabase, encryption, validation, logging, utilities
 src/repositories/        Database query layer
 src/services/            Integration and product service boundaries
 src/types/               Domain types
-supabase/migrations/     SQL schema, local auth stub, and RLS policies
+public/images/gyvft/     Public homepage + case-study assets
+public/images/brand/     Logo masters
+docs/gyvft/              Imagery inventory + editorial review
+docs/CODEX.md            Agent continuation guide
+supabase/migrations/     SQL schema, local auth stub, RLS, storage
 scripts/                 Migration, owner creation, dev seed/reset scripts
+tests/                   Vitest unit/integration + Playwright e2e
 ```
 
 ## 3. Local setup
@@ -236,7 +252,21 @@ If Supabase Auth is not configured, the script creates a local profile ID only. 
 
 ## 9. Resend setup
 
-Resend is used by `src/services/email/send.ts` for transactional acknowledgements and internal opportunity notifications. The renderer also contains templates for assignments, invitation copy, and test emails.
+### Public website forms
+
+Public forms use `src/services/email/public-resend.ts` (no database required):
+
+- `RESEND_API_KEY` (required for delivery)
+- `RESEND_FROM_EMAIL` / `RESEND_FROM_NAME` (default from-address / name → `aarla@aarla.in` / `GYVFT by Aarla` if unset)
+- `GYVFT_LEADS_EMAIL` (notification inbox; defaults to `aarla@aarla.in`)
+
+If the configured from-domain is not verified in Resend, the service retries once with `onboarding@resend.dev` so leads still deliver during domain setup.
+
+After a successful send, `submit-public-lead` forwards the structured lead to Aarla OS (see §9a). That forward is fail-open.
+
+### Studio / CRM emails
+
+Studio and opportunity notifications use `src/services/email/send.ts`.
 
 Configuration options:
 
@@ -258,6 +288,15 @@ Production checklist:
 5. Monitor `/studio/integration-logs` and `email_deliveries`.
 
 If Resend is not configured, email sends are logged as failed and the lead capture path continues where the email is a secondary effect.
+
+## 9a. Aarla OS story leads
+
+Public form leads are POSTed to Aarla OS **Your Story. Our Telling.** after email:
+
+- Client: `src/services/leads/aarla-story-leads.ts`
+- URL: hardcoded production intake (`AARLA_STORY_LEADS_URL`)
+- Auth: Bearer + HMAC using `STORY_LEADS_API_KEY` (aliases: `GYVFT_LEADS_API_KEY`, deprecated `AARLA_STORY_LEADS_API_KEY`)
+- Fail-open: CRM errors are logged; they must not fail the user-facing form success path
 
 ## 10. Meta Pixel and Conversions API setup
 
@@ -464,19 +503,20 @@ npm run lint
 npm run typecheck
 npm test
 npm run test:watch
+npm run test:integration
 npm run test:e2e
 ```
 
 Current repository state:
 
-- Vitest is configured as the unit test runner by script, but there are no `*.test.ts`/`*.spec.ts` files in the repo at the time of writing.
-- Playwright is installed and `npm run test:e2e` is defined, but no Playwright config or e2e specs are currently present.
+- **Vitest** unit tests under `tests/unit/` (validation, encryption, webhooks, consent, public Resend fallback, Aarla story leads, roles, etc.).
+- **Playwright** e2e under `tests/e2e/` (`forms-email.spec.ts`, `public-flows.spec.ts`) with `playwright.config.ts`.
+- Integration folder: `tests/integration/`.
 
-Recommended coverage:
+Recommended additional coverage:
 
-- Unit tests for validation schemas, utility functions, and secret/webhook signing.
 - Integration tests against a disposable Postgres database for lead capture, migrations, and repositories.
-- E2E tests for public form submission, auth redirect, Studio login, opportunity review, and integration settings.
+- Broader e2e for auth redirect, Studio login, opportunity review, and integration settings.
 
 ## 19. Development seed and reset
 
@@ -544,9 +584,13 @@ From `.env.example`:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Legacy fallback | Public | Deprecated JWT anon key. Used only if publishable key is unset. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Legacy fallback | Server | Deprecated JWT service_role key. Used only if secret key is unset. |
 | `INTEGRATION_ENCRYPTION_KEY` | Required for Studio secrets | Server | At least 32 characters. Encrypts Studio-managed integration secrets. |
-| `RESEND_API_KEY` | Optional fallback | Server | Resend API key when no Studio encrypted secret exists. |
-| `RESEND_FROM_EMAIL` | Recommended | Server | Default sending address. |
+| `RESEND_API_KEY` | Public site yes / Studio fallback | Server | Resend API key (required for public form email). |
+| `RESEND_FROM_EMAIL` | Recommended | Server | Default sending address (public default `aarla@aarla.in` if omitted). |
 | `RESEND_FROM_NAME` | Recommended | Server | Default sending name. |
+| `GYVFT_LEADS_EMAIL` | Recommended | Server | Public lead notification inbox (defaults to `aarla@aarla.in`). |
+| `STORY_LEADS_API_KEY` | Recommended for CRM forward | Server | Shared secret for Aarla OS story leads intake (min 16). |
+| `GYVFT_LEADS_API_KEY` | Alias | Server | Accepted alias for `STORY_LEADS_API_KEY`. |
+| `AARLA_STORY_LEADS_API_KEY` | Deprecated alias | Server | Prefer `STORY_LEADS_API_KEY`. |
 | `OPENAI_API_KEY` | Optional fallback | Server | OpenAI API key when no Studio encrypted secret exists. |
 | `META_ACCESS_TOKEN` | Optional fallback | Server | Meta CAPI access token when no Studio encrypted secret exists. |
 | `META_DATASET_ID` | Optional fallback | Server | Meta dataset/pixel ID for CAPI. |
