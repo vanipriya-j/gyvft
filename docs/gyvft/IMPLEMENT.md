@@ -1,5 +1,7 @@
 # GYVFT image and case-study implementation
 
+> Agent note: for overall product continuation see [`docs/CODEX.md`](../CODEX.md). This file is imagery-specific.
+
 The package is already aligned to this repository's existing image structure.
 
 ## Installed paths
