@@ -5,6 +5,10 @@ import { resetMemoryGuardsForTests } from "@/lib/security/memory-guards";
 import { escapeHtml } from "@/lib/security/sanitize";
 
 const sendMock = vi.fn();
+const captureMock = vi.hoisted(() => vi.fn());
+vi.mock("@/services/leads/customer-enquiry", () => ({
+  captureCustomerEnquiry: captureMock,
+}));
 
 vi.mock("next/headers", () => ({
   headers: async () =>
@@ -32,6 +36,8 @@ vi.mock("@/config/env", () => ({
 describe("public lead email submission", () => {
   beforeEach(() => {
     resetMemoryGuardsForTests();
+    captureMock.mockReset();
+    captureMock.mockResolvedValue(undefined);
     sendMock.mockReset();
     sendMock.mockResolvedValue({ id: "msg_1" });
   });
@@ -47,7 +53,8 @@ describe("public lead email submission", () => {
   });
 
   it("sends internal + acknowledgement emails for a story lead", async () => {
-    const { submitPublicLead, __testables } = await import("@/services/leads/submit-public-lead");
+    const { submitPublicLead, __testables } =
+      await import("@/services/leads/submit-public-lead");
 
     const result = await submitPublicLead({
       formKey: "tell_your_story",
@@ -59,7 +66,8 @@ describe("public lead email submission", () => {
         phone: "+919999999999",
         organisation_name: "",
         preferred_contact_method: "whatsapp",
-        story_description: "A long enough story about a family milestone and keepsake.",
+        story_description:
+          "A long enough story about a family milestone and keepsake.",
       },
       attribution: {
         firstTouchCampaign: "spring",
@@ -68,6 +76,12 @@ describe("public lead email submission", () => {
     });
 
     expect(result.submissionId).toBeTruthy();
+    expect(captureMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "ada@example.test",
+        submissionKey: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      }),
+    );
     expect(sendMock).toHaveBeenCalledTimes(2);
 
     const internal = sendMock.mock.calls[0][0];
@@ -86,7 +100,8 @@ describe("public lead email submission", () => {
   });
 
   it("uses organisation in partner lead subject", async () => {
-    const { submitPublicLead } = await import("@/services/leads/submit-public-lead");
+    const { submitPublicLead } =
+      await import("@/services/leads/submit-public-lead");
     await submitPublicLead({
       formKey: "become_a_merch_partner",
       idempotencyKey: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
@@ -104,7 +119,8 @@ describe("public lead email submission", () => {
   });
 
   it("returns the same submission id for duplicate idempotency keys without re-emailing", async () => {
-    const { submitPublicLead } = await import("@/services/leads/submit-public-lead");
+    const { submitPublicLead } =
+      await import("@/services/leads/submit-public-lead");
     const key = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
     const first = await submitPublicLead({
       formKey: "book_a_discovery",
@@ -135,7 +151,8 @@ describe("public lead email submission", () => {
 
   it("fails the submission when the internal email cannot be sent", async () => {
     sendMock.mockRejectedValueOnce(new Error("resend down"));
-    const { submitPublicLead } = await import("@/services/leads/submit-public-lead");
+    const { submitPublicLead } =
+      await import("@/services/leads/submit-public-lead");
     await expect(
       submitPublicLead({
         formKey: "tell_your_story",
@@ -154,7 +171,8 @@ describe("public lead email submission", () => {
     sendMock
       .mockResolvedValueOnce({ id: "internal" })
       .mockRejectedValueOnce(new Error("ack failed"));
-    const { submitPublicLead } = await import("@/services/leads/submit-public-lead");
+    const { submitPublicLead } =
+      await import("@/services/leads/submit-public-lead");
     const result = await submitPublicLead({
       formKey: "tell_your_story",
       idempotencyKey: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
@@ -166,10 +184,17 @@ describe("public lead email submission", () => {
       },
     });
     expect(result.submissionId).toBeTruthy();
+    expect(captureMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "ack@example.test",
+        submissionKey: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+      }),
+    );
   });
 
   it("rejects honeypot submissions", async () => {
-    const { submitPublicLead } = await import("@/services/leads/submit-public-lead");
+    const { submitPublicLead } =
+      await import("@/services/leads/submit-public-lead");
     await expect(
       submitPublicLead({
         formKey: "tell_your_story",
@@ -184,5 +209,18 @@ describe("public lead email submission", () => {
       }),
     ).rejects.toThrow(/rejected/i);
     expect(sendMock).not.toHaveBeenCalled();
+  });
+  it("preserves an emailed enquiry when customer storage is unavailable", async () => {
+    captureMock.mockRejectedValueOnce(new Error("storage unavailable"));
+    const { submitPublicLead } =
+      await import("@/services/leads/submit-public-lead");
+    await expect(
+      submitPublicLead({
+        formKey: "tell_your_story",
+        idempotencyKey: "portal-outage",
+        fields: { full_name: "Customer", email: "customer@example.test" },
+      }),
+    ).resolves.toHaveProperty("submissionId");
+    expect(sendMock).toHaveBeenCalledTimes(2);
   });
 });

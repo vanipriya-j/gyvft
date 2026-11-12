@@ -20,11 +20,11 @@ export function SiteHeader() {
       >
         <Link className="group inline-flex items-center gap-3" href="/">
           <BrandLogo height={28} priority />
-          <span className="hidden text-sm text-muted-text transition group-hover:text-olive-dark sm:inline">
+          <span className="hidden text-sm text-muted-text transition group-hover:text-olive-dark sm:inline xl:hidden">
             Your story. Our telling.
           </span>
         </Link>
-        <div className="hidden items-center gap-7 lg:flex">
+        <div className="hidden items-center gap-7 xl:flex">
           {nav.map((item) => (
             <Link
               className="text-sm font-medium text-muted-text transition hover:text-ink"
@@ -35,13 +35,29 @@ export function SiteHeader() {
             </Link>
           ))}
         </div>
-        <ButtonLink className="hidden sm:inline-flex" href="/become-a-merch-partner" variant="dark">
-          Merch partner
-        </ButtonLink>
+        <div className="flex shrink-0 items-center gap-4">
+          <Link
+            href="/account"
+            className="whitespace-nowrap text-sm font-medium text-olive-dark"
+          >
+            My GYVFT
+          </Link>
+          <ButtonLink
+            className="hidden sm:inline-flex"
+            href="/become-a-merch-partner"
+            variant="dark"
+          >
+            Merch partner
+          </ButtonLink>
+        </div>
       </nav>
-      <div className="flex gap-5 overflow-x-auto border-t border-border/70 px-5 py-3 text-sm lg:hidden">
+      <div className="flex gap-5 overflow-x-auto border-t border-border/70 px-5 py-3 text-sm xl:hidden">
         {nav.map((item) => (
-          <Link className="shrink-0 font-medium text-muted-text" href={item.href} key={item.href}>
+          <Link
+            className="shrink-0 font-medium text-muted-text"
+            href={item.href}
+            key={item.href}
+          >
             {item.label}
           </Link>
         ))}

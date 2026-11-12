@@ -1,0 +1,66 @@
+import { readdir, readFile } from "fs/promises";
+import path from "path";
+import type { Sql } from "postgres";
+
+const migrationDirectory = path.join(process.cwd(), "supabase", "migrations");
+// Transaction-scoped: safe with connection pooling, shared by web and CLI runners.
+const migrationLock = 714093821;
+export type MigrationStatus = { id: string; appliedAt: string | null };
+export class MigrationBusyError extends Error {
+  constructor() {
+    super(
+      "Another migration run is in progress. Refresh and try again shortly.",
+    );
+  }
+}
+export async function migrationFiles() {
+  return (await readdir(migrationDirectory))
+    .filter((file) => /^\d+_[a-zA-Z0-9_-]+\.sql$/.test(file))
+    .sort();
+}
+export async function listMigrations(sql: Sql): Promise<MigrationStatus[]> {
+  const files = await migrationFiles();
+  const [table] = await sql<
+    { name: string | null }[]
+  >`SELECT to_regclass('public.schema_migrations')::text AS name`;
+  const applied = table?.name
+    ? await sql<
+        { id: string; applied_at: string }[]
+      >`SELECT id, applied_at FROM public.schema_migrations`
+    : [];
+  const byId = new Map(
+    applied.map((row) => [row.id, new Date(row.applied_at).toISOString()]),
+  );
+  return files.map((id) => ({ id, appliedAt: byId.get(id) ?? null }));
+}
+export async function runPendingMigrations(sql: Sql): Promise<string[]> {
+  // Only SQL bundled with this deployment is ever executed. No request input.
+  const files = await migrationFiles();
+  const migrations = await Promise.all(
+    files.map(async (id) => ({
+      id,
+      contents: await readFile(path.join(migrationDirectory, id), "utf8"),
+    })),
+  );
+  const applied: string[] = [];
+  await sql.begin(async (tx) => {
+    await tx`SET LOCAL statement_timeout = '45s'`;
+    await tx`SET LOCAL lock_timeout = '5s'`;
+    const [lock] = await tx<
+      { acquired: boolean }[]
+    >`SELECT pg_try_advisory_xact_lock(${migrationLock}) AS acquired`;
+    if (!lock?.acquired) throw new MigrationBusyError();
+    await tx`CREATE TABLE IF NOT EXISTS public.schema_migrations (id TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
+    const recorded = await tx<
+      { id: string }[]
+    >`SELECT id FROM public.schema_migrations`;
+    const seen = new Set(recorded.map((row) => row.id));
+    for (const migration of migrations) {
+      if (seen.has(migration.id)) continue;
+      await tx.unsafe(migration.contents);
+      await tx`INSERT INTO public.schema_migrations (id) VALUES (${migration.id})`;
+      applied.push(migration.id);
+    }
+  });
+  return applied;
+}
