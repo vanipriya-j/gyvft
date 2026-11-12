@@ -6,6 +6,11 @@ GYVFT is a Next.js application for public story-led lead capture and an authenti
 
 > **Agents (Codex / Cursor):** start with [`docs/CODEX.md`](docs/CODEX.md) for current product state and next work, then use this README for setup and ops. This app uses a custom Next.js build — read `node_modules/next/dist/docs/` and `AGENTS.md` before changing framework APIs.
 
+## Customer portal guides
+
+- [Customer and owner user manual](docs/USER-MANUAL.md)
+- [Customer portal setup and integration notes](docs/CUSTOMER-PORTAL.md)
+
 ## 1. Product architecture
 
 ### Public site
