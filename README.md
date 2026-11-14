@@ -12,6 +12,8 @@ Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 11 characters)
 
 ## Customer portal guides
 
+- [Product backlog: Now, Next, Later](docs/PRODUCT-BACKLOG.md)
+
 - [Customer and owner user manual](docs/USER-MANUAL.md)
 - [Customer portal setup and integration notes](docs/CUSTOMER-PORTAL.md)
 
