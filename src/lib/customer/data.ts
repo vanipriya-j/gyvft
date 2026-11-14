@@ -1,19 +1,9 @@
 import "server-only";
-import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/auth/session";
-import { hasSupabasePublishableConfig } from "@/lib/supabase/keys";
+import { requireCustomerAccount } from "@/lib/customer/session";
 import { uuidPattern } from "@/lib/customer/model";
 import { getSql } from "@/lib/database/client";
 export async function customerEmail() {
-  if (!hasSupabasePublishableConfig()) redirect("/account/login");
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user?.email || !user.email_confirmed_at)
-    redirect("/account/login");
-  return user.email.trim().toLowerCase();
+  return (await requireCustomerAccount()).email;
 }
 export type CustomerProject = {
   id: string;
@@ -32,15 +22,15 @@ export type CustomerProject = {
   shopify_order_reference: string | null;
   created_at: string;
 };
-export async function projectsFor(email: string) {
+export async function projectsFor(accountId: string) {
   return getSql()<
     CustomerProject[]
-  >`SELECT * FROM customer_projects WHERE customer_email = ${email} ORDER BY created_at DESC`;
+  >`SELECT * FROM customer_projects WHERE customer_account_id = ${accountId}::uuid ORDER BY created_at DESC`;
 }
-export async function ownedProject(id: string, email: string) {
+export async function ownedProject(id: string, accountId: string) {
   if (!uuidPattern.test(id)) return null;
   const rows = await getSql()<
     CustomerProject[]
-  >`SELECT * FROM customer_projects WHERE id = ${id}::uuid AND customer_email = ${email}`;
+  >`SELECT * FROM customer_projects WHERE id = ${id}::uuid AND customer_account_id = ${accountId}::uuid`;
   return rows[0] ?? null;
 }

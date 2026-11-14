@@ -9,18 +9,20 @@ declare global {
 export function getSql(): Sql {
   if (global.__gyvftSql) return global.__gyvftSql;
   const sql = postgres(requireDatabaseUrl(), {
-    max: 10,
+    max: 5,
     idle_timeout: 20,
     connect_timeout: 10,
     prepare: false,
   });
-  if (process.env.NODE_ENV !== "production") {
-    global.__gyvftSql = sql;
-  }
+  // Reuse one bounded pool per server instance in production as well as dev.
+  // Creating a fresh pool per query exhausts serverless database connections.
+  global.__gyvftSql = sql;
   return sql;
 }
 
-export async function withTransaction<T>(fn: (tx: Sql) => Promise<T>): Promise<T> {
+export async function withTransaction<T>(
+  fn: (tx: Sql) => Promise<T>,
+): Promise<T> {
   const sql = getSql();
   return sql.begin(async (tx) => fn(tx as unknown as Sql)) as Promise<T>;
 }

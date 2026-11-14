@@ -380,9 +380,10 @@ export default function SetupPage() {
         </ol>
       </details>
       <p className="mt-8 text-xs leading-relaxed text-muted-text">
-        No staff accounts or demo data are created. Your secret isn’t saved in
-        browser storage. Remove SETUP_SECRET from Vercel and redeploy when setup
-        access is no longer needed.
+        Setup adds the customer tables and three labelled DEMO enquiries for
+        aarla@aarla.in. Create your customer account after setup. Keep the
+        operator secret configured to use setup and app reports; it is never
+        saved in browser storage.
       </p>
     </main>
   );

@@ -64,5 +64,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/studio/:path*", "/studio", "/account/:path*"],
+  matcher: ["/studio/:path*", "/studio"],
 };

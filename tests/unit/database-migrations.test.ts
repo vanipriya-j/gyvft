@@ -144,22 +144,32 @@ describe("database migrations", () => {
       ),
     ).toBe(false);
   });
-  it("public customer setup selects only the customer migration, not legacy CRM SQL", async () => {
+  it("public customer setup selects only the customer migrations, not legacy CRM SQL", async () => {
     files.mockResolvedValueOnce([
       "20260725000001_init.sql",
       "20260725000000_local_auth_stub.sql",
       "20261112000000_customer_portal.sql",
+      "20261114000001_customer_accounts.sql",
+      "20261114000002_customer_demo_requests.sql",
+      "20261114000003_customer_observability.sql",
     ]);
-    read.mockResolvedValueOnce("CUSTOMER ONLY SQL");
+    read
+      .mockResolvedValueOnce("CUSTOMER ONLY SQL")
+      .mockResolvedValueOnce("ACCOUNT SQL")
+      .mockResolvedValueOnce("DEMO SQL")
+      .mockResolvedValueOnce("OBSERVABILITY SQL");
     const { sql, tx } = connection();
     expect(await runPendingMigrations(sql, undefined, "customer")).toEqual([
       "20261112000000_customer_portal.sql",
+      "20261114000001_customer_accounts.sql",
+      "20261114000002_customer_demo_requests.sql",
+      "20261114000003_customer_observability.sql",
     ]);
-    expect(tx.unsafe).toHaveBeenCalledExactlyOnceWith("CUSTOMER ONLY SQL");
-    expect(read).toHaveBeenCalledTimes(1);
-    expect(read.mock.calls[0][0]).toContain(
-      "20261112000000_customer_portal.sql",
-    );
+    expect(tx.unsafe).toHaveBeenNthCalledWith(1, "CUSTOMER ONLY SQL");
+    expect(tx.unsafe).toHaveBeenNthCalledWith(2, "ACCOUNT SQL");
+    expect(tx.unsafe).toHaveBeenNthCalledWith(3, "DEMO SQL");
+    expect(tx.unsafe).toHaveBeenNthCalledWith(4, "OBSERVABILITY SQL");
+    expect(read).toHaveBeenCalledTimes(4);
   });
   it("fails closed instead of falling back to legacy SQL if the customer migration is missing", async () => {
     await expect(migrationFiles("customer")).rejects.toThrow(

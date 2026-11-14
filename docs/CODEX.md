@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: *Your story. Our telling.*
 
+## Customer portal update — 14 November 2026
+
+The current customer release uses **GYVFT-owned email/password accounts and database sessions**, independent of the legacy Studio Supabase Auth code described below. Start with [`CUSTOMER-PORTAL.md`](CUSTOMER-PORTAL.md), [`USER-MANUAL.md`](USER-MANUAL.md) and [`PRODUCT-BACKLOG.md`](PRODUCT-BACKLOG.md). `/setup` installs only the explicit customer migration manifest; `/operations` provides app reports using the existing operator secret. Infrastructure monitoring remains on Vercel; no OpenTelemetry/Grafana service is required. Production still needs the new migrations applied before accounts can be created.
+
 | Doc | Use for |
 |---|---|
 | **This file (`docs/CODEX.md`)** | Current state, what to build next, gotchas |

@@ -10,6 +10,7 @@ import {
 } from "@/lib/database/migrations";
 import { migrationDiagnostic } from "@/lib/database/migration-diagnostic";
 import type { MigrationProgress } from "@/lib/database/migration-progress";
+import { recordCustomerEvent } from "@/lib/customer/observability";
 import { logger } from "@/lib/logging/logger";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -95,10 +96,14 @@ export async function POST(request: Request) {
         body.action === "migrate"
           ? await runPendingMigrations(sql, onProgress, "customer")
           : [];
-      if (body.action === "migrate")
+      if (body.action === "migrate") {
         logger.info("Secret-protected setup migrations completed", {
           migrations: applied,
         });
+        await recordCustomerEvent("setup.completed", {
+          metadata: { route: "/api/setup", operation: "setup", status: 200 },
+        });
+      }
       try {
         const migrations = await listMigrations(sql, "customer");
         return {
@@ -132,6 +137,14 @@ export async function POST(request: Request) {
       if (error instanceof MigrationBusyError)
         return { status: 409, result: { ok: false, message: error.message } };
       const diagnostic = migrationDiagnostic(error);
+      await recordCustomerEvent("setup.failed", {
+        metadata: {
+          route: "/api/setup",
+          operation: "setup",
+          code: diagnostic.code,
+          status: 500,
+        },
+      });
       logger.error("Setup database operation failed", {
         code: diagnostic.code,
         migration: diagnostic.filename,
