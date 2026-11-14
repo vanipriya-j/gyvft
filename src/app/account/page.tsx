@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { customerEmail, projectsFor } from "@/lib/customer/data";
+import { projectsFor } from "@/lib/customer/data";
+import { requireCustomerAccount } from "@/lib/customer/session";
 import { stages } from "@/lib/customer/model";
 import { signOut } from "./actions";
 export const dynamic = "force-dynamic";
 export default async function AccountPage() {
-  const email = await customerEmail();
+  const account = await requireCustomerAccount();
   const ready = Boolean(process.env.DATABASE_URL);
-  const projects = ready ? await projectsFor(email) : [];
+  const projects = ready ? await projectsFor(account.id) : [];
   return (
     <>
       <div className="mb-12 flex flex-wrap items-start justify-between gap-5">
@@ -17,7 +18,7 @@ export default async function AccountPage() {
           <h1 className="mt-3 font-serif text-4xl md:text-5xl">
             Your stories, taking shape.
           </h1>
-          <p className="mt-4 text-muted-text">{email}</p>
+          <p className="mt-4 text-muted-text">{account.email}</p>
         </div>
         <form action={signOut}>
           <button className="rounded-full border border-border px-5 py-2 text-sm">
@@ -44,7 +45,7 @@ export default async function AccountPage() {
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-muted-text">
             {ready
-              ? "Enquiries submitted with your verified email will appear here. If you used another address, contact our team to help connect your story."
+              ? "Enquiries submitted while signed in appear here. If you submitted before creating your account, use the same browser to connect that request."
               : "Your account is ready. Project updates will appear once your customer space is connected."}
           </p>
           <Link

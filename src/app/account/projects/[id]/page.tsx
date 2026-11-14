@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { customerEmail, ownedProject } from "@/lib/customer/data";
+import { ownedProject } from "@/lib/customer/data";
 import {
   stages,
   paymentSummary,
   money,
   safePaymentUrl,
 } from "@/lib/customer/model";
+import { requireCustomerAccount } from "@/lib/customer/session";
 import { getSql } from "@/lib/database/client";
 import { ActionForm } from "@/components/customer/action-form";
 import { sendMessage, submitPayment, decideApproval } from "../../actions";
@@ -25,10 +26,10 @@ export default async function ProjectPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const email = await customerEmail();
+  const account = await requireCustomerAccount();
   const { id } = await params;
   if (!process.env.DATABASE_URL) notFound();
-  const project = await ownedProject(id, email);
+  const project = await ownedProject(id, account.id);
   if (!project) notFound();
   const sql = getSql();
   const [events, messages, payments, approvals] = await Promise.all([

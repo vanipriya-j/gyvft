@@ -8,7 +8,11 @@ GYVFT is a Next.js application for public story-led lead capture and an authenti
 
 ## Browser database setup
 
-Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 11 characters) in Vercel and redeploy. Open `/setup`, enter the secret and click **Start setup**. No Studio login is required. Setup does not create staff accounts or demo data. Remove the secret and redeploy to disable it afterward.
+Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 11 characters) in Vercel and redeploy. Open `/setup`, enter the secret and click **Start setup**. No Studio login is required. Setup creates the customer tables and requested DEMO enquiries. Customer accounts use app-owned password hashes and database sessions. Keep the secret for the operator reports at `/operations`; removing it disables both operator entrypoints.
+
+## Customer access and app reporting
+
+Customer signup/sign-in uses GYVFT-owned database accounts and secure session cookies; it does not use Supabase Auth or public browser API keys. Supabase remains the database host. Existing email configuration is used for enquiry delivery and password reset links. Application reports and safe errors are at `/operations` (operator secret required); hosting/infrastructure monitoring remains on Vercel.
 
 ## Customer portal guides
 
@@ -47,7 +51,7 @@ Studio auth uses Supabase Auth through `@supabase/ssr`:
 - `/studio/forgot-password`
 - `/studio/reset-password`
 
-`src/middleware.ts` protects `/studio` routes and redirects unauthenticated users to `/studio/login?next=...`. The app exposes no public signup page.
+`src/middleware.ts` protects `/studio` routes and redirects unauthenticated users to `/studio/login?next=...`. Studio has no public signup page. Customer registration at `/account/login` uses the separate GYVFT database account/session system described above.
 
 ### GYVFT Studio
 

@@ -1,5 +1,17 @@
 import "server-only";
+import { recordCustomerEvent } from "@/lib/customer/observability";
+import { cookies } from "next/headers";
 import { getSql } from "@/lib/database/client";
+import {
+  getCustomerAccount,
+  claimCookie,
+  customerCookieOptions,
+} from "@/lib/customer/session";
+import {
+  hashOpaqueToken,
+  newOpaqueToken,
+  isOpaqueToken,
+} from "@/lib/customer/password";
 export async function captureCustomerEnquiry(input: {
   submissionKey: string;
   email: string;
@@ -8,7 +20,25 @@ export async function captureCustomerEnquiry(input: {
   leadId: string | null;
 }) {
   if (!process.env.DATABASE_URL) return;
-  await getSql()`INSERT INTO customer_projects (submission_key, customer_email, title, brief, external_lead_id)
- VALUES (${input.submissionKey}, ${input.email.trim().toLowerCase()}, ${input.title}, ${input.brief}, ${input.leadId})
- ON CONFLICT (submission_key) DO NOTHING`;
+  const email = input.email.trim().toLowerCase();
+  const account = await getCustomerAccount();
+  const owner = account?.email === email ? account.id : null;
+  let claimHash: string | null = null;
+  if (!owner) {
+    const jar = await cookies();
+    let token = jar.get(claimCookie)?.value;
+    if (!token || !isOpaqueToken(token)) {
+      token = newOpaqueToken();
+      jar.set(claimCookie, token, customerCookieOptions);
+    }
+    claimHash = hashOpaqueToken(token);
+  }
+  const inserted =
+    await getSql()`INSERT INTO customer_projects (submission_key, customer_email, title, brief, external_lead_id, customer_account_id, browser_claim_hash, browser_claim_expires_at)
+   VALUES (${input.submissionKey}, ${email}, ${input.title}, ${input.brief}, ${input.leadId}, ${owner}::uuid, ${claimHash}, CASE WHEN ${claimHash}::text IS NULL THEN NULL ELSE now() + interval '7 days' END) ON CONFLICT (submission_key) DO NOTHING RETURNING id`;
+  if (inserted.length)
+    await recordCustomerEvent("enquiry.created", {
+      accountId: owner ?? undefined,
+      metadata: { operation: "enquiry", status: 201 },
+    });
 }

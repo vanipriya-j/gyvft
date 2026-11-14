@@ -1,57 +1,61 @@
-# My GYVFT customer portal
+# My GYVFT — implementation and setup
 
-## Routes and scope
+## Customer login
 
-- `/account/login`: email/password login, customer registration, email-code verification and password recovery.
-- `/account`: verified-email enquiry/project overview.
-- `/account/projects/[id]`: brief, current stage, next action, public timeline, customer/team messages and payment status.
-- Public navigation and enquiry acknowledgement emails link to My GYVFT.
+Customer authentication is owned by GYVFT. Supabase is the PostgreSQL host; customer signup/sign-in does not call Supabase Auth or require browser API keys.
 
-This is the GYVFT customer side. No Aarla OS endpoints, staff workflows, Razorpay link creation/webhooks or Shopify order creation have been added. Existing lead forwarding remains unchanged. Never treat customer-submitted payment references as proof of receipt.
+- `gyvft_customer_accounts`: unique normalized email username and salted scrypt password hash. Passwords contain 8–128 characters and are never stored or logged in plaintext.
+- `gyvft_customer_sessions`: SHA-256 digest of a random session token, linked account and seven-day expiry. The raw token is stored only in a host-only HttpOnly, SameSite=Lax cookie, Secure in production. Logout removes the server record; password reset revokes all sessions.
+- `gyvft_customer_password_resets`: hashed, single-use reset token, one-hour expiry. Reset links are sent through the existing Resend service. Signup/sign-in require no email OTP.
+- `gyvft_customer_auth_limits`: persistent per-IP and per-IP/email attempt limits before expensive hashing or email delivery.
 
-## Setup before production
+The legacy Studio authentication code remains separate and is not a prerequisite for this customer portal.
 
-1. Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 11 characters) in the GYVFT Vercel environment, redeploy, and open `/setup`. Enter the secret and choose **Start setup**. Live progress shows the database check, each pending migration and the final save. No Studio account or app login is required. `/api/setup` uses secret authentication with a timing-safe comparison; GET only exposes readiness booleans, and POST checks the secret before database access. The route runs only packaged SQL through the existing transactional runner and lock. It never seeds demo data or provisions staff users. Remove `SETUP_SECRET` and redeploy to disable setup access. The optional owner-only Studio migration page and `npm run db:migrate` remain available for installations using Studio.
-2. Configure the existing Supabase URL and publishable key and `DATABASE_URL` on the server. Configure `NEXT_PUBLIC_APP_URL` to the production origin.
-3. Enable customer email/password signup and mandatory email confirmation in Supabase. The prior Studio-only setup disabled public signup; this must change deliberately for customer registration. Customer signup does not create a Studio profile or grant staff roles. Check that deployed Auth hooks do not auto-provision staff profiles.
-4. Configure Supabase **Confirm signup** and **Reset password** email templates to display `{{ .Token }}` as an email code. This portal verifies codes in-page rather than relying on email callback links. Keep email-change confirmation enabled; a customer must prove control of an address before its enquiries are accessible.
-5. Configure production SMTP and Supabase authentication rate limits/CAPTCHA as appropriate for the deployment. The customer forms surface generic errors and do not list which emails have enquiries.
-6. Test signup, verification, sign-in, recovery, sign-out, customer ownership isolation, message persistence and UPI submission against a staging Supabase/database before launch.
+## Deployment
 
-No production credentials or database are present in the development environment. Database migration and live authentication/payment checks have not been performed here.
+Required existing variables:
 
-## Customer data boundary for future Aarla OS integration
+- `DATABASE_URL`: server-side PostgreSQL connection.
+- `SETUP_SECRET`: existing operator secret of at least 11 characters for `/setup` and `/operations`.
+- `NEXT_PUBLIC_APP_URL`: production GYVFT origin, used in password reset links.
+- `RESEND_API_KEY` and existing sending configuration: enquiry emails and password recovery. Login and signup do not depend on email delivery.
 
-The `customer_*` tables are a customer-visible projection. All tables have RLS enabled and browser roles have no direct grants. Current access is through server code, requiring a Supabase `getUser()` result with a confirmed email and an exact normalized email ownership match. Studio authorization still separately requires an active staff profile.
+After deploying, open `/setup`, enter the setup secret and choose **Start setup** once. The server-owned customer manifest installs only customer-portal tables, GYVFT account/session tables, explicitly requested sample enquiries and operational events. It skips recorded migrations, supports `id` or `filename` history keys, and uses a transaction/advisory lock. It does not run the legacy Studio CRM schema or change existing campaigns/contacts/Aarla login tables. CLI equivalent: `npm run db:migrate -- --customer`.
 
-- `customer_projects`: one enquiry/project per row. `submission_key` provides idempotency for public form capture; `external_lead_id` links to Aarla OS. New public submissions are mirrored after email delivery when a database is configured. Mirroring failure does not fail a successfully emailed enquiry; errors are logged. Historical enquiries require a separate backfill and failed captures require reconciliation.
-- `customer_email`: exact verified customer access address, normalized to lowercase. Do not grant access by organisation name or email domain. Multi-contact organisation access is future work and needs explicit membership authorization.
-- `kind`: `enquiry` or `project`; `customer_type`: `b2b` or `b2c`; `organisation_name` labels B2B records. Actual organisation/individual conversion is owned by the future team/Aarla workflow.
-- `stage`: index into `src/lib/customer/model.ts` stages, 0 through 11. `next_action` is the customer-facing instruction; `target_date` is optional.
-- `customer_project_events`: only explicitly published milestone titles/descriptions. Never mirror internal notes into this table.
-- `customer_project_approvals`: versioned proposal/design snapshots with customer decisions (`pending`, `approved`, `changes_requested`). Each decision is ownership-scoped, accepted only once, and atomically appended to the public timeline. Publish new versions as new rows; never edit the contents of an already approved snapshot. The integration must supersede obsolete pending versions and separately handle conversion, payment gates and production release. Customer approval alone does not change stage or create an order.
-- `customer_project_messages`: customer messages are saved here with `sender=customer`; future team sync should read these and insert customer-visible replies with `sender=team`. No external delivery or automatic polling is implemented; refresh to load updates.
-- Payment amounts are integer INR paise. `total_paise=NULL` means not quoted. Every order requires a 50% advance (rounded up to a whole paise). `paid_paise` counts verified receipts only; show any refunds/adjustments through published updates until a fuller ledger is integrated.
-- `razorpay_url`: an existing HTTPS Razorpay payment link. Only approved Razorpay hosts are rendered. Link creation and webhook verification belong to the later integration.
-- `upi_id`: the business UPI ID. Customers submit amount and UTR into `customer_payment_submissions`, initially `pending`. A future trusted verification workflow must reconcile the bank receipt, atomically update the submission and verified paid total, and prevent double counting.
-- `shopify_order_reference`: optional display-only order reference, supplied after order creation elsewhere.
+Create a customer account at `/account/login`. For the requested canned data use `aarla@aarla.in`; three clearly marked fictional enquiries appear after account creation. No account or password is embedded in migrations. Existing Supabase Auth passwords are not imported into GYVFT's independent account table; use Create account for this version.
 
-Future sync must use trusted server credentials, authenticate requests, enforce idempotency, and derive ownership from trusted records. No customer-supplied email or record ID may override ownership. This implementation intentionally exposes no unauthenticated sync endpoint.
+No new Vercel variables or external authentication service are required to enable this change beyond the existing database/setup configuration.
 
-## Development validation
+## Ownership and public enquiries
 
-The existing lockfile installs with `npm ci --legacy-peer-deps`. Unit tests, lint, TypeScript and the production build are checked locally. The full existing integration suite requires a running Postgres test database. Browser QA requires the managed browser tools, which were unavailable in this session.
+All request reads and writes use `customer_account_id`, derived from the authenticated database session. A self-registered email alone never claims another person's real enquiry.
 
-The `/setup` secret gate is separate from Supabase customer authentication. The endpoint has per-instance in-memory attempt limiting; use deployment-level rate limits for shared enforcement across serverless instances. The SQL file trace includes `/api/setup`; there is no duplicate bundled SQL copy to drift. Migration failures are not silently marked applied.
+- Requests submitted while signed in with the matching contact email are linked to that account.
+- Anonymous submissions receive an unguessable HttpOnly browser claim cookie; only its hash is stored on the enquiry. Registering/signing in from that browser with the matching email links those unowned requests. Already owned requests are never reassigned.
+- Requests submitted before this mechanism, or from another browser without the claim cookie, require an explicit ownership-recovery/import process. There is no historical import in this fresh launch.
+- The three exact fictional sample UUID/key pairs may be linked by their matching email; that exception does not apply to real enquiries.
+- Later company membership/work-email verification is a separate product phase. Signing up does not grant staff or employer access.
 
-Migration history supports both GYVFT’s `schema_migrations.id` and the filename-based `schema_migrations.filename` convention. The runner detects the existing column and writes to it without renaming columns or marking failed SQL as applied. This compatibility does not imply that unrelated applications can safely share all other tables.
+The `customer_*` and `gyvft_customer_*` tables have RLS enabled and direct anon/authenticated table grants revoked. Browser clients use server actions rather than raw database access. The application database role must have the intended server permissions.
 
-## Setup scope
+## Customer-visible content
 
-Public `/setup` is deliberately restricted to the explicit customer-portal migration manifest. It creates the five customer-facing tables and uses the existing migration history; it does not run the old Studio CRM bootstrap, create campaigns/contacts, alter business tables or mark excluded Studio migrations as applied. The customer login reads Supabase Auth directly and does not depend on a Studio profile. Historical enquiries in Aarla OS still require a separate integration/backfill; only newly captured enquiries appear automatically.
+`customer_projects` holds enquiries/projects and current status. Published events and conversations are separate customer-visible tables; never copy internal notes into them. New public submissions still email the existing inbox and forward to Aarla OS, with a secondary customer-portal mirror. Mirror failure is logged rather than turning a successfully emailed submission into a duplicate retry.
 
-For command-line setup equivalent to `/setup`, run `npm run db:migrate -- --customer`. The original unqualified CLI and owner-only Studio page retain full Studio migration behavior for dedicated Studio installations; they should not be used to initialize the customer portal in an existing business database. New enquiries show request details/status/conversations; payment and production sidebars appear only on records explicitly converted to projects.
+Enquiry pages show the request, status, timeline and conversations. Payment/production sidebars appear only after an explicit project conversion. B2B/B2C conversion, operational replies/status syncing, payment receipt verification and Shopify order creation remain separate integration work.
 
-## Signup configuration troubleshooting
+## Canned data and cleanup
 
-A working `DATABASE_URL` does not configure customer authentication. The browser also needs `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the supported legacy anon key) in the GYVFT Production environment **when the frontend is built**. Add the public values from the same Supabase project, then redeploy; a previously built browser bundle cannot pick them up afterward. Never put the Supabase secret/service-role key in a `NEXT_PUBLIC_` variable. Missing public configuration produces a service-unavailable message, rather than suggesting the customer entered incorrect details.
+`20261114000002_customer_demo_requests.sql` inserts three fictional enquiries for `aarla@aarla.in`: received, requirements review, and quote accepted/awaiting advance, plus sample timeline events. It creates no Auth provider user, emails, payment or real order. Fixed IDs and `ON CONFLICT DO NOTHING` make repeat execution safe without overwriting edited records.
+
+`scripts/sql/remove-customer-demo.sql` deletes only the exact demo owner/key/UUID records and their dependent rows. It does not truncate shared tables or clear migration history. No cleanup has been run.
+
+## App reporting and logging
+
+Open `/operations` and unlock it with the existing operator setup secret. It shows account/session counts, real enquiries by stage, accounts with enquiries, actual converted project records, event counts and recent safe error/sign-in-failure summaries. Demo enquiries are excluded from real enquiry/conversion counts. CSV exports contain aggregate counts only. The secret stays in tab memory and is removed by locking/closing the page.
+
+`gyvft_customer_events` stores allowlisted event types and metadata only: route, operation, safe error code/status and duration. It does not store passwords, raw session/reset tokens, raw IP addresses, email addresses or arbitrary payloads. Event recording fails open so a reporting failure cannot reject a customer action.
+
+The native Next.js request-error hook writes structured JSON to Vercel logs and a safe app error record with a correlation ID. `/api/health` reports database/account-schema readiness and mail configuration, without returning credentials. Infrastructure/deployment/performance monitoring stays in Vercel. No Grafana/ELK/OpenTelemetry service or SDK is installed for this release.
+
+Keep `SETUP_SECRET` configured if using the operator dashboard. Removing it and redeploying disables both operator entrypoints. Restrict operator-secret access to the people who manage the app. Event/session cleanup and retention policy should be set before sustained production traffic; event summaries currently use a 30-day window.

@@ -17,7 +17,12 @@ const migrationLock = 714093821;
 export type MigrationScope = "all" | "customer";
 // Explicit server-owned manifest: the public setup endpoint must never install
 // the legacy Studio CRM schema into the existing business database.
-const customerMigrations = ["20261112000000_customer_portal.sql"] as const;
+const customerMigrations = [
+  "20261112000000_customer_portal.sql",
+  "20261114000001_customer_accounts.sql",
+  "20261114000002_customer_demo_requests.sql",
+  "20261114000003_customer_observability.sql",
+] as const;
 export type MigrationStatus = { id: string; appliedAt: string | null };
 export class MigrationBusyError extends Error {
   constructor() {
