@@ -343,9 +343,8 @@ export default function OperationsPage() {
             )}
           </section>
           <p className="mt-6 text-xs text-muted-text">
-            This dashboard reports stored application activity. External uptime
-            alerting and Grafana/Vercel telemetry connections are configured
-            separately.
+            This dashboard reports application activity. Infrastructure and
+            deployment monitoring is available in Vercel.
           </p>
         </>
       )}
