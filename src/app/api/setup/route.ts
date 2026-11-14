@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         message:
-          "Setup is disabled. Configure SETUP_SECRET with at least 32 characters in Vercel, then redeploy.",
+          "Setup is disabled. Configure SETUP_SECRET with at least 11 characters in Vercel, then redeploy.",
       },
       503,
     );
