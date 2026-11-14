@@ -10,6 +10,21 @@
 
 This creates a GYVFT login in the application's database. No Supabase dashboard account or email OTP is required. If you already have an account, use **Sign in**. If you previously tested the Supabase Auth version, create an account again for this app-managed version; passwords are not imported from that service.
 
+### Tell us about a gift
+
+Open **Start a new story** (`/tell-your-story`). The seven steps capture:
+
+- The story and what the gift should communicate.
+- The occasion and its significance.
+- One person, one group with a recipient count, or separate individuals using **Add another recipient**. Give each profile a name/label and description; add likes and dislikes when known.
+- Preferred formats.
+- A numeric INR budget **per recipient or in total**, and the requested delivery date.
+- Delivery city/location notes and your contact details.
+
+Your draft saves in this browser. Submitted preferences appear under **Your gifting details** inside the request, and are included in the lead email and Aarla intake context. A budget is a preference, not a confirmed quotation or a payment request. GYVFT will confirm delivery feasibility. Existing real enquiries are not filled with invented preferences; the three labelled demos receive fictional examples.
+
+After deploying this update, run `/setup` once to add the structured-brief column.
+
 ### View your requests
 
 After signing in, open an enquiry to see its submitted brief, current status, next action, public timeline and conversations. Use **Start a new story** to submit another enquiry. Requests submitted while signed in with the matching contact email appear in your account.

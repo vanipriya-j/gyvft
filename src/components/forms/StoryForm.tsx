@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { submitStoryAction } from "@/actions/public-forms";
 import { trackPublicEvent } from "@/components/analytics/AnalyticsProvider";
@@ -13,28 +13,47 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { AUDIENCE_OPTIONS, FORMAT_OPTIONS, OCCASION_TYPES } from "@/config/constants";
+import { FORMAT_OPTIONS, OCCASION_TYPES } from "@/config/constants";
 import { useAttribution } from "@/hooks/use-attribution";
 import { useConsent } from "@/hooks/use-consent";
 import { toConsentSnapshot } from "@/lib/consent/client";
-import { storyFormSchema, type StoryFormInput } from "@/lib/validation/story-form";
+import {
+  storyFormSchema,
+  type StoryFormInput,
+} from "@/lib/validation/story-form";
 
-const DRAFT_KEY = "gyvft.story-form.v1";
+import { RecipientFields } from "./RecipientFields";
+import { emptyGiftBrief, todayInIndia } from "@/lib/validation/gift-brief";
 
-const quantityRanges = ["1-25", "26-100", "101-500", "500+", "Not sure"];
-const budgetRanges = ["Under 1L", "1L-5L", "5L-15L", "15L+", "Not sure"];
+const DRAFT_KEY = "gyvft.story-form.v2";
+
 const stepFields: Array<Array<FieldPath<StoryFormInput>>> = [
-  ["story_description"],
-  ["occasion_type", "occasion_other"],
-  ["audiences"],
+  ["story_description", "gift_brief.gift_message"],
+  ["occasion_type", "occasion_other", "gift_brief.occasion_description"],
+  [
+    "gift_brief.recipient_type",
+    "gift_brief.recipients",
+    "gift_brief.group_size",
+  ],
   ["preferred_formats"],
-  ["target_date", "target_date_precision", "quantity_range", "budget_range"],
+  [
+    "gift_brief.budget_basis",
+    "gift_brief.budget_amount",
+    "gift_brief.delivery_date",
+  ],
   ["primary_city", "multiple_locations", "location_notes"],
-  ["full_name", "email", "phone", "preferred_contact_method", "communication_consent"],
+  [
+    "full_name",
+    "email",
+    "phone",
+    "preferred_contact_method",
+    "communication_consent",
+  ],
 ];
 
 function defaultValues(): StoryFormInput {
   return {
+    gift_brief: emptyGiftBrief(),
     story_description: "",
     occasion_type: "Birthday",
     occasion_other: "",
@@ -60,11 +79,63 @@ function defaultValues(): StoryFormInput {
   };
 }
 
+function restoreDraft(raw: unknown): StoryFormInput {
+  const values = defaultValues();
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return values;
+  const source = raw as Record<string, unknown>;
+  for (const key of Object.keys(values) as Array<keyof StoryFormInput>) {
+    if (key === "gift_brief") continue;
+    const value = source[key];
+    if (
+      typeof value === typeof values[key] &&
+      (typeof value === "string" || typeof value === "boolean")
+    )
+      Object.assign(values, { [key]: value });
+    if (
+      Array.isArray(values[key]) &&
+      Array.isArray(value) &&
+      value.every((item) => typeof item === "string")
+    )
+      Object.assign(values, { [key]: value });
+  }
+  const brief = source.gift_brief;
+  if (brief && typeof brief === "object" && !Array.isArray(brief)) {
+    const b = brief as Record<string, unknown>;
+    for (const key of Object.keys(values.gift_brief) as Array<
+      keyof StoryFormInput["gift_brief"]
+    >) {
+      if (key === "recipients") continue;
+      if (typeof b[key] === typeof values.gift_brief[key])
+        Object.assign(values.gift_brief, { [key]: b[key] });
+    }
+    if (
+      Array.isArray(b.recipients) &&
+      b.recipients.length > 0 &&
+      b.recipients.length <= 50
+    ) {
+      values.gift_brief.recipients = b.recipients.map((item) => {
+        const p =
+          item && typeof item === "object"
+            ? (item as Record<string, unknown>)
+            : {};
+        return {
+          name: typeof p.name === "string" ? p.name : "",
+          description: typeof p.description === "string" ? p.description : "",
+          likes: typeof p.likes === "string" ? p.likes : "",
+          dislikes: typeof p.dislikes === "string" ? p.dislikes : "",
+        };
+      });
+    }
+  }
+  return values;
+}
+
 export function StoryForm() {
   const router = useRouter();
   const { consent } = useConsent();
   const attribution = useAttribution(consent);
   const [step, setStep] = useState(0);
+  const submitting = useRef(false);
   const [formMessage, setFormMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -85,15 +156,18 @@ export function StoryForm() {
     trigger,
   } = form;
   const draftValues = useWatch({ control });
-  const watchedAudiences = useWatch({ control, name: "audiences" });
   const watchedFormats = useWatch({ control, name: "preferred_formats" });
 
   useEffect(() => {
     const raw = window.localStorage.getItem(DRAFT_KEY);
     if (!raw) return;
     try {
-      const draft = storyFormSchema.partial().parse(JSON.parse(raw));
-      reset({ ...defaultValues(), ...draft, idempotency_key: draft.idempotency_key ?? crypto.randomUUID() });
+      const draft = restoreDraft(JSON.parse(raw));
+      reset({
+        ...defaultValues(),
+        ...draft,
+        idempotency_key: draft.idempotency_key ?? crypto.randomUUID(),
+      });
     } catch {
       window.localStorage.removeItem(DRAFT_KEY);
     }
@@ -111,7 +185,7 @@ export function StoryForm() {
     void trackPublicEvent("story_step_viewed", { step: step + 1 });
   }, [step]);
 
-  const toggleArray = (name: "audiences" | "preferred_formats", value: string) => {
+  const toggleArray = (name: "preferred_formats", value: string) => {
     const current = getValues(name);
     const next = current.includes(value)
       ? current.filter((item) => item !== value)
@@ -131,186 +205,273 @@ export function StoryForm() {
     setStep((current) => Math.max(current - 1, 0));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setIsSubmitting(true);
-    setFormMessage(null);
-    void trackPublicEvent("story_form_reviewed", { steps: stepFields.length });
-    const result = await submitStoryAction({
-      ...values,
-      attribution,
-      consent: toConsentSnapshot(consent),
-      honeypot: values.honeypot ?? "",
-    });
-    setIsSubmitting(false);
-    if (!result.ok) {
-      setFormMessage(result.message);
-      void trackPublicEvent("story_form_error", { reason: "validation_or_submit" });
-      return;
-    }
-    window.localStorage.removeItem(DRAFT_KEY);
-    void trackPublicEvent("story_form_submitted", { submitted: true });
-    router.push("/thank-you");
-  });
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    await handleSubmit(
+      async (values) => {
+        if (submitting.current) return;
+        submitting.current = true;
+        setIsSubmitting(true);
+        try {
+          setFormMessage(null);
+          void trackPublicEvent("story_form_reviewed", {
+            steps: stepFields.length,
+          });
+          const result = await submitStoryAction({
+            ...values,
+            attribution,
+            consent: toConsentSnapshot(consent),
+            honeypot: values.honeypot ?? "",
+          });
+          if (!result.ok) {
+            setFormMessage(result.message);
+            void trackPublicEvent("story_form_error", {
+              reason: "validation_or_submit",
+            });
+            return;
+          }
+          window.localStorage.removeItem(DRAFT_KEY);
+          void trackPublicEvent("story_form_submitted", { submitted: true });
+          router.push("/thank-you");
+        } catch {
+          setFormMessage(
+            "We couldn’t send your request. Your details are still here; please try again.",
+          );
+        } finally {
+          submitting.current = false;
+          setIsSubmitting(false);
+        }
+      },
+      async () => {
+        setFormMessage("Please check the highlighted details before sending.");
+        for (let index = 0; index < stepFields.length; index++) {
+          if (!(await trigger(stepFields[index]))) {
+            setStep(index);
+            break;
+          }
+        }
+      },
+    )(event);
+  }
 
   return (
-    <form className="paper-panel space-y-8 rounded-[2rem] p-5 md:p-8" onSubmit={onSubmit}>
-      <Progress label={`Step ${step + 1} of 7`} max={7} value={step + 1} />
-      <input
-        aria-hidden="true"
-        className="hidden"
-        name="website/company_url"
-        tabIndex={-1}
-        type="text"
-        onChange={(event) => setValue("honeypot", event.target.value)}
-      />
-      <input type="hidden" {...register("honeypot")} />
-      <input type="hidden" {...register("idempotency_key")} />
+    <form
+      className="paper-panel space-y-8 rounded-[2rem] p-5 md:p-8"
+      onSubmit={onSubmit}
+    >
+      <fieldset disabled={isSubmitting} className="space-y-8">
+        <Progress label={`Step ${step + 1} of 7`} max={7} value={step + 1} />
+        <input
+          aria-hidden="true"
+          className="hidden"
+          name="website/company_url"
+          tabIndex={-1}
+          type="text"
+          onChange={(event) => setValue("honeypot", event.target.value)}
+        />
+        <input type="hidden" {...register("honeypot")} />
+        <input type="hidden" {...register("idempotency_key")} />
 
-      {step === 0 ? (
-        <Field label="What story should we help tell?" error={errors.story_description?.message}>
-          <Textarea
-            placeholder="Share the people, place, milestone, or memory. A few generous paragraphs are welcome."
-            {...register("story_description")}
+        {step === 0 ? (
+          <div className="space-y-5">
+            <Field
+              label="What story should we help tell?"
+              error={errors.story_description?.message}
+            >
+              <Textarea
+                placeholder="Share the people, place, milestone, or memory. A few generous paragraphs are welcome."
+                {...register("story_description")}
+              />
+            </Field>
+            <Field
+              label="What should the gift say or communicate?"
+              error={errors.gift_brief?.gift_message?.message}
+            >
+              <Textarea
+                placeholder="Thank you for being there. You belong here. We’re proud of you…"
+                maxLength={3000}
+                {...register("gift_brief.gift_message")}
+              />
+            </Field>
+          </div>
+        ) : null}
+
+        {step === 1 ? (
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field label="Occasion" error={errors.occasion_type?.message}>
+              <Select {...register("occasion_type")}>
+                {OCCASION_TYPES.map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field
+              label="If other, tell us more"
+              error={errors.occasion_other?.message}
+            >
+              <Input {...register("occasion_other")} />
+            </Field>
+            <div className="md:col-span-2">
+              <Field
+                label="Describe the occasion"
+                error={errors.gift_brief?.occasion_description?.message}
+              >
+                <Textarea
+                  placeholder="What is being celebrated, and why does it matter?"
+                  maxLength={3000}
+                  {...register("gift_brief.occasion_description")}
+                />
+              </Field>
+            </div>
+          </div>
+        ) : null}
+
+        {step === 2 ? <RecipientFields form={form} /> : null}
+
+        {step === 3 ? (
+          <ChoiceGrid
+            error={errors.preferred_formats?.message}
+            label="What could it become?"
+            onToggle={(value) => toggleArray("preferred_formats", value)}
+            options={FORMAT_OPTIONS}
+            selected={watchedFormats}
           />
-        </Field>
-      ) : null}
+        ) : null}
 
-      {step === 1 ? (
-        <div className="grid gap-5 md:grid-cols-2">
-          <Field label="Occasion" error={errors.occasion_type?.message}>
-            <Select {...register("occasion_type")}>
-              {OCCASION_TYPES.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="If other, tell us more" error={errors.occasion_other?.message}>
-            <Input {...register("occasion_other")} />
-          </Field>
-        </div>
-      ) : null}
+        {step === 4 ? (
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field
+              label="Budget applies to"
+              error={errors.gift_brief?.budget_basis?.message}
+            >
+              <Select {...register("gift_brief.budget_basis")}>
+                <option value="per_recipient">Each recipient</option>
+                <option value="total">The entire request</option>
+              </Select>
+            </Field>
+            <Field
+              label="Budget amount (₹ INR)"
+              error={errors.gift_brief?.budget_amount?.message}
+            >
+              <Input
+                type="number"
+                min="0.01"
+                max="100000000"
+                step="0.01"
+                {...register("gift_brief.budget_amount", {
+                  valueAsNumber: true,
+                })}
+              />
+            </Field>
+            <Field
+              label="Requested delivery date"
+              error={errors.gift_brief?.delivery_date?.message}
+            >
+              <Input
+                type="date"
+                min={todayInIndia()}
+                {...register("gift_brief.delivery_date")}
+              />
+            </Field>
+            <p className="text-sm text-ink/65 md:col-span-2">
+              This is your preferred budget and delivery date. We’ll confirm
+              feasibility and pricing with you.
+            </p>
+          </div>
+        ) : null}
 
-      {step === 2 ? (
-        <ChoiceGrid
-          error={errors.audiences?.message}
-          label="Who is this for?"
-          onToggle={(value) => toggleArray("audiences", value)}
-          options={AUDIENCE_OPTIONS}
-          selected={watchedAudiences}
-        />
-      ) : null}
+        {step === 5 ? (
+          <div className="space-y-5">
+            <Field label="Primary city" error={errors.primary_city?.message}>
+              <Input {...register("primary_city")} />
+            </Field>
+            <label className="flex gap-3 text-ink/75">
+              <Checkbox {...register("multiple_locations")} />
+              Multiple locations
+            </label>
+            <Field
+              label="Location notes"
+              error={errors.location_notes?.message}
+            >
+              <Textarea {...register("location_notes")} />
+            </Field>
+          </div>
+        ) : null}
 
-      {step === 3 ? (
-        <ChoiceGrid
-          error={errors.preferred_formats?.message}
-          label="What could it become?"
-          onToggle={(value) => toggleArray("preferred_formats", value)}
-          options={FORMAT_OPTIONS}
-          selected={watchedFormats}
-        />
-      ) : null}
+        {step === 6 ? (
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field label="Full name" error={errors.full_name?.message}>
+              <Input {...register("full_name")} />
+            </Field>
+            <Field label="Email" error={errors.email?.message}>
+              <Input type="email" {...register("email")} />
+            </Field>
+            <Field label="Phone" error={errors.phone?.message}>
+              <Input {...register("phone")} />
+            </Field>
+            <Field
+              label="Preferred contact"
+              error={errors.preferred_contact_method?.message}
+            >
+              <Select {...register("preferred_contact_method")}>
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+                <option value="whatsapp">WhatsApp</option>
+              </Select>
+            </Field>
+            <Field
+              label="Organisation"
+              error={errors.organisation_name?.message}
+            >
+              <Input {...register("organisation_name")} />
+            </Field>
+            <Field label="Designation" error={errors.designation?.message}>
+              <Input {...register("designation")} />
+            </Field>
+            <label className="flex gap-3 md:col-span-2">
+              <Checkbox {...register("communication_consent")} />
+              <span className="text-sm leading-6 text-ink/70">
+                I consent to GYVFT contacting me about this enquiry.
+              </span>
+            </label>
+            <label className="flex gap-3 md:col-span-2">
+              <Checkbox {...register("marketing_consent")} />
+              <span className="text-sm leading-6 text-ink/70">
+                I would like occasional notes from GYVFT.
+              </span>
+            </label>
+          </div>
+        ) : null}
 
-      {step === 4 ? (
-        <div className="grid gap-5 md:grid-cols-2">
-          <Field label="Target date" error={errors.target_date?.message}>
-            <Input type="date" {...register("target_date")} />
-          </Field>
-          <Field label="Date precision" error={errors.target_date_precision?.message}>
-            <Select {...register("target_date_precision")}>
-              {["exact", "month", "quarter", "flexible"].map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Quantity range" error={errors.quantity_range?.message}>
-            <Select {...register("quantity_range")}>
-              <option value="">Select range</option>
-              {quantityRanges.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Budget range" error={errors.budget_range?.message}>
-            <Select {...register("budget_range")}>
-              <option value="">Select range</option>
-              {budgetRanges.map((option) => (
-                <option key={option}>{option}</option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-      ) : null}
+        {formMessage ? (
+          <p className="rounded-2xl bg-copper/10 p-4 text-sm text-copper-deep">
+            {formMessage}
+          </p>
+        ) : null}
 
-      {step === 5 ? (
-        <div className="space-y-5">
-          <Field label="Primary city" error={errors.primary_city?.message}>
-            <Input {...register("primary_city")} />
-          </Field>
-          <label className="flex gap-3 text-ink/75">
-            <Checkbox {...register("multiple_locations")} />
-            Multiple locations
-          </label>
-          <Field label="Location notes" error={errors.location_notes?.message}>
-            <Textarea {...register("location_notes")} />
-          </Field>
-        </div>
-      ) : null}
-
-      {step === 6 ? (
-        <div className="grid gap-5 md:grid-cols-2">
-          <Field label="Full name" error={errors.full_name?.message}>
-            <Input {...register("full_name")} />
-          </Field>
-          <Field label="Email" error={errors.email?.message}>
-            <Input type="email" {...register("email")} />
-          </Field>
-          <Field label="Phone" error={errors.phone?.message}>
-            <Input {...register("phone")} />
-          </Field>
-          <Field label="Preferred contact" error={errors.preferred_contact_method?.message}>
-            <Select {...register("preferred_contact_method")}>
-              <option value="email">Email</option>
-              <option value="phone">Phone</option>
-              <option value="whatsapp">WhatsApp</option>
-            </Select>
-          </Field>
-          <Field label="Organisation" error={errors.organisation_name?.message}>
-            <Input {...register("organisation_name")} />
-          </Field>
-          <Field label="Designation" error={errors.designation?.message}>
-            <Input {...register("designation")} />
-          </Field>
-          <label className="flex gap-3 md:col-span-2">
-            <Checkbox {...register("communication_consent")} />
-            <span className="text-sm leading-6 text-ink/70">
-              I consent to GYVFT contacting me about this enquiry.
-            </span>
-          </label>
-          <label className="flex gap-3 md:col-span-2">
-            <Checkbox {...register("marketing_consent")} />
-            <span className="text-sm leading-6 text-ink/70">
-              I would like occasional notes from GYVFT.
-            </span>
-          </label>
-        </div>
-      ) : null}
-
-      {formMessage ? <p className="rounded-2xl bg-copper/10 p-4 text-sm text-copper-deep">{formMessage}</p> : null}
-
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-        <Button disabled={step === 0 || isSubmitting} onClick={backStep} type="button" variant="secondary">
-          Back
-        </Button>
-        {step < 6 ? (
-          <Button onClick={continueStep} type="button">
-            Continue
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+          <Button
+            disabled={step === 0 || isSubmitting}
+            onClick={backStep}
+            type="button"
+            variant="secondary"
+          >
+            Back
           </Button>
-        ) : (
-          <Button disabled={isSubmitting} type="submit">
-            {isSubmitting ? "Sending..." : "Send story"}
-          </Button>
-        )}
-      </div>
+          {step < 6 ? (
+            <Button
+              disabled={isSubmitting}
+              onClick={continueStep}
+              type="button"
+            >
+              Continue
+            </Button>
+          ) : (
+            <Button disabled={isSubmitting} type="submit">
+              {isSubmitting ? "Sending..." : "Send story"}
+            </Button>
+          )}
+        </div>
+      </fieldset>
     </form>
   );
 }
@@ -326,8 +487,10 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
+      <label className="block space-y-2">
+        <span className="text-sm font-medium">{label}</span>
+        {children}
+      </label>
       {error ? <p className="text-sm text-copper-deep">{error}</p> : null}
     </div>
   );

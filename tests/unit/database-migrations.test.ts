@@ -152,24 +152,28 @@ describe("database migrations", () => {
       "20261114000001_customer_accounts.sql",
       "20261114000002_customer_demo_requests.sql",
       "20261114000003_customer_observability.sql",
+      "20261114000004_customer_gift_brief.sql",
     ]);
     read
       .mockResolvedValueOnce("CUSTOMER ONLY SQL")
       .mockResolvedValueOnce("ACCOUNT SQL")
       .mockResolvedValueOnce("DEMO SQL")
-      .mockResolvedValueOnce("OBSERVABILITY SQL");
+      .mockResolvedValueOnce("OBSERVABILITY SQL")
+      .mockResolvedValueOnce("GIFT BRIEF SQL");
     const { sql, tx } = connection();
     expect(await runPendingMigrations(sql, undefined, "customer")).toEqual([
       "20261112000000_customer_portal.sql",
       "20261114000001_customer_accounts.sql",
       "20261114000002_customer_demo_requests.sql",
       "20261114000003_customer_observability.sql",
+      "20261114000004_customer_gift_brief.sql",
     ]);
     expect(tx.unsafe).toHaveBeenNthCalledWith(1, "CUSTOMER ONLY SQL");
     expect(tx.unsafe).toHaveBeenNthCalledWith(2, "ACCOUNT SQL");
     expect(tx.unsafe).toHaveBeenNthCalledWith(3, "DEMO SQL");
     expect(tx.unsafe).toHaveBeenNthCalledWith(4, "OBSERVABILITY SQL");
-    expect(read).toHaveBeenCalledTimes(4);
+    expect(tx.unsafe).toHaveBeenNthCalledWith(5, "GIFT BRIEF SQL");
+    expect(read).toHaveBeenCalledTimes(5);
   });
   it("fails closed instead of falling back to legacy SQL if the customer migration is missing", async () => {
     await expect(migrationFiles("customer")).rejects.toThrow(

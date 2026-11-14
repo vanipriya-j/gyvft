@@ -1,4 +1,5 @@
 import "server-only";
+import type { GiftBrief } from "@/lib/validation/gift-brief";
 import { recordCustomerEvent } from "@/lib/customer/observability";
 import { cookies } from "next/headers";
 import { getSql } from "@/lib/database/client";
@@ -18,6 +19,7 @@ export async function captureCustomerEnquiry(input: {
   title: string;
   brief: string;
   leadId: string | null;
+  giftBrief?: GiftBrief;
 }) {
   if (!process.env.DATABASE_URL) return;
   const email = input.email.trim().toLowerCase();
@@ -33,8 +35,11 @@ export async function captureCustomerEnquiry(input: {
     }
     claimHash = hashOpaqueToken(token);
   }
-  const inserted =
-    await getSql()`INSERT INTO customer_projects (submission_key, customer_email, title, brief, external_lead_id, customer_account_id, browser_claim_hash, browser_claim_expires_at)
+  const sql = getSql();
+  const inserted = input.giftBrief
+    ? await sql`INSERT INTO customer_projects (submission_key, customer_email, title, brief, external_lead_id, customer_account_id, browser_claim_hash, browser_claim_expires_at, gift_brief, target_date)
+      VALUES (${input.submissionKey}, ${email}, ${input.title}, ${input.brief}, ${input.leadId}, ${owner}::uuid, ${claimHash}, CASE WHEN ${claimHash}::text IS NULL THEN NULL ELSE now() + interval '7 days' END, ${sql.json(input.giftBrief)}, ${input.giftBrief.delivery_date}::date) ON CONFLICT (submission_key) DO NOTHING RETURNING id`
+    : await sql`INSERT INTO customer_projects (submission_key, customer_email, title, brief, external_lead_id, customer_account_id, browser_claim_hash, browser_claim_expires_at)
    VALUES (${input.submissionKey}, ${email}, ${input.title}, ${input.brief}, ${input.leadId}, ${owner}::uuid, ${claimHash}, CASE WHEN ${claimHash}::text IS NULL THEN NULL ELSE now() + interval '7 days' END) ON CONFLICT (submission_key) DO NOTHING RETURNING id`;
   if (inserted.length)
     await recordCustomerEvent("enquiry.created", {

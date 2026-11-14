@@ -9,6 +9,7 @@ export type CustomerProject = {
   id: string;
   title: string;
   brief: string;
+  gift_brief?: unknown;
   kind: string;
   customer_type: string | null;
   organisation_name: string | null;

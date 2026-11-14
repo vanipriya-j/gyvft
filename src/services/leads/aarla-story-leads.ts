@@ -1,4 +1,5 @@
 import "server-only";
+import { giftBriefSchema, giftBriefSummary } from "@/lib/validation/gift-brief";
 import { createHmac } from "crypto";
 import { getEnv } from "@/config/env";
 import { logger } from "@/lib/logging/logger";
@@ -116,7 +117,9 @@ function asStringArray(value: unknown): string[] {
   return value.map((item) => String(item).trim()).filter(Boolean);
 }
 
-function asContactMethod(value: unknown): "email" | "phone" | "whatsapp" | null {
+function asContactMethod(
+  value: unknown,
+): "email" | "phone" | "whatsapp" | null {
   const text = asString(value);
   if (text === "email" || text === "phone" || text === "whatsapp") return text;
   return null;
@@ -133,6 +136,7 @@ export function buildAarlaStoryLeadPayload(input: {
 }): AarlaStoryLeadPayload {
   const fields = input.fields;
   const attribution = input.attribution;
+  const gift = giftBriefSchema.safeParse(fields.gift_brief);
 
   const payload: AarlaStoryLeadPayload = {
     idempotency_key: input.idempotencyKey,
@@ -144,24 +148,40 @@ export function buildAarlaStoryLeadPayload(input: {
       full_name: asString(fields.full_name ?? fields.name) || "Unknown",
       email: asString(fields.email ?? fields.work_email) || "",
       phone: asString(fields.phone),
-      organisation_name: asString(fields.organisation_name ?? fields.organisation),
+      organisation_name: asString(
+        fields.organisation_name ?? fields.organisation,
+      ),
       designation: asString(fields.designation),
-      preferred_contact_method: asContactMethod(fields.preferred_contact_method),
+      preferred_contact_method: asContactMethod(
+        fields.preferred_contact_method,
+      ),
     },
     story: {
       description: asString(fields.story_description),
-      occasion_type: asString(fields.occasion_type ?? fields.occasion_or_requirement),
+      occasion_type: asString(
+        fields.occasion_type ?? fields.occasion_or_requirement,
+      ),
       audiences: asStringArray(fields.audiences),
-      preferred_formats: asStringArray(fields.preferred_formats ?? fields.requirement_types),
+      preferred_formats: asStringArray(
+        fields.preferred_formats ?? fields.requirement_types,
+      ),
       target_date: asString(fields.target_date),
       quantity_range: asString(fields.quantity_range),
       budget_range: asString(fields.budget_range),
       primary_city: asString(fields.primary_city ?? fields.primary_locations),
       discussion_topic: asString(fields.discussion_topic),
       timeline: asString(fields.timeline),
-      additional_context: asString(
-        fields.additional_context ?? fields.brief_context ?? fields.location_notes,
-      ),
+      additional_context:
+        [
+          asString(
+            fields.additional_context ??
+              fields.brief_context ??
+              fields.location_notes,
+          ),
+          gift.success ? giftBriefSummary(gift.data) : null,
+        ]
+          .filter(Boolean)
+          .join("\n\n") || null,
     },
     consent: {
       communication: Boolean(fields.communication_consent ?? true),
@@ -176,11 +196,14 @@ export function buildAarlaStoryLeadPayload(input: {
         asString(attribution?.lastTouchReferrer) ||
         asString(attribution?.firstTouchReferrer),
       utm_source:
-        asString(attribution?.lastTouchSource) || asString(attribution?.firstTouchSource),
+        asString(attribution?.lastTouchSource) ||
+        asString(attribution?.firstTouchSource),
       utm_medium:
-        asString(attribution?.lastTouchMedium) || asString(attribution?.firstTouchMedium),
+        asString(attribution?.lastTouchMedium) ||
+        asString(attribution?.firstTouchMedium),
       utm_campaign:
-        asString(attribution?.lastTouchCampaign) || asString(attribution?.firstTouchCampaign),
+        asString(attribution?.lastTouchCampaign) ||
+        asString(attribution?.firstTouchCampaign),
     },
   };
 
@@ -196,7 +219,9 @@ export function buildAarlaStoryLeadPayload(input: {
 }
 
 function signHmac(apiKey: string, timestamp: string, rawBody: string): string {
-  const digest = createHmac("sha256", apiKey).update(`${timestamp}.${rawBody}`).digest("hex");
+  const digest = createHmac("sha256", apiKey)
+    .update(`${timestamp}.${rawBody}`)
+    .digest("hex");
   return `sha256=${digest}`;
 }
 
@@ -209,7 +234,9 @@ export async function forwardLeadToAarlaStory(
 ): Promise<AarlaStoryLeadResult | null> {
   const config = getAarlaStoryLeadsConfig();
   if (!config.apiKey) {
-    logger.warn("Aarla story leads API key not configured; skipping CRM forward");
+    logger.warn(
+      "Aarla story leads API key not configured; skipping CRM forward",
+    );
     return null;
   }
 
@@ -244,7 +271,9 @@ export async function forwardLeadToAarlaStory(
 
   const result = json as AarlaStoryLeadResult | null;
   if (!result?.ok || !result.lead_id) {
-    throw new Error("Aarla story leads API returned an unexpected success payload");
+    throw new Error(
+      "Aarla story leads API returned an unexpected success payload",
+    );
   }
   return result;
 }

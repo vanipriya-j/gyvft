@@ -1,10 +1,20 @@
 "use server";
 
 import { z } from "zod";
+import { recipientCount } from "@/lib/validation/gift-brief";
 import { AppError } from "@/lib/errors/app-error";
-import { discoveryFormSchema, type DiscoveryFormInput } from "@/lib/validation/discovery-form";
-import { partnerFormSchema, type PartnerFormInput } from "@/lib/validation/partner-form";
-import { storyFormSchema, type StoryFormInput } from "@/lib/validation/story-form";
+import {
+  discoveryFormSchema,
+  type DiscoveryFormInput,
+} from "@/lib/validation/discovery-form";
+import {
+  partnerFormSchema,
+  type PartnerFormInput,
+} from "@/lib/validation/partner-form";
+import {
+  storyFormSchema,
+  type StoryFormInput,
+} from "@/lib/validation/story-form";
 import { submitPublicLead } from "@/services/leads/submit-public-lead";
 
 type ActionResult =
@@ -14,15 +24,16 @@ type ActionResult =
 function fieldErrors(error: z.ZodError): Record<string, string[]> {
   const flattened = error.flatten();
   return Object.fromEntries(
-    Object.entries(flattened.fieldErrors).filter((entry): entry is [string, string[]] =>
-      Array.isArray(entry[1]),
+    Object.entries(flattened.fieldErrors).filter(
+      (entry): entry is [string, string[]] => Array.isArray(entry[1]),
     ),
   );
 }
 
 function messageFrom(error: unknown): string {
   if (error instanceof AppError && error.expose) return error.message;
-  if (error instanceof z.ZodError) return "Please check the highlighted fields.";
+  if (error instanceof z.ZodError)
+    return "Please check the highlighted fields.";
   if (error instanceof Error) return error.message;
   return "Something went wrong. Please try again.";
 }
@@ -36,17 +47,29 @@ function omitMeta<T extends Record<string, unknown>>(input: T) {
   return fields;
 }
 
-export async function submitStoryAction(input: StoryFormInput): Promise<ActionResult> {
+export async function submitStoryAction(
+  input: StoryFormInput,
+): Promise<ActionResult> {
   const parsed = storyFormSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, message: messageFrom(parsed.error), fieldErrors: fieldErrors(parsed.error) };
+    return {
+      ok: false,
+      message: messageFrom(parsed.error),
+      fieldErrors: fieldErrors(parsed.error),
+    };
   }
   try {
     const result = await submitPublicLead({
       formKey: "tell_your_story",
       idempotencyKey: parsed.data.idempotency_key,
       honeypot: parsed.data.honeypot,
-      fields: omitMeta(parsed.data),
+      fields: {
+        ...omitMeta(parsed.data),
+        target_date: parsed.data.gift_brief.delivery_date,
+        target_date_precision: "exact",
+        quantity_range: String(recipientCount(parsed.data.gift_brief)),
+        budget_range: `INR ${parsed.data.gift_brief.budget_amount} ${parsed.data.gift_brief.budget_basis === "total" ? "total" : "per recipient"}`,
+      },
       attribution: parsed.data.attribution,
     });
     return { ok: true, opportunityId: result.submissionId };
@@ -55,10 +78,16 @@ export async function submitStoryAction(input: StoryFormInput): Promise<ActionRe
   }
 }
 
-export async function submitPartnerAction(input: PartnerFormInput): Promise<ActionResult> {
+export async function submitPartnerAction(
+  input: PartnerFormInput,
+): Promise<ActionResult> {
   const parsed = partnerFormSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, message: messageFrom(parsed.error), fieldErrors: fieldErrors(parsed.error) };
+    return {
+      ok: false,
+      message: messageFrom(parsed.error),
+      fieldErrors: fieldErrors(parsed.error),
+    };
   }
   try {
     const result = await submitPublicLead({
@@ -74,10 +103,16 @@ export async function submitPartnerAction(input: PartnerFormInput): Promise<Acti
   }
 }
 
-export async function submitDiscoveryAction(input: DiscoveryFormInput): Promise<ActionResult> {
+export async function submitDiscoveryAction(
+  input: DiscoveryFormInput,
+): Promise<ActionResult> {
   const parsed = discoveryFormSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, message: messageFrom(parsed.error), fieldErrors: fieldErrors(parsed.error) };
+    return {
+      ok: false,
+      message: messageFrom(parsed.error),
+      fieldErrors: fieldErrors(parsed.error),
+    };
   }
   try {
     const result = await submitPublicLead({
@@ -111,23 +146,35 @@ const briefMetadataSchema = z.object({
   consent: storyFormSchema.shape.consent,
 });
 
-export async function submitBriefUploadAction(formData: FormData): Promise<ActionResult> {
+export async function submitBriefUploadAction(
+  formData: FormData,
+): Promise<ActionResult> {
   const file = formData.get("file");
   const rawMetadata = formData.get("metadata");
   if (!(file instanceof File) || typeof rawMetadata !== "string") {
-    return { ok: false, message: "Please attach a brief file and contact details." };
+    return {
+      ok: false,
+      message: "Please attach a brief file and contact details.",
+    };
   }
 
   let metadataJson: unknown;
   try {
     metadataJson = JSON.parse(rawMetadata) as unknown;
   } catch {
-    return { ok: false, message: "Please attach a brief file and contact details." };
+    return {
+      ok: false,
+      message: "Please attach a brief file and contact details.",
+    };
   }
 
   const parsed = briefMetadataSchema.safeParse(metadataJson);
   if (!parsed.success) {
-    return { ok: false, message: messageFrom(parsed.error), fieldErrors: fieldErrors(parsed.error) };
+    return {
+      ok: false,
+      message: messageFrom(parsed.error),
+      fieldErrors: fieldErrors(parsed.error),
+    };
   }
 
   try {

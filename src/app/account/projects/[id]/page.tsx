@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CustomerGiftBrief } from "@/components/customer/gift-brief";
 import { notFound } from "next/navigation";
 import { ownedProject } from "@/lib/customer/data";
 import {
@@ -107,6 +108,7 @@ export default async function ProjectPage({
               </p>
             )}
           </section>
+          <CustomerGiftBrief value={project.gift_brief} />
           {approvals.length > 0 && (
             <section className={card}>
               <h2 className="font-serif text-2xl">For your approval</h2>
