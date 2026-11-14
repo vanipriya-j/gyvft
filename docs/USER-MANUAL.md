@@ -1,6 +1,6 @@
 # GYVFT customer portal — user manual
 
-This guide covers **My GYVFT**, the customer portal, and the owner’s database migration page. Features become available after this pull request is deployed and setup is completed. Aarla OS syncing, automatic payment verification and Shopify order creation are separate integrations.
+This guide covers **My GYVFT**, the customer portal, and the secret-protected database setup page. Features become available after this pull request is deployed and setup is completed. Aarla OS syncing, automatic payment verification and Shopify order creation are separate integrations.
 
 ## For customers
 
@@ -95,35 +95,36 @@ Your submission appears as **Awaiting verification** until receipt is checked. A
 
 1. Review the pull request and its Vercel preview, then merge when ready. Confirm that the production deployment succeeds.
 2. Confirm the deployed environment has `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the supported legacy anon key). Supabase Auth keys alone do not supply a SQL connection. Credentials already configured in Vercel do not need to be entered in the migration page.
-3. Sign into `/studio/login` using an existing active **owner** account.
-4. Open **Settings → Database migrations** and apply pending migrations as described below.
+3. Set a separate random `SETUP_SECRET` of at least 32 characters in Vercel and redeploy. This secret is not an application login password.
+4. Open `/setup`, enter the same secret, choose **Check migrations**, review the pending list, check the confirmation box, and choose **Run pending migrations**. No Studio owner account is needed.
 5. In Supabase, enable customer email/password signup and require email confirmation. Ensure customer registrations are not automatically granted Studio profiles or staff roles.
 6. Configure Supabase’s **Confirm signup** and **Reset password** email templates to display `{{ .Token }}`. This portal accepts email codes directly on its login page. Configure production email delivery and an appropriate password policy.
 7. Set `NEXT_PUBLIC_APP_URL` to the production GYVFT origin so enquiry emails link to the correct site.
 8. Test customer registration, email verification, login, recovery and enquiry visibility. Confirm a second customer cannot access the first customer’s project URL.
 
-The migration page needs the existing Studio database schema and owner profile. It cannot bootstrap an entirely empty database or create the first owner account. Use the repository’s initial database and owner setup instructions for that case.
+The `/setup` page works before app users or the migration tracking table exist. It does not create staff users or sample data. The Studio owner migration page remains an optional tool for deployments that use staff accounts.
 
-### Run database migrations in your browser
+### Run database setup in your browser
 
-Open `/studio/settings/migrations`, or use **Studio → Settings → Database migrations**.
+1. Open `/setup` on the GYVFT deployment you want to update.
+2. Check that `DATABASE_URL` and `SETUP_SECRET` show as configured.
+3. Enter the secret you configured in Vercel and choose **Check migrations**.
+4. Review the pending/applied list. Re-enter the secret if the form cleared it.
+5. Check **Apply pending migrations to this deployment’s database** and choose **Run pending migrations**.
+6. Wait for confirmation, then check that the migration list shows Applied.
 
-1. Review the pending and applied migration list.
-2. Confirm that you are using the intended deployment: it runs against that deployment’s `DATABASE_URL`.
-3. Choose **Run pending migrations** and wait for the result.
-4. Check that the pending migrations now show **Applied**.
+Setup uses the deployment’s `DATABASE_URL`. It accepts only the setup secret, with no customer or staff login dependency. It executes SQL packaged with the deployment, skips applied migrations and prevents concurrent runs with a database lock. Failed database transactions roll back the pending batch. The CLI command `npm run db:migrate` uses the same runner and history.
 
-Only owners can view or run this page. It executes SQL files packaged with the deployment, skips already applied files, and prevents overlapping runs. The pending batch is transactional: a database failure rolls back that batch. The CLI command `npm run db:migrate` uses the same runner and history.
+| Result                               | What to do                                                                      |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| Database up to date                  | No migration action is needed.                                                  |
+| Invalid setup secret                 | Use the secret configured for this deployment’s Vercel environment.             |
+| Setup disabled                       | Set a separate `SETUP_SECRET` with at least 32 characters and redeploy.         |
+| DATABASE_URL missing                 | Add the database connection string to the same Vercel environment and redeploy. |
+| Another migration run is in progress | Wait, then check migration status again.                                        |
+| Completion could not be confirmed    | Check status before retrying and inspect deployment logs.                       |
 
-| Result                               | What to do                                                                          |
-| ------------------------------------ | ----------------------------------------------------------------------------------- |
-| Database up to date                  | No migration action is needed.                                                      |
-| Another migration run is in progress | Wait, refresh history, and check again.                                             |
-| Migration status unavailable         | Check `DATABASE_URL`, database access and bundled migration files.                  |
-| Completion could not be confirmed    | Refresh history before retrying; inspect deployment logs and database connectivity. |
-| Run button absent or access denied   | Verify that your Studio account is an active owner.                                 |
-
-Do not repeatedly click Run while a request is pending. Never paste database passwords into customer messages or support conversations.
+The secret is not saved in browser storage and must be supplied for each request. Remove `SETUP_SECRET` in Vercel and redeploy when setup access is no longer needed. Do not paste it into chat or customer messages.
 
 ### What is connected in this release
 

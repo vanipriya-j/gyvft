@@ -6,6 +6,10 @@ GYVFT is a Next.js application for public story-led lead capture and an authenti
 
 > **Agents (Codex / Cursor):** start with [`docs/CODEX.md`](docs/CODEX.md) for current product state and next work, then use this README for setup and ops. This app uses a custom Next.js build — read `node_modules/next/dist/docs/` and `AGENTS.md` before changing framework APIs.
 
+## Browser database setup
+
+Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 32 characters) in Vercel and redeploy. Open `/setup`, enter the secret, check migration status, then confirm and run pending migrations. No Studio login is required. Setup does not create staff accounts or demo data. Remove the secret and redeploy to disable it afterward.
+
 ## Customer portal guides
 
 - [Customer and owner user manual](docs/USER-MANUAL.md)
