@@ -41,6 +41,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_GTM_ID: z.string().optional(),
   NEXT_PUBLIC_GA4_MEASUREMENT_ID: z.string().optional(),
   NEXT_PUBLIC_CLARITY_PROJECT_ID: z.string().optional(),
+  SETUP_SECRET: z.string().optional(),
   CRON_SECRET: z.string().min(16).optional(),
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(10_485_760),
   DEFAULT_CURRENCY: z.string().length(3).default("INR"),

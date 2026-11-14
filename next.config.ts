@@ -30,6 +30,7 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   outputFileTracingIncludes: {
+    "/api/setup": ["./supabase/migrations/*.sql"],
     "/studio/settings/migrations": ["./supabase/migrations/*.sql"],
   },
   async redirects() {
