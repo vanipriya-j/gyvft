@@ -181,4 +181,15 @@ describe("public setup with secret authentication", () => {
     const response = await post({ secret, action: "migrate", confirm: true });
     expect((await response.json()).ok).toBe(true);
   });
+  it("never lets a request select legacy Studio migrations", async () => {
+    const response = await post({
+      secret,
+      action: "migrate",
+      confirm: true,
+      scope: "all",
+    });
+    expect(response.status).toBe(200);
+    expect(run).toHaveBeenCalledWith(undefined, undefined, "customer");
+    expect(list).toHaveBeenCalledWith(undefined, "customer");
+  });
 });

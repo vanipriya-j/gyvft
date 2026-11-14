@@ -29,9 +29,11 @@ export default async function AccountPage() {
         <span>
           {projects.filter((p) => p.kind === "enquiry").length} enquiries
         </span>
-        <span>
-          {projects.filter((p) => p.kind === "project").length} projects
-        </span>
+        {projects.some((p) => p.kind === "project") && (
+          <span>
+            {projects.filter((p) => p.kind === "project").length} projects
+          </span>
+        )}
       </div>
       {!projects.length ? (
         <section className="rounded-3xl border border-border bg-paper px-7 py-16 text-center">

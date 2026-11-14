@@ -113,7 +113,7 @@ The `/setup` page works before app users or the migration tracking table exist. 
 5. Wait for **Your database is ready**. Expand migration history to see applied updates.
 6. If setup stops, share the diagnostic code and migration filename shown. The secret remains in the form for retrying but is cleared after success and is never persisted in browser storage.
 
-Setup uses the deployment’s `DATABASE_URL`. It accepts only the setup secret, with no customer or staff login dependency. It executes SQL packaged with the deployment, skips applied migrations and prevents concurrent runs with a database lock. Failed database transactions roll back the pending batch. The CLI command `npm run db:migrate` uses the same runner and history.
+Setup uses the deployment’s `DATABASE_URL`. It accepts only the setup secret, with no customer or staff login dependency. It executes only the packaged customer-portal migrations, skips applied migrations and prevents concurrent runs with a database lock. Existing campaign/contact tables are not changed. Failed database transactions roll back the pending batch. The equivalent CLI command is `npm run db:migrate -- --customer`. Legacy Studio migrations are excluded and are not marked applied.
 
 | Result                               | What to do                                                                      |
 | ------------------------------------ | ------------------------------------------------------------------------------- |

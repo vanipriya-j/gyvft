@@ -45,3 +45,9 @@ The existing lockfile installs with `npm ci --legacy-peer-deps`. Unit tests, lin
 The `/setup` secret gate is separate from Supabase customer authentication. The endpoint has per-instance in-memory attempt limiting; use deployment-level rate limits for shared enforcement across serverless instances. The SQL file trace includes `/api/setup`; there is no duplicate bundled SQL copy to drift. Migration failures are not silently marked applied.
 
 Migration history supports both GYVFT’s `schema_migrations.id` and the filename-based `schema_migrations.filename` convention. The runner detects the existing column and writes to it without renaming columns or marking failed SQL as applied. This compatibility does not imply that unrelated applications can safely share all other tables.
+
+## Setup scope
+
+Public `/setup` is deliberately restricted to the explicit customer-portal migration manifest. It creates the five customer-facing tables and uses the existing migration history; it does not run the old Studio CRM bootstrap, create campaigns/contacts, alter business tables or mark excluded Studio migrations as applied. The customer login reads Supabase Auth directly and does not depend on a Studio profile. Historical enquiries in Aarla OS still require a separate integration/backfill; only newly captured enquiries appear automatically.
+
+For command-line setup equivalent to `/setup`, run `npm run db:migrate -- --customer`. The original unqualified CLI and owner-only Studio page retain full Studio migration behavior for dedicated Studio installations; they should not be used to initialize the customer portal in an existing business database. New enquiries show request details/status/conversations; payment and production sidebars appear only on records explicitly converted to projects.

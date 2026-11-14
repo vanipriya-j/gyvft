@@ -152,8 +152,8 @@ export default function SetupPage() {
         Let’s get GYVFT ready.
       </h1>
       <p className="mt-4 max-w-lg leading-relaxed text-muted-text">
-        Enter your setup secret once. We’ll check the database and apply any
-        updates it needs.
+        Enter your setup secret once. We’ll prepare the customer portal so
+        customers can sign in and see their enquiries.
       </p>
       <section className="mt-8 rounded-3xl border border-border bg-paper p-6 shadow-sm md:p-8">
         <div className="grid gap-3 border-b border-border pb-6 sm:grid-cols-2">
@@ -217,8 +217,8 @@ export default function SetupPage() {
             </p>
           </fieldset>
           <p className="mt-5 text-sm leading-relaxed text-muted-text">
-            Starting setup checks what’s already installed and applies only
-            pending updates. Existing migration history is preserved.
+            Setup applies only customer-portal updates. Existing campaigns,
+            contacts and other business tables are left unchanged.
           </p>
           <button
             disabled={busy || !readiness?.ready || result?.ok === true}

@@ -87,7 +87,13 @@ export default async function ProjectPage({
         <h2 className="mt-3 font-serif text-3xl">{stages[project.stage]}</h2>
         <p className="mt-3 opacity-90">{project.next_action}</p>
       </section>
-      <div className="grid items-start gap-7 lg:grid-cols-[1.6fr_1fr]">
+      <div
+        className={
+          project.kind === "project"
+            ? "grid items-start gap-7 lg:grid-cols-[1.6fr_1fr]"
+            : "space-y-7"
+        }
+      >
         <div className="space-y-7">
           <section className={card}>
             <h2 className="font-serif text-2xl">Your brief</h2>
@@ -238,141 +244,143 @@ export default async function ProjectPage({
             </ActionForm>
           </section>
         </div>
-        <aside className="space-y-7">
-          <section className={card}>
-            <h2 className="font-serif text-2xl">Payments</h2>
-            <p className="mt-3 text-sm leading-relaxed text-muted-text">
-              Every order starts with a 50% advance. The remaining balance is
-              due before dispatch.
-            </p>
-            {summary && total !== null ? (
-              <>
-                <dl className="my-6 space-y-4 text-sm">
-                  <div className="flex justify-between">
-                    <dt>Agreed total</dt>
-                    <dd>{money(total)}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt>50% advance</dt>
-                    <dd>{money(summary.advance)}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt>Verified payments</dt>
-                    <dd>{money(paid)}</dd>
-                  </div>
-                  <div className="flex justify-between border-t border-border pt-4 font-semibold">
-                    <dt>Balance remaining</dt>
-                    <dd>{money(summary.balance)}</dd>
-                  </div>
-                </dl>
-                {summary.advanceDue > 0 && (
-                  <p className="mb-5 rounded-xl bg-surface p-3 text-sm">
-                    Advance due: {money(summary.advanceDue)}
-                  </p>
-                )}
-                {summary.balance > 0 && (
-                  <>
-                    {paymentUrl && (
-                      <a
-                        href={paymentUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block rounded-full bg-olive-dark px-5 py-3 text-center text-sm text-white"
-                      >
-                        Pay securely with Razorpay ↗
-                      </a>
-                    )}
-                    {project.upi_id && (
-                      <div className="mt-5">
-                        <p className="text-sm">
-                          Pay directly with GPay or another UPI app
-                        </p>
-                        <p className="my-3 break-all rounded-xl bg-surface p-3 font-medium">
-                          {project.upi_id}
-                        </p>
-                        <ActionForm
-                          action={submitPayment.bind(null, id)}
-                          label="Submit payment reference"
-                        >
-                          <label className="block text-sm">
-                            Amount paid (₹)
-                            <input
-                              name="amount"
-                              type="number"
-                              min="0.01"
-                              max="99999999.99"
-                              step="0.01"
-                              required
-                              className={input}
-                            />
-                          </label>
-                          <label className="block text-sm">
-                            UPI transaction reference
-                            <input
-                              name="reference"
-                              required
-                              minLength={6}
-                              maxLength={100}
-                              className={input}
-                            />
-                          </label>
-                          <p className="text-xs leading-relaxed text-muted-text">
-                            Your payment stays pending until our team verifies
-                            receipt. Please don’t share your UPI PIN.
-                          </p>
-                        </ActionForm>
-                      </div>
-                    )}
-                    {!paymentUrl && !project.upi_id && (
-                      <p className="text-sm text-muted-text">
-                        Our team will share payment instructions here.
-                      </p>
-                    )}
-                  </>
-                )}
-              </>
-            ) : (
-              <p className="mt-6 rounded-xl bg-surface p-4 text-sm">
-                We’ll share pricing after understanding your requirements.
+        {project.kind === "project" && (
+          <aside className="space-y-7">
+            <section className={card}>
+              <h2 className="font-serif text-2xl">Payments</h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-text">
+                Every order starts with a 50% advance. The remaining balance is
+                due before dispatch.
               </p>
-            )}
-            {payments.length > 0 && (
-              <div className="mt-6 space-y-3 border-t border-border pt-5">
-                <h3 className="text-sm font-medium">Submitted payments</h3>
-                {payments.map((p) => (
-                  <p key={p.id} className="break-all text-sm">
-                    {money(Number(p.amount_paise))} · {p.reference}
-                    <span className="block text-xs text-muted-text">
-                      {p.status === "pending"
-                        ? "Awaiting verification"
-                        : p.status === "verified"
-                          ? "Verified"
-                          : "Could not verify — please contact us"}
-                    </span>
-                  </p>
+              {summary && total !== null ? (
+                <>
+                  <dl className="my-6 space-y-4 text-sm">
+                    <div className="flex justify-between">
+                      <dt>Agreed total</dt>
+                      <dd>{money(total)}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt>50% advance</dt>
+                      <dd>{money(summary.advance)}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt>Verified payments</dt>
+                      <dd>{money(paid)}</dd>
+                    </div>
+                    <div className="flex justify-between border-t border-border pt-4 font-semibold">
+                      <dt>Balance remaining</dt>
+                      <dd>{money(summary.balance)}</dd>
+                    </div>
+                  </dl>
+                  {summary.advanceDue > 0 && (
+                    <p className="mb-5 rounded-xl bg-surface p-3 text-sm">
+                      Advance due: {money(summary.advanceDue)}
+                    </p>
+                  )}
+                  {summary.balance > 0 && (
+                    <>
+                      {paymentUrl && (
+                        <a
+                          href={paymentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block rounded-full bg-olive-dark px-5 py-3 text-center text-sm text-white"
+                        >
+                          Pay securely with Razorpay ↗
+                        </a>
+                      )}
+                      {project.upi_id && (
+                        <div className="mt-5">
+                          <p className="text-sm">
+                            Pay directly with GPay or another UPI app
+                          </p>
+                          <p className="my-3 break-all rounded-xl bg-surface p-3 font-medium">
+                            {project.upi_id}
+                          </p>
+                          <ActionForm
+                            action={submitPayment.bind(null, id)}
+                            label="Submit payment reference"
+                          >
+                            <label className="block text-sm">
+                              Amount paid (₹)
+                              <input
+                                name="amount"
+                                type="number"
+                                min="0.01"
+                                max="99999999.99"
+                                step="0.01"
+                                required
+                                className={input}
+                              />
+                            </label>
+                            <label className="block text-sm">
+                              UPI transaction reference
+                              <input
+                                name="reference"
+                                required
+                                minLength={6}
+                                maxLength={100}
+                                className={input}
+                              />
+                            </label>
+                            <p className="text-xs leading-relaxed text-muted-text">
+                              Your payment stays pending until our team verifies
+                              receipt. Please don’t share your UPI PIN.
+                            </p>
+                          </ActionForm>
+                        </div>
+                      )}
+                      {!paymentUrl && !project.upi_id && (
+                        <p className="text-sm text-muted-text">
+                          Our team will share payment instructions here.
+                        </p>
+                      )}
+                    </>
+                  )}
+                </>
+              ) : (
+                <p className="mt-6 rounded-xl bg-surface p-4 text-sm">
+                  We’ll share pricing after understanding your requirements.
+                </p>
+              )}
+              {payments.length > 0 && (
+                <div className="mt-6 space-y-3 border-t border-border pt-5">
+                  <h3 className="text-sm font-medium">Submitted payments</h3>
+                  {payments.map((p) => (
+                    <p key={p.id} className="break-all text-sm">
+                      {money(Number(p.amount_paise))} · {p.reference}
+                      <span className="block text-xs text-muted-text">
+                        {p.status === "pending"
+                          ? "Awaiting verification"
+                          : p.status === "verified"
+                            ? "Verified"
+                            : "Could not verify — please contact us"}
+                      </span>
+                    </p>
+                  ))}
+                </div>
+              )}
+            </section>
+            <section className={card}>
+              <h2 className="font-serif text-2xl">The journey ahead</h2>
+              <ol className="mt-5 space-y-3 text-sm">
+                {stages.map((stage, i) => (
+                  <li
+                    key={stage}
+                    className={
+                      i === project.stage
+                        ? "font-semibold text-olive-dark"
+                        : "text-muted-text"
+                    }
+                  >
+                    {i < project.stage ? "✓" : i === project.stage ? "●" : "○"}{" "}
+                    {stage}
+                  </li>
                 ))}
-              </div>
-            )}
-          </section>
-          <section className={card}>
-            <h2 className="font-serif text-2xl">The journey ahead</h2>
-            <ol className="mt-5 space-y-3 text-sm">
-              {stages.map((stage, i) => (
-                <li
-                  key={stage}
-                  className={
-                    i === project.stage
-                      ? "font-semibold text-olive-dark"
-                      : "text-muted-text"
-                  }
-                >
-                  {i < project.stage ? "✓" : i === project.stage ? "●" : "○"}{" "}
-                  {stage}
-                </li>
-              ))}
-            </ol>
-          </section>
-        </aside>
+              </ol>
+            </section>
+          </aside>
+        )}
       </div>
     </>
   );

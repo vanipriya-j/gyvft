@@ -12,7 +12,11 @@ async function main() {
     connect_timeout: 10,
   });
   try {
-    const applied = await runPendingMigrations(sql);
+    const applied = await runPendingMigrations(
+      sql,
+      undefined,
+      process.argv.includes("--customer") ? "customer" : "all",
+    );
     for (const id of applied) console.log(`applied ${id}`);
     console.log(
       applied.length ? "Migrations complete" : "Database already up to date",
