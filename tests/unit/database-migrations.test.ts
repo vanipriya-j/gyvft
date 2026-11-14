@@ -9,14 +9,21 @@ import {
   runPendingMigrations,
 } from "@/lib/database/migrations";
 function connection(
-  options: { locked?: boolean; applied?: string[]; failure?: boolean } = {},
+  options: {
+    locked?: boolean;
+    applied?: string[];
+    failure?: boolean;
+    filename?: boolean;
+  } = {},
 ) {
   const tx = Object.assign(
     vi.fn(async (parts: TemplateStringsArray) => {
       const text = parts.join("?");
       if (text.includes("pg_try_advisory_xact_lock"))
         return [{ acquired: !options.locked }];
-      if (text.startsWith("SELECT id"))
+      if (text.includes("information_schema.columns"))
+        return [{ uses_filename: options.filename === true }];
+      if (text.startsWith("SELECT id") || text.startsWith("SELECT filename"))
         return (options.applied ?? []).map((id) => ({ id }));
       return [];
     }),
@@ -92,5 +99,49 @@ describe("database migrations", () => {
       { phase: "applying", total: 1, completed: 0, filename: "002_second.sql" },
       { phase: "committing", total: 1, completed: 1 },
     ]);
+  });
+  it("uses the existing filename tracker without altering its schema or history", async () => {
+    const { sql, tx } = connection({
+      filename: true,
+      applied: ["001_first.sql"],
+    });
+    expect(await runPendingMigrations(sql)).toEqual(["002_second.sql"]);
+    const statements = tx.mock.calls.map(([parts]) => parts.join("?"));
+    expect(
+      statements.some((text) => text.includes("SELECT filename AS id")),
+    ).toBe(true);
+    expect(
+      statements.some((text) =>
+        text.includes("INSERT INTO public.schema_migrations (filename)"),
+      ),
+    ).toBe(true);
+    expect(
+      statements.some(
+        (text) => text.startsWith("ALTER") || text.startsWith("DELETE"),
+      ),
+    ).toBe(false);
+    expect(tx.unsafe).toHaveBeenCalledExactlyOnceWith("SECOND SQL");
+  });
+  it("reads applied status from a filename-based tracker", async () => {
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce([{ name: "schema_migrations" }])
+      .mockResolvedValueOnce([{ uses_filename: true }])
+      .mockResolvedValueOnce([
+        { id: "001_first.sql", applied_at: "2026-11-14T00:00:00Z" },
+      ]);
+    const status = await listMigrations(query as unknown as Sql);
+    expect(status[0].appliedAt).toBe("2026-11-14T00:00:00.000Z");
+    expect(status[1].appliedAt).toBeNull();
+    expect(query.mock.calls[2][0].join("")).toContain("filename AS id");
+  });
+  it("prefers filename when the table also has an unrelated numeric id", async () => {
+    const { sql, tx } = connection({ filename: true });
+    await runPendingMigrations(sql);
+    expect(
+      tx.mock.calls.some(([parts]) =>
+        parts.join("").startsWith("SELECT id FROM"),
+      ),
+    ).toBe(false);
   });
 });
