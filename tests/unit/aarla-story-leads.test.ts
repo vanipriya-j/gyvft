@@ -1,4 +1,4 @@
-import { gift } from "../fixtures/gift-brief";
+import { storyInput } from "../fixtures/story-request";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const fetchMock = vi.fn();
@@ -127,24 +127,24 @@ describe("aarla story leads forwarder", () => {
   });
 });
 
-it("passes recipient preferences and explicit budget to Aarla using the existing context contract", async () => {
+it("preserves original occasion, precision and location answers in the existing Aarla contract", async () => {
   const { buildAarlaStoryLeadPayload } =
     await import("@/services/leads/aarla-story-leads");
   const payload = buildAarlaStoryLeadPayload({
     formKey: "tell_your_story",
-    idempotencyKey: "local-test",
+    idempotencyKey: storyInput.idempotency_key,
     submittedAt: "2026-11-14",
-    fields: {
-      email: "test@example.test",
-      location_notes: "One delivery location",
-      gift_brief: gift,
-    },
+    fields: storyInput,
   });
-  expect(payload.story.additional_context).toContain("One delivery location");
-  expect(payload.story.additional_context).toContain("Sam");
-  expect(payload.story.additional_context).toContain("Plastic packaging");
-  expect(payload.story.additional_context).toContain(
-    "Thank you for always being there",
-  );
-  expect(payload.story.additional_context).toContain("2099-12-01");
+  expect(payload.story).toMatchObject({
+    audiences: ["Family", "Community"],
+    preferred_formats: ["Book", "Merchandise"],
+    quantity_range: "26-100",
+    budget_range: "1L-5L",
+    target_date: "2099-12-01",
+  });
+  expect(payload.story.additional_context).toContain("Family reunion");
+  expect(payload.story.additional_context).toContain("Date precision: exact");
+  expect(payload.story.additional_context).toContain("Multiple locations: Yes");
+  expect(payload.story.additional_context).toContain(storyInput.location_notes);
 });

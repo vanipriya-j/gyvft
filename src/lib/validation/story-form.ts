@@ -1,18 +1,16 @@
 import { z } from "zod";
-import { giftBriefSchema, todayInIndia } from "./gift-brief";
 import { AUDIENCE_OPTIONS, FORMAT_OPTIONS, OCCASION_TYPES } from "@/config/constants";
 
 export const storyFormSchema = z.object({
-  gift_brief: giftBriefSchema.refine(brief => brief.delivery_date >= todayInIndia(), { path: ["delivery_date"], message: "Delivery date must be today or later." }),
   story_description: z.string().trim().min(40, "Please share a fuller story (at least 40 characters).").max(20000),
   occasion_type: z.enum(OCCASION_TYPES as unknown as [string, ...string[]]),
   occasion_other: z.string().trim().max(200).optional().nullable(),
-  audiences: z.array(z.enum(AUDIENCE_OPTIONS as unknown as [string, ...string[]])).default([]),
+  audiences: z.array(z.enum(AUDIENCE_OPTIONS as unknown as [string, ...string[]])).min(1),
   preferred_formats: z.array(z.enum(FORMAT_OPTIONS as unknown as [string, ...string[]])).min(1),
   target_date: z.string().optional().nullable(),
   target_date_precision: z.enum(["exact", "month", "quarter", "flexible"]).default("flexible"),
-  quantity_range: z.string().default(""),
-  budget_range: z.string().default(""),
+  quantity_range: z.string().min(1),
+  budget_range: z.string().min(1),
   primary_city: z.string().trim().min(1).max(120),
   multiple_locations: z.boolean().default(false),
   location_notes: z.string().trim().max(2000).optional().nullable(),

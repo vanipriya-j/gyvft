@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetMemoryGuardsForTests } from "@/lib/security/memory-guards";
-import { gift } from "../fixtures/gift-brief";
+import { storyInput } from "../fixtures/story-request";
 import { escapeHtml } from "@/lib/security/sanitize";
 
 const sendMock = vi.fn();
@@ -47,33 +47,30 @@ describe("public lead email submission", () => {
     resetMemoryGuardsForTests();
   });
 
-  it("includes structured gifting preferences in email and the customer projection", async () => {
+  it("passes all original story answers into customer storage and readable lead email", async () => {
     const { submitPublicLead } =
       await import("@/services/leads/submit-public-lead");
     await submitPublicLead({
       formKey: "tell_your_story",
-      idempotencyKey: "22222222-2222-4222-8222-222222222222",
-      fields: {
-        email: "test@example.test",
-        full_name: "Test Customer",
-        gift_brief: {
-          ...gift,
-          recipients: [{ ...gift.recipients[0], name: "Sam <friend>" }],
-        },
-      },
+      idempotencyKey: storyInput.idempotency_key,
+      fields: storyInput,
     });
-    expect(sendMock.mock.calls[0][0].text).toContain("Books and gardening");
-    expect(sendMock.mock.calls[0][0].text).toContain("Plastic packaging");
-    expect(sendMock.mock.calls[0][0].text).toContain("per recipient");
-    expect(sendMock.mock.calls[0][0].html).toContain("Sam &lt;friend&gt;");
     expect(captureMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        giftBrief: expect.objectContaining({
-          delivery_date: "2099-12-01",
-          budget_basis: "per_recipient",
+        storyDetails: expect.objectContaining({
+          occasion_other: "Family reunion",
+          audiences: ["Family", "Community"],
+          preferred_formats: ["Book", "Merchandise"],
+          quantity_range: "26-100",
+          budget_range: "1L-5L",
+          multiple_locations: true,
+          location_notes: storyInput.location_notes,
         }),
       }),
     );
+    expect(sendMock.mock.calls[0][0].text).toContain("Family reunion");
+    expect(sendMock.mock.calls[0][0].text).toContain("1L-5L");
+    expect(sendMock.mock.calls[0][0].text).toContain(storyInput.location_notes);
   });
 
   it("escapes HTML for email rendering", () => {

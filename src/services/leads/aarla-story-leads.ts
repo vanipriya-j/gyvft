@@ -1,5 +1,5 @@
 import "server-only";
-import { giftBriefSchema, giftBriefSummary } from "@/lib/validation/gift-brief";
+import { readStoryRequest } from "@/lib/customer/story-request";
 import { createHmac } from "crypto";
 import { getEnv } from "@/config/env";
 import { logger } from "@/lib/logging/logger";
@@ -136,7 +136,9 @@ export function buildAarlaStoryLeadPayload(input: {
 }): AarlaStoryLeadPayload {
   const fields = input.fields;
   const attribution = input.attribution;
-  const gift = giftBriefSchema.safeParse(fields.gift_brief);
+  const snapshot =
+    input.formKey === "tell_your_story" ? readStoryRequest(fields) : null;
+  const details = snapshot?.success ? snapshot.data : null;
 
   const payload: AarlaStoryLeadPayload = {
     idempotency_key: input.idempotencyKey,
@@ -178,7 +180,20 @@ export function buildAarlaStoryLeadPayload(input: {
               fields.brief_context ??
               fields.location_notes,
           ),
-          gift.success ? giftBriefSummary(gift.data) : null,
+          details
+            ? [
+                details.occasion_other
+                  ? `Occasion (other): ${details.occasion_other}`
+                  : null,
+                `Date precision: ${details.target_date_precision}`,
+                `Multiple locations: ${details.multiple_locations ? "Yes" : "No"}`,
+                details.location_notes
+                  ? `Location notes: ${details.location_notes}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join("\n")
+            : null,
         ]
           .filter(Boolean)
           .join("\n\n") || null,
