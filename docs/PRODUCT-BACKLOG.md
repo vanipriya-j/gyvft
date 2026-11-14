@@ -21,16 +21,17 @@ Code being present or a build passing is not the same as the customer journey be
 | N5  | Clear, minimal experience                   | Single-button setup with live progress/diagnostics implemented. Enquiry records hide payment/production sidebars; project counters appear only if project records exist. | Mobile and desktop show clear login, loading, empty, error and request states; no invented progress or irrelevant future steps.                                                              |
 | N6  | Release check and instructions              | User manual exists; deployment and first live migration are separate steps.                                                                                              | N1–N5 pass on the live deployment, the manual matches the tested journey, and remaining limitations are explicit.                                                                            |
 
-**Open release decision:** should the first version include only new enquiries, or also older enquiries stored in Aarla OS? Existing enquiries are not automatically imported by signup. If older enquiries are required at launch, the history item below moves into Now.
+**Release decision:** this is a fresh launch. Show new enquiries; no historical import or backward-compatibility project is needed. Existing enquiry/test records may be discarded if necessary. Any cleanup must target identified GYVFT enquiry records only, not shared business tables. No data has been deleted as part of this backlog.
 
 **Suggested order:** N1 → N2 → N3 → N4/N5 → N6. Do not start later commerce/operations work while the basic journey is unverified.
+
+Optional pre-launch task: reset confirmed GYVFT test enquiries if needed, then repeat the controlled customer test. This is not a blanket database truncate.
 
 ## Next — make progress and conversations useful
 
 | ID  | Item                                         | Definition of done                                                                                                                                                                                        |
 | --- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | X1  | Publish enquiry progress from Aarla OS       | Agree the existing Aarla enquiry ID, customer ownership and customer-visible status mapping; authenticated/idempotent sync updates the correct request. Internal notes remain private.                    |
-| X2  | Show earlier enquiries, if required          | Explicit mapping/import links historical enquiries to verified email, without duplicates or granting access by organisation name/domain. Reconcile errors before calling the import complete.             |
 | X3  | Complete the customer/team conversation loop | Customer messages reach the operational team and customer-visible replies return to the correct thread. The current portal saves messages locally; external delivery/team reply tooling is not connected. |
 | X4  | Decide customer notifications                | Agree which events deserve email and opt-out behavior; retries do not duplicate messages. Avoid notifications for every internal change.                                                                  |
 | X5  | Operational reliability                      | Reconcile a successfully emailed enquiry if the portal mirror fails; expose a useful diagnostic and repeat safely without duplicating records.                                                            |
