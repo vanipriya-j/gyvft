@@ -43,3 +43,5 @@ Future sync must use trusted server credentials, authenticate requests, enforce 
 The existing lockfile installs with `npm ci --legacy-peer-deps`. Unit tests, lint, TypeScript and the production build are checked locally. The full existing integration suite requires a running Postgres test database. Browser QA requires the managed browser tools, which were unavailable in this session.
 
 The `/setup` secret gate is separate from Supabase customer authentication. The endpoint has per-instance in-memory attempt limiting; use deployment-level rate limits for shared enforcement across serverless instances. The SQL file trace includes `/api/setup`; there is no duplicate bundled SQL copy to drift. Migration failures are not silently marked applied.
+
+Migration history supports both GYVFT’s `schema_migrations.id` and the filename-based `schema_migrations.filename` convention. The runner detects the existing column and writes to it without renaming columns or marking failed SQL as applied. This compatibility does not imply that unrelated applications can safely share all other tables.

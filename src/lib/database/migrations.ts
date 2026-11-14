@@ -32,11 +32,21 @@ export async function listMigrations(sql: Sql): Promise<MigrationStatus[]> {
   const [table] = await sql<
     { name: string | null }[]
   >`SELECT to_regclass('public.schema_migrations')::text AS name`;
-  const applied = table?.name
-    ? await sql<
-        { id: string; applied_at: string }[]
-      >`SELECT id, applied_at FROM public.schema_migrations`
-    : [];
+  let applied: { id: string; applied_at: string }[] = [];
+  if (table?.name) {
+    const [format] = await sql<{ uses_filename: boolean }[]>`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'schema_migrations' AND column_name = 'filename'
+      ) AS uses_filename`;
+    applied = format?.uses_filename
+      ? await sql<
+          { id: string; applied_at: string }[]
+        >`SELECT filename AS id, applied_at FROM public.schema_migrations`
+      : await sql<
+          { id: string; applied_at: string }[]
+        >`SELECT id, applied_at FROM public.schema_migrations`;
+  }
   const byId = new Map(
     applied.map((row) => [row.id, new Date(row.applied_at).toISOString()]),
   );
@@ -64,9 +74,17 @@ export async function runPendingMigrations(
     >`SELECT pg_try_advisory_xact_lock(${migrationLock}) AS acquired`;
     if (!lock?.acquired) throw new MigrationBusyError();
     await tx`CREATE TABLE IF NOT EXISTS public.schema_migrations (id TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
-    const recorded = await tx<
-      { id: string }[]
-    >`SELECT id FROM public.schema_migrations`;
+    const [format] = await tx<{ uses_filename: boolean }[]>`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'schema_migrations' AND column_name = 'filename'
+      ) AS uses_filename`;
+    const usesFilename = format?.uses_filename === true;
+    const recorded = usesFilename
+      ? await tx<
+          { id: string }[]
+        >`SELECT filename AS id FROM public.schema_migrations`
+      : await tx<{ id: string }[]>`SELECT id FROM public.schema_migrations`;
     const seen = new Set(recorded.map((row) => row.id));
     const pending = migrations.filter((m) => !seen.has(m.id));
     for (const migration of pending) {
@@ -78,7 +96,10 @@ export async function runPendingMigrations(
       });
       try {
         await tx.unsafe(migration.contents);
-        await tx`INSERT INTO public.schema_migrations (id) VALUES (${migration.id})`;
+        if (usesFilename)
+          await tx`INSERT INTO public.schema_migrations (filename) VALUES (${migration.id})`;
+        else
+          await tx`INSERT INTO public.schema_migrations (id) VALUES (${migration.id})`;
       } catch (error) {
         throw new MigrationExecutionError(migration.id, error);
       }
