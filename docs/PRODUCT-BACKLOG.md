@@ -2,6 +2,12 @@
 
 Updated: 14 November 2026. This is the working scope and priority list, not a commitment to build every future item now.
 
+## Product destination
+
+Use [the product roadmap](PRODUCT-ROADMAP.md) for the complete sequence from B2B/B2C identification to company onboarding, verified employees, accepted circles, consented occasions and cross-company gifting. The immediate customer-portal release below is the first slice, not the complete product vision. Company workspaces and employee eligibility are customer-product foundations; they are separate from the optional internal GYVFT team workspace.
+
+The next complete pilot is two companies on GYVFT, verified employees with an accepted personal connection, one shared occasion, and a gift completed through private recipient delivery, payment and fulfilment. Expand the backlog from that sequence after verifying the current customer journey.
+
 ## Immediate release goal
 
 **A customer submits an enquiry, creates an email/password account, signs back in, and sees only their own request and its current status.**

@@ -12,6 +12,7 @@ Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 11 characters)
 
 ## Customer portal guides
 
+- [Product roadmap: customer identity to cross-company gifting](docs/PRODUCT-ROADMAP.md)
 - [Product backlog: Now, Next, Later](docs/PRODUCT-BACKLOG.md)
 
 - [Customer and owner user manual](docs/USER-MANUAL.md)
