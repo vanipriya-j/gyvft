@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { customerAuthMessage } from "@/lib/auth/customer-errors";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 export function CustomerAuth() {
   const router = useRouter();
@@ -54,10 +55,8 @@ export function CustomerAuth() {
         router.replace("/account");
         router.refresh();
       }
-    } catch {
-      setMessage(
-        "We couldn’t complete that request. Check your details or code and try again.",
-      );
+    } catch (error) {
+      setMessage(customerAuthMessage(error));
     } finally {
       setBusy(false);
     }

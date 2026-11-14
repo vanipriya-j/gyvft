@@ -13,8 +13,11 @@ export function createSupabaseBrowserClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = getBrowserPublishableKey();
   if (!url || !key) {
-    throw new Error(
-      "Supabase browser configuration is missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+    throw Object.assign(
+      new Error("Customer authentication is not configured."),
+      {
+        code: "AUTH_CONFIGURATION_MISSING",
+      },
     );
   }
   return createBrowserClient(url, key);
