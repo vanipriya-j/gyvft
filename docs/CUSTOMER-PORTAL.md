@@ -58,6 +58,16 @@ Enquiry pages show the request, status, timeline and conversations. Payment/prod
 
 `scripts/sql/remove-customer-demo.sql` deletes only the exact demo owner/key/UUID records and their dependent rows. It does not truncate shared tables or clear migration history. No cleanup has been run.
 
+## Customer dashboard v1
+
+`/account` provides Overview, Requests, Occasions and Ideas. Request summaries omit internal integration identifiers and raw brief text; all server reads remain account-scoped. Pending approvals include only the latest version of each kind. `paid_paise` on real converted projects is the source of recorded-spend totals; budget preferences, pending payment references and sample data are not counted. Monthly charts count request creation in Asia/Kolkata; requested formats are explicitly not purchase rankings.
+
+`20261114000005_customer_dashboard.sql` adds nullable `occasion_date` / `delivery_date` to customer projects, plus RLS-protected `gyvft_customer_occasions` and `gyvft_customer_saved_ideas`. Mutation actions derive ownership from the app session and bind account IDs in SQL. The existing public form is untouched. Yearly date recurrence is opt-in and does not dispatch emails/orders. Leap-day display uses 28 February outside leap years while retaining the original date.
+
+Ideas use existing ready portfolio content and published assets, with private save/remove actions. External Aarla collection links carry only static campaign attribution, never customer identity or request details. They open a separate store; shared order history is not claimed. Source suggestions are editorial, not an AI recommendation or inventory integration.
+
+Missing new tables leave the established requests available with a setup-needed notice; unexpected database failures are not converted into fake empty reports. Repeat the existing `/setup` once after deployment. Only exact fictional fixture IDs receive demo occasion/delivery dates. Real requests keep dates unset until explicitly saved.
+
 ## App reporting and logging
 
 Open `/operations` and unlock it with the existing operator setup secret. It shows account/session counts, real enquiries by stage, accounts with enquiries, actual converted project records, event counts and recent safe error/sign-in-failure summaries. Demo enquiries are excluded from real enquiry/conversion counts. CSV exports contain aggregate counts only. The secret stays in tab memory and is removed by locking/closing the page.

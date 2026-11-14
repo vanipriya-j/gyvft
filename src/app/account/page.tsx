@@ -1,86 +1,87 @@
 import Link from "next/link";
+import { ArrowUpRight, Plus } from "lucide-react";
 import { projectsFor } from "@/lib/customer/data";
 import { requireCustomerAccount } from "@/lib/customer/session";
-import { stages } from "@/lib/customer/model";
+import { dashboardExtrasFor } from "@/lib/customer/dashboard-data";
+import { indiaToday, summarizeRequests } from "@/lib/customer/dashboard-model";
+import { GiftingDashboard } from "@/components/customer/dashboard";
+import { stories } from "@/content/stories";
 import { signOut } from "./actions";
 export const dynamic = "force-dynamic";
 export default async function AccountPage() {
   const account = await requireCustomerAccount();
-  const ready = Boolean(process.env.DATABASE_URL);
-  const projects = ready ? await projectsFor(account.id) : [];
+  const [projects, extras] = await Promise.all([
+    projectsFor(account.id),
+    dashboardExtrasFor(account.id),
+  ]);
+  const selected = [
+    "private-diwali-hampers",
+    "photo-gauge-summer-care-pack",
+    "veeramakaliamman-temple-colouring-book",
+    "kumon-delegate-gifting",
+    "tm-karthik-crew-gifting",
+    "jannal-oram",
+    "root360",
+    "sruti-40",
+  ];
+  const groups = {
+    "celebrating-people": "People & milestones",
+    "building-communities": "Communities",
+    "institutions-heritage": "Learning & culture",
+    "organisations-events": "For teams",
+    "seasonal-personal-gifting": "Gatherings & occasions",
+  };
+  const ideas = selected
+    .map((slug) => stories.find((s) => s.slug === slug))
+    .filter((s) => s && s.status === "ready" && !s.hero.isPlaceholder)
+    .map((s) => ({
+      slug: s!.slug,
+      title: s!.title,
+      summary: s!.summary,
+      group: groups[s!.groupId],
+      image: s!.hero.src,
+      alt: s!.hero.alt,
+    }));
   return (
     <>
-      <div className="mb-12 flex flex-wrap items-start justify-between gap-5">
+      <div className="mb-7 flex flex-wrap items-start justify-between gap-5">
         <div>
-          <p className="text-xs uppercase tracking-[.2em] text-olive">
-            Your corner of GYVFT
+          <p className="text-[10px] uppercase tracking-[.22em] text-olive">
+            My GYVFT
           </p>
-          <h1 className="mt-3 font-serif text-4xl md:text-5xl">
-            Your stories, taking shape.
+          <h1 className="mt-2 font-serif text-3xl leading-tight md:text-4xl">
+            A little thought. A lasting connection.
           </h1>
-          <p className="mt-4 text-muted-text">{account.email}</p>
-        </div>
-        <form action={signOut}>
-          <button className="rounded-full border border-border px-5 py-2 text-sm">
-            Sign out
-          </button>
-        </form>
-      </div>
-      <div className="mb-8 flex gap-8 border-b border-border pb-4 text-sm">
-        <span>
-          {projects.filter((p) => p.kind === "enquiry").length} enquiries
-        </span>
-        {projects.some((p) => p.kind === "project") && (
-          <span>
-            {projects.filter((p) => p.kind === "project").length} projects
-          </span>
-        )}
-      </div>
-      {!projects.length ? (
-        <section className="rounded-3xl border border-border bg-paper px-7 py-16 text-center">
-          <h2 className="font-serif text-3xl">
-            {ready
-              ? "Your next story starts here."
-              : "We’re preparing your customer space."}
-          </h2>
-          <p className="mx-auto mt-4 max-w-lg text-muted-text">
-            {ready
-              ? "Enquiries submitted while signed in appear here. If you submitted before creating your account, use the same browser to connect that request."
-              : "Your account is ready. Project updates will appear once your customer space is connected."}
+          <p className="mt-2 text-sm text-muted-text">
+            Your gifting space, for home, work and the people who matter.
           </p>
-          <Link
-            className="mt-7 inline-block rounded-full bg-olive-dark px-6 py-3 text-white"
-            href="/tell-your-story"
-          >
-            Tell us your story
-          </Link>
-        </section>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2">
-          {projects.map((p) => (
-            <Link
-              href={`/account/projects/${p.id}`}
-              key={p.id}
-              className="rounded-3xl border border-border bg-paper p-7 transition hover:shadow-lg"
-            >
-              <div className="flex justify-between gap-3 text-xs uppercase tracking-wider text-olive">
-                <span>
-                  {p.kind}
-                  {p.organisation_name ? ` · ${p.organisation_name}` : ""}
-                </span>
-                <span>View story →</span>
-              </div>
-              <h2 className="mt-5 font-serif text-2xl">{p.title}</h2>
-              <p className="mt-4 inline-block rounded-full bg-surface px-3 py-1 text-sm">
-                {stages[p.stage]}
-              </p>
-              <p className="mt-5 text-sm leading-relaxed text-muted-text">
-                {p.next_action}
-              </p>
-            </Link>
-          ))}
         </div>
-      )}
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/tell-your-story"
+            className="inline-flex items-center gap-2 rounded-full bg-olive-dark px-5 py-2.5 text-sm text-white"
+          >
+            <Plus size={15} /> Start a new story
+          </Link>
+          <form action={signOut}>
+            <button className="rounded-full border border-border px-4 py-2.5 text-xs">
+              Sign out
+            </button>
+          </form>
+        </div>
+      </div>
+      <GiftingDashboard
+        requests={summarizeRequests(projects)}
+        {...extras}
+        ideas={ideas}
+        today={indiaToday()}
+      />
+      <div className="mt-9 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-xs text-muted-text">
+        <span className="min-w-0 break-all">Signed in as {account.email}</span>
+        <Link href="/stories" className="inline-flex items-center gap-1">
+          More stories worth sharing <ArrowUpRight size={13} />
+        </Link>
+      </div>
     </>
   );
 }
