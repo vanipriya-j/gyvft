@@ -52,6 +52,9 @@ const ACK_TEXT = [
   "",
   "We have received your submission and will get in touch to understand it better.",
   "",
+  "Follow your enquiry: " + (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000") + "/account",
+  "Use the same email to create your customer account.",
+  "",
   "Your story. Our telling.",
   "",
   "GYVFT",
@@ -61,6 +64,7 @@ const ACK_TEXT = [
 const ACK_HTML = `
 <p>Thank you for reaching out to GYVFT.</p>
 <p>We have received your submission and will get in touch to understand it better.</p>
+<p>Visit <a href="${escapeHtml(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000")}/account">My GYVFT</a> to follow your enquiry. Create an account with the same email.</p>
 <p><em>Your story. Our telling.</em></p>
 <p>GYVFT<br/>Created by the team behind Aarla.</p>
 `.trim();
@@ -282,7 +286,7 @@ export async function submitPublicLead(input: {
   }
 
   // Fail-open: CRM lead in Aarla OS must not block email delivery.
-  await tryForwardLeadToAarlaStory({
+  const forward = await tryForwardLeadToAarlaStory({
     formKey: input.formKey,
     idempotencyKey: input.idempotencyKey,
     submittedAt,
@@ -291,6 +295,21 @@ export async function submitPublicLead(input: {
     referrer,
     attachment: input.attachment,
   });
+
+  // Customer projection is a secondary effect; email delivery remains authoritative.
+  try {
+    const { captureCustomerEnquiry } = await import("@/services/leads/customer-enquiry");
+    await captureCustomerEnquiry({
+      submissionKey: input.idempotencyKey,
+      email: replyTo,
+      title: String(input.fields.brief_title || input.fields.occasion_type || FORM_NAMES[input.formKey]),
+      brief: String(input.fields.story_description || input.fields.brief_context || input.fields.discussion_topic || input.fields.upcoming_requirement || input.fields.additional_context || ""),
+      leadId: forward?.leadId ?? null,
+    });
+  } catch {
+    const { logger } = await import("@/lib/logging/logger");
+    logger.warn("Customer enquiry projection failed", { formKey: input.formKey });
+  }
 
   rememberIdempotentSubmission(input.idempotencyKey, submissionId);
   return { submissionId };
