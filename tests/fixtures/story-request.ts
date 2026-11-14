@@ -1,0 +1,26 @@
+import type { StoryFormInput } from "@/lib/validation/story-form";
+export const storyInput: StoryFormInput = {
+  story_description:
+    "A keepsake for the people who supported our family through an important milestone.",
+  occasion_type: "Other",
+  occasion_other: "Family reunion",
+  audiences: ["Family", "Community"],
+  preferred_formats: ["Book", "Merchandise"],
+  target_date: "2099-12-01",
+  target_date_precision: "exact",
+  quantity_range: "26-100",
+  budget_range: "1L-5L",
+  primary_city: "Chennai",
+  multiple_locations: true,
+  location_notes: "Chennai and Bengaluru; coordinate delivery separately.",
+  full_name: "Test Customer",
+  organisation_name: "Example",
+  designation: "Coordinator",
+  email: "test@example.test",
+  phone: "+919999999999",
+  preferred_contact_method: "whatsapp",
+  communication_consent: true,
+  marketing_consent: false,
+  honeypot: "",
+  idempotency_key: "11111111-1111-4111-8111-111111111111",
+};

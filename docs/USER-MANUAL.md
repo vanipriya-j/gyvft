@@ -10,20 +10,13 @@
 
 This creates a GYVFT login in the application's database. No Supabase dashboard account or email OTP is required. If you already have an account, use **Sign in**. If you previously tested the Supabase Auth version, create an account again for this app-managed version; passwords are not imported from that service.
 
-### Tell us about a gift
+### Your seven-step story request
 
-Open **Start a new story** (`/tell-your-story`). The seven steps capture:
+Use the existing **Tell your story** form. Its questions and seven-step layout are unchanged: story, occasion, audiences, preferred formats, timing/quantity/budget, locations, and contact details/permissions.
 
-- The story and what the gift should communicate.
-- The occasion and its significance.
-- One person, one group with a recipient count, or separate individuals using **Add another recipient**. Give each profile a name/label and description; add likes and dislikes when known.
-- Preferred formats.
-- A numeric INR budget **per recipient or in total**, and the requested delivery date.
-- Delivery city/location notes and your contact details.
+The backend saves every validated answer. Open the request in My GYVFT to see the story and **Your request details**, including the original ranges and date precision. Flexible/month/quarter preferences do not become promised delivery dates. The current budget-range question does not specify per-recipient versus total; the system does not invent that distinction or unknown recipient preferences.
 
-Your draft saves in this browser. Submitted preferences appear under **Your gifting details** inside the request, and are included in the lead email and Aarla intake context. A budget is a preference, not a confirmed quotation or a payment request. GYVFT will confirm delivery feasibility. Existing real enquiries are not filled with invented preferences; the three labelled demos receive fictional examples.
-
-After deploying this update, run `/setup` once to add the structured-brief column.
+The same answers remain in the lead email and Aarla intake. Aarla context also carries occasion-other text, date precision and location details. Internal tracking identifiers are not copied into the customer-visible snapshot.
 
 ### View your requests
 

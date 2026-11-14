@@ -1,5 +1,5 @@
 import "server-only";
-import { giftBriefSchema, giftBriefSummary } from "@/lib/validation/gift-brief";
+import { readStoryRequest } from "@/lib/customer/story-request";
 import { headers } from "next/headers";
 import { AppError } from "@/lib/errors/app-error";
 import {
@@ -162,8 +162,6 @@ function fieldRows(fields: Record<string, unknown>): Array<[string, string]> {
     if (!isPresent(value)) continue;
     rows.push([label, formatFieldValue(value)]);
   }
-  const gift = giftBriefSchema.safeParse(fields.gift_brief);
-  if (gift.success) rows.push(["Gifting brief", giftBriefSummary(gift.data)]);
   return rows;
 }
 
@@ -328,6 +326,10 @@ export async function submitPublicLead(input: {
   try {
     const { captureCustomerEnquiry } =
       await import("@/services/leads/customer-enquiry");
+    const story =
+      input.formKey === "tell_your_story"
+        ? readStoryRequest(input.fields)
+        : null;
     await captureCustomerEnquiry({
       submissionKey: input.idempotencyKey,
       email: replyTo,
@@ -345,9 +347,7 @@ export async function submitPublicLead(input: {
           "",
       ),
       leadId: forward?.leadId ?? null,
-      giftBrief: giftBriefSchema.safeParse(input.fields.gift_brief).success
-        ? giftBriefSchema.parse(input.fields.gift_brief)
-        : undefined,
+      storyDetails: story?.success ? story.data : undefined,
     });
   } catch {
     const { logger } = await import("@/lib/logging/logger");

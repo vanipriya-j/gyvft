@@ -38,11 +38,13 @@ All request reads and writes use `customer_account_id`, derived from the authent
 
 The `customer_*` and `gyvft_customer_*` tables have RLS enabled and direct anon/authenticated table grants revoked. Browser clients use server actions rather than raw database access. The application database role must have the intended server permissions.
 
-## Structured gift brief
+## Backend matching the existing story form
 
-`/tell-your-story` validates a required `gift_brief`: recipient mode/profiles, group count, occasion description, intended gift message, INR amount and per-recipient/total basis, and requested delivery date. Likes/dislikes may be unknown. The server derives legacy handoff date/count/budget text from this validated object; it never trusts stale hidden range fields.
+The original `/tell-your-story` questions, seven-step flow and validation remain unchanged. `storyRequestSchema` creates an allowlisted, versioned snapshot of every validated form answer, excluding honeypot/idempotency/attribution/analytics metadata. The existing `customer_projects.gift_brief` JSONB column stores this snapshot with `source: tell_your_story` and `version: 1`; no additional migration is required beyond the already shipped `20261114000004_customer_gift_brief.sql`.
 
-`20261114000004_customer_gift_brief.sql` adds a nullable JSONB column to `customer_projects` and fills only the three exact fictional demo rows. Real legacy requests remain unchanged. The portal displays the structured preferences and requested date; quoted/order/payment amounts stay separate. Lead email renders a readable escaped summary; the existing Aarla payload receives it in `story.additional_context`, preserving its contract. Aarla's own structured fields/UI are separate work.
+The customer request shows occasion/other, audiences, preferred formats, target date and precision, quantity/budget ranges, city/multiple-location notes, contact details and contact/marketing preferences. The narrative stays in `brief`. Only valid exact dates are projected into the DATE column. Budget ranges are not converted into numeric quotes or assigned an invented per-recipient/total basis. Recipient likes/dislikes are not inferred from audience categories. Previously saved structured records remain readable; no real request is rewritten or deleted.
+
+Lead emails already render the form answers. Aarla's existing fields retain their original values; `additional_context` additionally preserves occasion-other, date precision and multiple-location details. Aarla's application UI remains separate work.
 
 ## Customer-visible content
 
