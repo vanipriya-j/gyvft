@@ -78,9 +78,19 @@ describe("database migrations", () => {
   });
   it("propagates SQL failures out of the transaction without recording success", async () => {
     const { sql, tx } = connection({ failure: true });
-    await expect(runPendingMigrations(sql)).rejects.toThrow("SQL failed");
+    await expect(runPendingMigrations(sql)).rejects.toThrow("001_first.sql");
     expect(tx.mock.calls.some(([p]) => p.join("").startsWith("INSERT"))).toBe(
       false,
     );
+  });
+  it("reports the actual pending file then commit, without claiming completion before commit", async () => {
+    const { sql } = connection({ applied: ["001_first.sql"] });
+    const events: unknown[] = [];
+    await runPendingMigrations(sql, (event) => events.push(event));
+    expect(events).toEqual([
+      { phase: "checking", total: 0, completed: 0 },
+      { phase: "applying", total: 1, completed: 0, filename: "002_second.sql" },
+      { phase: "committing", total: 1, completed: 1 },
+    ]);
   });
 });

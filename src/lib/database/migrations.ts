@@ -1,6 +1,15 @@
 import { readdir, readFile } from "fs/promises";
 import path from "path";
 import type { Sql } from "postgres";
+import type { MigrationProgress } from "./migration-progress";
+export class MigrationExecutionError extends Error {
+  constructor(
+    public filename: string,
+    cause: unknown,
+  ) {
+    super(`Migration ${filename} failed.`, { cause });
+  }
+}
 
 const migrationDirectory = path.join(process.cwd(), "supabase", "migrations");
 // Transaction-scoped: safe with connection pooling, shared by web and CLI runners.
@@ -33,7 +42,11 @@ export async function listMigrations(sql: Sql): Promise<MigrationStatus[]> {
   );
   return files.map((id) => ({ id, appliedAt: byId.get(id) ?? null }));
 }
-export async function runPendingMigrations(sql: Sql): Promise<string[]> {
+export async function runPendingMigrations(
+  sql: Sql,
+  onProgress?: (event: MigrationProgress) => void,
+): Promise<string[]> {
+  onProgress?.({ phase: "checking", total: 0, completed: 0 });
   // Only SQL bundled with this deployment is ever executed. No request input.
   const files = await migrationFiles();
   const migrations = await Promise.all(
@@ -55,12 +68,27 @@ export async function runPendingMigrations(sql: Sql): Promise<string[]> {
       { id: string }[]
     >`SELECT id FROM public.schema_migrations`;
     const seen = new Set(recorded.map((row) => row.id));
-    for (const migration of migrations) {
-      if (seen.has(migration.id)) continue;
-      await tx.unsafe(migration.contents);
-      await tx`INSERT INTO public.schema_migrations (id) VALUES (${migration.id})`;
+    const pending = migrations.filter((m) => !seen.has(m.id));
+    for (const migration of pending) {
+      onProgress?.({
+        phase: "applying",
+        total: pending.length,
+        completed: applied.length,
+        filename: migration.id,
+      });
+      try {
+        await tx.unsafe(migration.contents);
+        await tx`INSERT INTO public.schema_migrations (id) VALUES (${migration.id})`;
+      } catch (error) {
+        throw new MigrationExecutionError(migration.id, error);
+      }
       applied.push(migration.id);
     }
+    onProgress?.({
+      phase: "committing",
+      total: pending.length,
+      completed: applied.length,
+    });
   });
   return applied;
 }

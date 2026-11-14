@@ -15,6 +15,7 @@ vi.mock("@/lib/database/migrations", async (original) => ({
   listMigrations: list,
 }));
 import { GET, POST } from "@/app/api/setup/route";
+import { MigrationExecutionError } from "@/lib/database/migrations";
 import { validSetupSecret } from "@/lib/security/setup-secret";
 const secret = "test-setup-secret-with-at-least-32-characters";
 const post = (body: unknown) =>
@@ -120,5 +121,64 @@ describe("public setup with secret authentication", () => {
     vi.stubEnv("SETUP_SECRET", "x".repeat(10));
     expect(validSetupSecret("x".repeat(10))).toBe(false);
     expect((await (await GET()).json()).ready).toBe(false);
+  });
+  it("streams progress before the final result", async () => {
+    run.mockImplementationOnce(async (_sql, progress) => {
+      progress({
+        phase: "applying",
+        total: 1,
+        completed: 0,
+        filename: "001_test.sql",
+      });
+      progress({ phase: "committing", total: 1, completed: 1 });
+      return ["001_test.sql"];
+    });
+    const response = await post({
+      secret,
+      action: "migrate",
+      confirm: true,
+      stream: true,
+    });
+    expect(response.headers.get("content-type")).toContain(
+      "application/x-ndjson",
+    );
+    const events = (await response.text())
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    expect(events[0].type).toBe("progress");
+    expect(
+      events.some((event) => event.progress?.filename === "001_test.sql"),
+    ).toBe(true);
+    expect(events.at(-1).result.ok).toBe(true);
+  });
+  it("returns a safe failed migration filename and SQLSTATE", async () => {
+    const cause = Object.assign(
+      new Error("private SQL including credentials"),
+      { code: "42501" },
+    );
+    run.mockRejectedValueOnce(
+      new MigrationExecutionError("001_test.sql", cause),
+    );
+    const response = await post({
+      secret,
+      action: "migrate",
+      confirm: true,
+      stream: true,
+    });
+    const text = await response.text();
+    const result = JSON.parse(text.trim().split("\n").at(-1)!).result;
+    expect(result.ok).toBe(false);
+    expect(result.diagnostic).toEqual({
+      code: "42501",
+      filename: "001_test.sql",
+    });
+    expect(text).not.toContain("private SQL");
+  });
+  it("keeps a committed run successful if only refreshing history fails", async () => {
+    run.mockResolvedValueOnce(["001_test.sql"]);
+    list.mockRejectedValueOnce(new Error("read failed"));
+    const response = await post({ secret, action: "migrate", confirm: true });
+    expect((await response.json()).ok).toBe(true);
   });
 });
