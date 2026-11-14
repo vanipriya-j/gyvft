@@ -46,13 +46,28 @@ Customer messages are saved against the request. The operational delivery/reply 
 
 When a real project has a published versioned proposal/design, approve that version or request changes with comments. Payment/production views appear only on converted projects. The agreed business policy remains 50% advance and the remaining 50% before dispatch; direct UPI references are pending until receipt is verified. These operational/payment/Shopify integrations are not completed merely by loading this portal.
 
+### Your gifting space
+
+My GYVFT has four areas:
+
+- **Overview:** open requests, explicitly saved upcoming occasions, recorded project payments, pending latest-version approvals, six months of request activity, and formats chosen in briefs. Money totals exclude labelled samples and do not treat brief budgets or submitted UPI references as payments.
+- **Requests:** compact rows with search, status/type filters, newest/oldest/delivery sorting and pagination. Open a request to read its full brief, conversation and next step.
+- **Occasions:** add a private date after an enquiry, optionally repeat it yearly, or remove it. This is a planning calendar; saving a date does not automatically send a gift or notification. A leap-day yearly occasion appears on 28 February in non-leap years.
+- **Ideas:** explore published GYVFT stories and save favourites. These are past projects, not live stock or price promises. Related Aarla books, Play & Learn and Madras collections open the separate Aarla store in a new tab. Store purchases are not automatically imported into this customer portal yet.
+
+Within any request, **Occasion & delivery** lets you save the occasion date and requested delivery date separately. Neither is inferred from the original brief target. Delivery feasibility still needs confirmation. Clear an input and save to remove that date.
+
+The three DEMO requests have sample planning dates. If only samples exist, activity is explicitly labelled as sample activity. Actual item purchase rankings remain empty until item-level order history exists.
+
+The public seven-step Tell Your Story form remains unchanged.
+
 ## App owner
 
 ### Deploy and initialize
 
 1. Confirm GYVFT's Vercel Production environment has `DATABASE_URL` and `SETUP_SECRET` (at least 11 characters).
 2. Deploy the new app version.
-3. Open `/setup`, enter the secret and choose **Start setup** once.
+3. Open `/setup`, enter the secret and choose **Start setup** once. The dashboard update adds private occasion/saved-idea tables and separate request date columns through `20261114000005_customer_dashboard.sql`.
 4. Watch the check → apply → save progress. Wait for **Your database is ready**. Do not repeatedly click while it runs.
 5. Open `/account/login` and create the customer account for the test journey.
 

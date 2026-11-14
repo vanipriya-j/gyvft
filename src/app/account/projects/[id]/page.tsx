@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { saveRequestDates } from "../../dashboard-actions";
+import { dateKey } from "@/lib/customer/dashboard-model";
 import { CustomerStoryDetails } from "@/components/customer/story-details";
 import { CustomerGiftBrief } from "@/components/customer/gift-brief";
 import { notFound } from "next/navigation";
@@ -108,6 +110,43 @@ export default async function ProjectPage({
                 Order reference: {project.shopify_order_reference}
               </p>
             )}
+          </section>
+          <section className={card}>
+            <h2 className="font-serif text-2xl">Occasion & delivery</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-text">
+              The day you are celebrating and the day you need the gifts can be
+              different. Add your preferences here after submitting the brief.
+              GYVFT will confirm delivery feasibility.
+            </p>
+            <ActionForm
+              action={saveRequestDates.bind(null, id)}
+              label="Save dates"
+            >
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <label className="block text-sm">
+                  Occasion date
+                  <input
+                    type="date"
+                    name="occasion_date"
+                    defaultValue={dateKey(project.occasion_date) || ""}
+                    className={input}
+                  />
+                </label>
+                <label className="block text-sm">
+                  Requested delivery date
+                  <input
+                    type="date"
+                    name="delivery_date"
+                    defaultValue={dateKey(project.delivery_date) || ""}
+                    className={input}
+                  />
+                </label>
+              </div>
+              <p className="mt-3 text-xs text-muted-text">
+                Leave a date blank to clear it. Your original brief target is
+                preserved separately.
+              </p>
+            </ActionForm>
           </section>
           <CustomerStoryDetails value={project.gift_brief} />
           <CustomerGiftBrief value={project.gift_brief} />

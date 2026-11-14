@@ -29,6 +29,13 @@ Code being present or a build passing is not the same as the customer journey be
 
 Optional pre-launch task: reset confirmed GYVFT test enquiries if needed, then repeat the controlled customer test. This is not a blanket database truncate.
 
+
+## Customer dashboard first version
+
+Implemented for review: compact searchable requests; actual pending latest-version approvals; private occasions added after enquiry; distinct occasion/requested-delivery dates; saved portfolio inspiration; request-activity and requested-format charts; recorded project-payment totals; contextual links to real Aarla collections. The original seven-step public form is unchanged.
+
+Next commercial work: Aarla status/reply loop and actual quote/order/payment syncing; item-level purchase insights; reminder delivery with customer preferences; recipient profiles learned through curation; household/company collaboration and accepted circles. Do not infer occasion dates from brief targets or report requested formats as purchased products. The existing 50% advance / balance-before-dispatch policy remains in force for GYVFT orders.
+
 ## Next — make progress and conversations useful
 
 | ID  | Item                                         | Definition of done                                                                                                                                                                                        |

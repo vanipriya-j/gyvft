@@ -16,6 +16,9 @@ export type CustomerProject = {
   stage: number;
   next_action: string;
   target_date: string | null;
+  occasion_date?: string | null;
+  delivery_date?: string | null;
+  submission_key?: string | null;
   total_paise: number | null;
   paid_paise: number;
   razorpay_url: string | null;

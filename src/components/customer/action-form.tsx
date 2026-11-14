@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 export type ActionResult = { message: string; ok: boolean };
@@ -22,10 +23,13 @@ export function ActionForm({
   label: string;
   children: React.ReactNode;
 }) {
+  const router = useRouter();
   const [state, submit] = useActionState(
     async (_: ActionResult, data: FormData) => {
       try {
-        return await action(data);
+        const result = await action(data);
+        if (result.ok) router.refresh();
+        return result;
       } catch {
         return {
           message:
