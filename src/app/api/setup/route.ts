@@ -93,14 +93,14 @@ export async function POST(request: Request) {
       const sql = getSql();
       const applied =
         body.action === "migrate"
-          ? await runPendingMigrations(sql, onProgress)
+          ? await runPendingMigrations(sql, onProgress, "customer")
           : [];
       if (body.action === "migrate")
         logger.info("Secret-protected setup migrations completed", {
           migrations: applied,
         });
       try {
-        const migrations = await listMigrations(sql);
+        const migrations = await listMigrations(sql, "customer");
         return {
           status: 200,
           result: {

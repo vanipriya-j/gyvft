@@ -144,4 +144,26 @@ describe("database migrations", () => {
       ),
     ).toBe(false);
   });
+  it("public customer setup selects only the customer migration, not legacy CRM SQL", async () => {
+    files.mockResolvedValueOnce([
+      "20260725000001_init.sql",
+      "20260725000000_local_auth_stub.sql",
+      "20261112000000_customer_portal.sql",
+    ]);
+    read.mockResolvedValueOnce("CUSTOMER ONLY SQL");
+    const { sql, tx } = connection();
+    expect(await runPendingMigrations(sql, undefined, "customer")).toEqual([
+      "20261112000000_customer_portal.sql",
+    ]);
+    expect(tx.unsafe).toHaveBeenCalledExactlyOnceWith("CUSTOMER ONLY SQL");
+    expect(read).toHaveBeenCalledTimes(1);
+    expect(read.mock.calls[0][0]).toContain(
+      "20261112000000_customer_portal.sql",
+    );
+  });
+  it("fails closed instead of falling back to legacy SQL if the customer migration is missing", async () => {
+    await expect(migrationFiles("customer")).rejects.toThrow(
+      "Packaged customer migration missing",
+    );
+  });
 });

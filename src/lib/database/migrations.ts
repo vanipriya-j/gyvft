@@ -14,6 +14,10 @@ export class MigrationExecutionError extends Error {
 const migrationDirectory = path.join(process.cwd(), "supabase", "migrations");
 // Transaction-scoped: safe with connection pooling, shared by web and CLI runners.
 const migrationLock = 714093821;
+export type MigrationScope = "all" | "customer";
+// Explicit server-owned manifest: the public setup endpoint must never install
+// the legacy Studio CRM schema into the existing business database.
+const customerMigrations = ["20261112000000_customer_portal.sql"] as const;
 export type MigrationStatus = { id: string; appliedAt: string | null };
 export class MigrationBusyError extends Error {
   constructor() {
@@ -22,13 +26,24 @@ export class MigrationBusyError extends Error {
     );
   }
 }
-export async function migrationFiles() {
-  return (await readdir(migrationDirectory))
+export async function migrationFiles(scope: MigrationScope = "all") {
+  const files = (await readdir(migrationDirectory))
     .filter((file) => /^\d+_[a-zA-Z0-9_-]+\.sql$/.test(file))
     .sort();
+  if (scope === "all") return files;
+  for (const required of customerMigrations) {
+    if (!files.includes(required))
+      throw new Error(`Packaged customer migration missing: ${required}`);
+  }
+  return files.filter((file) =>
+    customerMigrations.some((required) => required === file),
+  );
 }
-export async function listMigrations(sql: Sql): Promise<MigrationStatus[]> {
-  const files = await migrationFiles();
+export async function listMigrations(
+  sql: Sql,
+  scope: MigrationScope = "all",
+): Promise<MigrationStatus[]> {
+  const files = await migrationFiles(scope);
   const [table] = await sql<
     { name: string | null }[]
   >`SELECT to_regclass('public.schema_migrations')::text AS name`;
@@ -55,10 +70,11 @@ export async function listMigrations(sql: Sql): Promise<MigrationStatus[]> {
 export async function runPendingMigrations(
   sql: Sql,
   onProgress?: (event: MigrationProgress) => void,
+  scope: MigrationScope = "all",
 ): Promise<string[]> {
   onProgress?.({ phase: "checking", total: 0, completed: 0 });
   // Only SQL bundled with this deployment is ever executed. No request input.
-  const files = await migrationFiles();
+  const files = await migrationFiles(scope);
   const migrations = await Promise.all(
     files.map(async (id) => ({
       id,
