@@ -72,7 +72,7 @@ export default function SetupPage() {
           </li>
           <li>
             Set <code>SETUP_SECRET</code> to a separate random secret of at
-            least 32 characters. This is not your customer or Studio password.
+            least 11 characters. This is not your customer or Studio password.
           </li>
           <li>
             Redeploy that environment, return here, and enter the same setup
@@ -93,7 +93,7 @@ export default function SetupPage() {
                 SETUP_SECRET:{" "}
                 {readiness.hasSetupSecret
                   ? "Configured"
-                  : "Missing or shorter than 32 characters"}
+                  : "Missing or shorter than 11 characters"}
               </p>
             </>
           ) : (
@@ -112,7 +112,7 @@ export default function SetupPage() {
             name="secret"
             type="password"
             autoComplete="off"
-            minLength={32}
+            minLength={11}
             maxLength={1024}
             required
           />

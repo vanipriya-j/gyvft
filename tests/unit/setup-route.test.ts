@@ -109,4 +109,16 @@ describe("public setup with secret authentication", () => {
     expect(validSetupSecret(secret)).toBe(true);
     expect(validSetupSecret("x".repeat(2000))).toBe(false);
   });
+  it("accepts an 11-character setup secret and rejects a 10-character one", async () => {
+    const fixture = "x".repeat(11);
+    vi.stubEnv("SETUP_SECRET", fixture);
+    expect(validSetupSecret(fixture)).toBe(true);
+    expect((await (await GET()).json()).ready).toBe(true);
+    expect((await post({ secret: fixture, action: "status" })).status).toBe(
+      200,
+    );
+    vi.stubEnv("SETUP_SECRET", "x".repeat(10));
+    expect(validSetupSecret("x".repeat(10))).toBe(false);
+    expect((await (await GET()).json()).ready).toBe(false);
+  });
 });

@@ -95,7 +95,7 @@ Your submission appears as **Awaiting verification** until receipt is checked. A
 
 1. Review the pull request and its Vercel preview, then merge when ready. Confirm that the production deployment succeeds.
 2. Confirm the deployed environment has `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the supported legacy anon key). Supabase Auth keys alone do not supply a SQL connection. Credentials already configured in Vercel do not need to be entered in the migration page.
-3. Set a separate random `SETUP_SECRET` of at least 32 characters in Vercel and redeploy. This secret is not an application login password.
+3. Set a separate random `SETUP_SECRET` of at least 11 characters in Vercel and redeploy. This secret is not an application login password.
 4. Open `/setup`, enter the same secret, choose **Check migrations**, review the pending list, check the confirmation box, and choose **Run pending migrations**. No Studio owner account is needed.
 5. In Supabase, enable customer email/password signup and require email confirmation. Ensure customer registrations are not automatically granted Studio profiles or staff roles.
 6. Configure Supabase’s **Confirm signup** and **Reset password** email templates to display `{{ .Token }}`. This portal accepts email codes directly on its login page. Configure production email delivery and an appropriate password policy.
@@ -119,7 +119,7 @@ Setup uses the deployment’s `DATABASE_URL`. It accepts only the setup secret, 
 | ------------------------------------ | ------------------------------------------------------------------------------- |
 | Database up to date                  | No migration action is needed.                                                  |
 | Invalid setup secret                 | Use the secret configured for this deployment’s Vercel environment.             |
-| Setup disabled                       | Set a separate `SETUP_SECRET` with at least 32 characters and redeploy.         |
+| Setup disabled                       | Set a separate `SETUP_SECRET` with at least 11 characters and redeploy.         |
 | DATABASE_URL missing                 | Add the database connection string to the same Vercel environment and redeploy. |
 | Another migration run is in progress | Wait, then check migration status again.                                        |
 | Completion could not be confirmed    | Check status before retrying and inspect deployment logs.                       |
