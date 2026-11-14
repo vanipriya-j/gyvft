@@ -38,6 +38,12 @@ All request reads and writes use `customer_account_id`, derived from the authent
 
 The `customer_*` and `gyvft_customer_*` tables have RLS enabled and direct anon/authenticated table grants revoked. Browser clients use server actions rather than raw database access. The application database role must have the intended server permissions.
 
+## Structured gift brief
+
+`/tell-your-story` validates a required `gift_brief`: recipient mode/profiles, group count, occasion description, intended gift message, INR amount and per-recipient/total basis, and requested delivery date. Likes/dislikes may be unknown. The server derives legacy handoff date/count/budget text from this validated object; it never trusts stale hidden range fields.
+
+`20261114000004_customer_gift_brief.sql` adds a nullable JSONB column to `customer_projects` and fills only the three exact fictional demo rows. Real legacy requests remain unchanged. The portal displays the structured preferences and requested date; quoted/order/payment amounts stay separate. Lead email renders a readable escaped summary; the existing Aarla payload receives it in `story.additional_context`, preserving its contract. Aarla's own structured fields/UI are separate work.
+
 ## Customer-visible content
 
 `customer_projects` holds enquiries/projects and current status. Published events and conversations are separate customer-visible tables; never copy internal notes into them. New public submissions still email the existing inbox and forward to Aarla OS, with a secondary customer-portal mirror. Mirror failure is logged rather than turning a successfully emailed submission into a duplicate retry.

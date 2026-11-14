@@ -2,6 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetMemoryGuardsForTests } from "@/lib/security/memory-guards";
+import { gift } from "../fixtures/gift-brief";
 import { escapeHtml } from "@/lib/security/sanitize";
 
 const sendMock = vi.fn();
@@ -44,6 +45,35 @@ describe("public lead email submission", () => {
 
   afterEach(() => {
     resetMemoryGuardsForTests();
+  });
+
+  it("includes structured gifting preferences in email and the customer projection", async () => {
+    const { submitPublicLead } =
+      await import("@/services/leads/submit-public-lead");
+    await submitPublicLead({
+      formKey: "tell_your_story",
+      idempotencyKey: "22222222-2222-4222-8222-222222222222",
+      fields: {
+        email: "test@example.test",
+        full_name: "Test Customer",
+        gift_brief: {
+          ...gift,
+          recipients: [{ ...gift.recipients[0], name: "Sam <friend>" }],
+        },
+      },
+    });
+    expect(sendMock.mock.calls[0][0].text).toContain("Books and gardening");
+    expect(sendMock.mock.calls[0][0].text).toContain("Plastic packaging");
+    expect(sendMock.mock.calls[0][0].text).toContain("per recipient");
+    expect(sendMock.mock.calls[0][0].html).toContain("Sam &lt;friend&gt;");
+    expect(captureMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        giftBrief: expect.objectContaining({
+          delivery_date: "2099-12-01",
+          budget_basis: "per_recipient",
+        }),
+      }),
+    );
   });
 
   it("escapes HTML for email rendering", () => {

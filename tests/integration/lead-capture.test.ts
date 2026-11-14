@@ -45,6 +45,7 @@ const metaConversions = await import("@/services/meta/conversions");
 
 function storyInput(overrides: Partial<StoryFormInput> = {}): StoryFormInput {
   return {
+    gift_brief: { recipient_type: "person", recipients: [{ name: "Friend", description: "An old friend", likes: "Books", dislikes: "" }], group_size: 1, occasion_description: "Birthday celebration", gift_message: "You matter to me", budget_basis: "total", budget_amount: 2500, currency: "INR", delivery_date: "2099-12-01" },
     story_description:
       "A detailed family story about a milestone, the people involved, and the keepsake we want to create together.",
     occasion_type: "Birthday",

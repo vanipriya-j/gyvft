@@ -1,3 +1,4 @@
+import { gift } from "../fixtures/gift-brief";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const fetchMock = vi.fn();
@@ -20,7 +21,8 @@ describe("aarla story leads forwarder", () => {
   });
 
   it("builds the documented payload shape", async () => {
-    const { buildAarlaStoryLeadPayload } = await import("@/services/leads/aarla-story-leads");
+    const { buildAarlaStoryLeadPayload } =
+      await import("@/services/leads/aarla-story-leads");
     const payload = buildAarlaStoryLeadPayload({
       formKey: "tell_your_story",
       idempotencyKey: "11111111-1111-4111-8111-111111111111",
@@ -67,8 +69,11 @@ describe("aarla story leads forwarder", () => {
         }),
     });
 
-    const { forwardLeadToAarlaStory, buildAarlaStoryLeadPayload, AARLA_STORY_LEADS_URL } =
-      await import("@/services/leads/aarla-story-leads");
+    const {
+      forwardLeadToAarlaStory,
+      buildAarlaStoryLeadPayload,
+      AARLA_STORY_LEADS_URL,
+    } = await import("@/services/leads/aarla-story-leads");
 
     const payload = buildAarlaStoryLeadPayload({
       formKey: "book_a_discovery",
@@ -88,7 +93,9 @@ describe("aarla story leads forwarder", () => {
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(url).toBe(AARLA_STORY_LEADS_URL);
-    expect(url).toBe("https://aarla-os.vercel.app/api/integrations/story/leads");
+    expect(url).toBe(
+      "https://aarla-os.vercel.app/api/integrations/story/leads",
+    );
     const headers = init.headers as Record<string, string>;
     expect(headers.Authorization).toMatch(/^Bearer /);
     expect(headers["X-Aarla-Timestamp"]).toMatch(/^\d+$/);
@@ -99,10 +106,12 @@ describe("aarla story leads forwarder", () => {
     fetchMock.mockResolvedValue({
       ok: false,
       status: 500,
-      text: async () => JSON.stringify({ ok: false, code: "server_error", error: "boom" }),
+      text: async () =>
+        JSON.stringify({ ok: false, code: "server_error", error: "boom" }),
     });
 
-    const { tryForwardLeadToAarlaStory } = await import("@/services/leads/aarla-story-leads");
+    const { tryForwardLeadToAarlaStory } =
+      await import("@/services/leads/aarla-story-leads");
     const result = await tryForwardLeadToAarlaStory({
       formKey: "book_a_discovery",
       idempotencyKey: "33333333-3333-4333-8333-333333333333",
@@ -116,4 +125,26 @@ describe("aarla story leads forwarder", () => {
 
     expect(result).toEqual({ leadId: null, skipped: false });
   });
+});
+
+it("passes recipient preferences and explicit budget to Aarla using the existing context contract", async () => {
+  const { buildAarlaStoryLeadPayload } =
+    await import("@/services/leads/aarla-story-leads");
+  const payload = buildAarlaStoryLeadPayload({
+    formKey: "tell_your_story",
+    idempotencyKey: "local-test",
+    submittedAt: "2026-11-14",
+    fields: {
+      email: "test@example.test",
+      location_notes: "One delivery location",
+      gift_brief: gift,
+    },
+  });
+  expect(payload.story.additional_context).toContain("One delivery location");
+  expect(payload.story.additional_context).toContain("Sam");
+  expect(payload.story.additional_context).toContain("Plastic packaging");
+  expect(payload.story.additional_context).toContain(
+    "Thank you for always being there",
+  );
+  expect(payload.story.additional_context).toContain("2099-12-01");
 });

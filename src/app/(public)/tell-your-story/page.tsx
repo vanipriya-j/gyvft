@@ -12,7 +12,7 @@ export default function TellYourStoryPage() {
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.8fr_1.2fr]">
         <div className="lg:sticky lg:top-28 lg:self-start">
           <SectionIntro
-            copy="Seven short steps. Drafts save in your browser. Tell us the story, audience, format, and timing."
+            copy="Seven short steps. Drafts save in your browser. Tell us about the recipients, occasion, message, budget, and delivery date."
             eyebrow="Tell your story"
             title="Start with what matters."
           />

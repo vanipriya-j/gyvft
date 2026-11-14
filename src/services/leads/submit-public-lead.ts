@@ -1,4 +1,5 @@
 import "server-only";
+import { giftBriefSchema, giftBriefSummary } from "@/lib/validation/gift-brief";
 import { headers } from "next/headers";
 import { AppError } from "@/lib/errors/app-error";
 import {
@@ -6,7 +7,11 @@ import {
   findIdempotentSubmission,
   rememberIdempotentSubmission,
 } from "@/lib/security/memory-guards";
-import { escapeHtml, formatFieldValue, isPresent } from "@/lib/security/sanitize";
+import {
+  escapeHtml,
+  formatFieldValue,
+  isPresent,
+} from "@/lib/security/sanitize";
 import {
   getPublicLeadsInbox,
   logAckFailure,
@@ -52,7 +57,9 @@ const ACK_TEXT = [
   "",
   "We have received your submission and will get in touch to understand it better.",
   "",
-  "Follow your enquiry: " + (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000") + "/account",
+  "Follow your enquiry: " +
+    (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000") +
+    "/account",
   "Use the same email to create your customer account.",
   "",
   "Your story. Our telling.",
@@ -71,22 +78,32 @@ const ACK_HTML = `
 
 function assertNotBot(honeypot: string | null | undefined) {
   if (honeypot && honeypot.trim().length > 0) {
-    throw new AppError("FORBIDDEN", "Submission rejected.", { expose: true, status: 403 });
+    throw new AppError("FORBIDDEN", "Submission rejected.", {
+      expose: true,
+      status: 403,
+    });
   }
 }
 
 async function requestContext() {
   const h = await headers();
   const forwarded = h.get("x-forwarded-for");
-  const ip = forwarded?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
+  const ip =
+    forwarded?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
   const referrer = h.get("referer") || h.get("referrer") || null;
   return { ip, referrer };
 }
 
-function buildInternalSubject(formKey: PublicFormKey, fields: Record<string, unknown>): string {
-  const name = String(fields.full_name ?? fields.name ?? "Unknown").trim() || "Unknown";
+function buildInternalSubject(
+  formKey: PublicFormKey,
+  fields: Record<string, unknown>,
+): string {
+  const name =
+    String(fields.full_name ?? fields.name ?? "Unknown").trim() || "Unknown";
   const organisation =
-    String(fields.organisation_name ?? fields.organisation ?? "Unknown").trim() || "Unknown";
+    String(
+      fields.organisation_name ?? fields.organisation ?? "Unknown",
+    ).trim() || "Unknown";
 
   switch (formKey) {
     case "tell_your_story":
@@ -145,10 +162,14 @@ function fieldRows(fields: Record<string, unknown>): Array<[string, string]> {
     if (!isPresent(value)) continue;
     rows.push([label, formatFieldValue(value)]);
   }
+  const gift = giftBriefSchema.safeParse(fields.gift_brief);
+  if (gift.success) rows.push(["Gifting brief", giftBriefSummary(gift.data)]);
   return rows;
 }
 
-function utmRows(attribution?: AttributionLike | null): Array<[string, string]> {
+function utmRows(
+  attribution?: AttributionLike | null,
+): Array<[string, string]> {
   if (!attribution) return [];
   const mapping: Array<[keyof AttributionLike, string]> = [
     ["firstTouchSource", "UTM source (first)"],
@@ -189,10 +210,13 @@ function buildInternalBodies(input: {
     ...utmRows(input.attribution),
   ];
 
-  const attributionReferrer = input.attribution?.firstTouchReferrer || input.attribution?.lastTouchReferrer;
+  const attributionReferrer =
+    input.attribution?.firstTouchReferrer ||
+    input.attribution?.lastTouchReferrer;
   const referrer = input.referrer || attributionReferrer;
   if (isPresent(referrer)) rows.push(["Referrer", formatFieldValue(referrer)]);
-  if (isPresent(input.attachmentName)) rows.push(["Attached file", formatFieldValue(input.attachmentName)]);
+  if (isPresent(input.attachmentName))
+    rows.push(["Attached file", formatFieldValue(input.attachmentName)]);
 
   const text = rows.map(([label, value]) => `${label}: ${value}`).join("\n");
   const html = `
@@ -237,7 +261,11 @@ export async function submitPublicLead(input: {
   const submittedAt = new Date().toISOString();
   const replyTo = visitorEmail(input.fields);
   if (!replyTo) {
-    throw new AppError("VALIDATION_ERROR", "A valid email address is required.", { expose: true });
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "A valid email address is required.",
+      { expose: true },
+    );
   }
 
   const subject = buildInternalSubject(input.formKey, input.fields);
@@ -298,17 +326,34 @@ export async function submitPublicLead(input: {
 
   // Customer projection is a secondary effect; email delivery remains authoritative.
   try {
-    const { captureCustomerEnquiry } = await import("@/services/leads/customer-enquiry");
+    const { captureCustomerEnquiry } =
+      await import("@/services/leads/customer-enquiry");
     await captureCustomerEnquiry({
       submissionKey: input.idempotencyKey,
       email: replyTo,
-      title: String(input.fields.brief_title || input.fields.occasion_type || FORM_NAMES[input.formKey]),
-      brief: String(input.fields.story_description || input.fields.brief_context || input.fields.discussion_topic || input.fields.upcoming_requirement || input.fields.additional_context || ""),
+      title: String(
+        input.fields.brief_title ||
+          input.fields.occasion_type ||
+          FORM_NAMES[input.formKey],
+      ),
+      brief: String(
+        input.fields.story_description ||
+          input.fields.brief_context ||
+          input.fields.discussion_topic ||
+          input.fields.upcoming_requirement ||
+          input.fields.additional_context ||
+          "",
+      ),
       leadId: forward?.leadId ?? null,
+      giftBrief: giftBriefSchema.safeParse(input.fields.gift_brief).success
+        ? giftBriefSchema.parse(input.fields.gift_brief)
+        : undefined,
     });
   } catch {
     const { logger } = await import("@/lib/logging/logger");
-    logger.warn("Customer enquiry projection failed", { formKey: input.formKey });
+    logger.warn("Customer enquiry projection failed", {
+      formKey: input.formKey,
+    });
   }
 
   rememberIdempotentSubmission(input.idempotencyKey, submissionId);
