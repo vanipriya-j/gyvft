@@ -8,6 +8,8 @@ import {
   MigrationBusyError,
   runPendingMigrations,
 } from "@/lib/database/migrations";
+import { migrationDiagnostic } from "@/lib/database/migration-diagnostic";
+import type { MigrationProgress } from "@/lib/database/migration-progress";
 import { logger } from "@/lib/logging/logger";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -86,42 +88,101 @@ export async function POST(request: Request) {
       },
       400,
     );
-  try {
-    const sql = getSql();
-    const applied =
-      body.action === "migrate" ? await runPendingMigrations(sql) : [];
-    if (body.action === "migrate")
-      logger.info("Secret-protected setup migrations completed", {
-        migrations: applied,
+  async function execute(onProgress?: (event: MigrationProgress) => void) {
+    try {
+      const sql = getSql();
+      const applied =
+        body.action === "migrate"
+          ? await runPendingMigrations(sql, onProgress)
+          : [];
+      if (body.action === "migrate")
+        logger.info("Secret-protected setup migrations completed", {
+          migrations: applied,
+        });
+      try {
+        const migrations = await listMigrations(sql);
+        return {
+          status: 200,
+          result: {
+            ok: true,
+            applied,
+            migrations,
+            message:
+              body.action === "status"
+                ? "Migration status loaded."
+                : applied.length
+                  ? `${applied.length} update${applied.length === 1 ? "" : "s"} saved. Your database is ready.`
+                  : "No updates needed. Your database is ready.",
+          },
+        };
+      } catch (error) {
+        // A committed migration batch must never be described as rolled back.
+        if (body.action !== "migrate") throw error;
+        return {
+          status: 200,
+          result: {
+            ok: true,
+            applied,
+            message:
+              "Database updates were saved. The history list could not be refreshed.",
+          },
+        };
+      }
+    } catch (error) {
+      if (error instanceof MigrationBusyError)
+        return { status: 409, result: { ok: false, message: error.message } };
+      const diagnostic = migrationDiagnostic(error);
+      logger.error("Setup database operation failed", {
+        code: diagnostic.code,
+        migration: diagnostic.filename,
       });
-    const migrations = await listMigrations(sql);
-    return reply({
-      ok: true,
-      applied,
-      migrations,
-      message:
-        body.action === "status"
-          ? "Migration status loaded."
-          : applied.length
-            ? `${applied.length} migration${applied.length === 1 ? "" : "s"} applied successfully.`
-            : "Your database is already up to date.",
-    });
-  } catch (error) {
-    if (error instanceof MigrationBusyError)
-      return reply({ ok: false, message: error.message }, 409);
-    logger.error("Setup database operation failed", {
-      code:
-        error && typeof error === "object" && "code" in error
-          ? String(error.code)
-          : "SETUP_FAILED",
-    });
-    return reply(
-      {
-        ok: false,
-        message:
-          "The database operation could not be confirmed. Check migration status before retrying. Verify DATABASE_URL and inspect Vercel logs. Failed transactions are rolled back.",
-      },
-      500,
-    );
+      return {
+        status: 500,
+        result: {
+          ok: false,
+          message: diagnostic.message,
+          diagnostic: { code: diagnostic.code, filename: diagnostic.filename },
+        },
+      };
+    }
   }
+  if (body.stream === true && body.action === "migrate") {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (event: unknown) => {
+          try {
+            controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+          } catch {
+            /* Browser disconnected; let the database finish safely. */
+          }
+        };
+        send({
+          type: "progress",
+          progress: { phase: "checking", total: 0, completed: 0 },
+        });
+        try {
+          const { result } = await execute((progress) =>
+            send({ type: "progress", progress }),
+          );
+          send({ type: "result", result });
+        } finally {
+          try {
+            controller.close();
+          } catch {
+            /* Already disconnected. */
+          }
+        }
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "application/x-ndjson",
+        "Cache-Control": "no-store, no-transform",
+        "X-Accel-Buffering": "no",
+      },
+    });
+  }
+  const { result, status } = await execute();
+  return reply(result, status);
 }

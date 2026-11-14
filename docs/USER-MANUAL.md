@@ -96,7 +96,7 @@ Your submission appears as **Awaiting verification** until receipt is checked. A
 1. Review the pull request and its Vercel preview, then merge when ready. Confirm that the production deployment succeeds.
 2. Confirm the deployed environment has `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the supported legacy anon key). Supabase Auth keys alone do not supply a SQL connection. Credentials already configured in Vercel do not need to be entered in the migration page.
 3. Set a separate random `SETUP_SECRET` of at least 11 characters in Vercel and redeploy. This secret is not an application login password.
-4. Open `/setup`, enter the same secret, choose **Check migrations**, review the pending list, check the confirmation box, and choose **Run pending migrations**. No Studio owner account is needed.
+4. Open `/setup`, enter the same secret and choose **Start setup**. No Studio owner account is needed.
 5. In Supabase, enable customer email/password signup and require email confirmation. Ensure customer registrations are not automatically granted Studio profiles or staff roles.
 6. Configure Supabase’s **Confirm signup** and **Reset password** email templates to display `{{ .Token }}`. This portal accepts email codes directly on its login page. Configure production email delivery and an appropriate password policy.
 7. Set `NEXT_PUBLIC_APP_URL` to the production GYVFT origin so enquiry emails link to the correct site.
@@ -108,10 +108,10 @@ The `/setup` page works before app users or the migration tracking table exist. 
 
 1. Open `/setup` on the GYVFT deployment you want to update.
 2. Check that `DATABASE_URL` and `SETUP_SECRET` show as configured.
-3. Enter the secret you configured in Vercel and choose **Check migrations**.
-4. Review the pending/applied list. Re-enter the secret if the form cleared it.
-5. Check **Apply pending migrations to this deployment’s database** and choose **Run pending migrations**.
-6. Wait for confirmation, then check that the migration list shows Applied.
+3. Enter the secret you configured in Vercel and choose **Start setup**.
+4. Watch the live check → apply → save steps. The active migration and elapsed time are shown; do not click again.
+5. Wait for **Your database is ready**. Expand migration history to see applied updates.
+6. If setup stops, share the diagnostic code and migration filename shown. The secret remains in the form for retrying but is cleared after success and is never persisted in browser storage.
 
 Setup uses the deployment’s `DATABASE_URL`. It accepts only the setup secret, with no customer or staff login dependency. It executes SQL packaged with the deployment, skips applied migrations and prevents concurrent runs with a database lock. Failed database transactions roll back the pending batch. The CLI command `npm run db:migrate` uses the same runner and history.
 

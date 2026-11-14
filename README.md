@@ -8,7 +8,7 @@ GYVFT is a Next.js application for public story-led lead capture and an authenti
 
 ## Browser database setup
 
-Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 11 characters) in Vercel and redeploy. Open `/setup`, enter the secret, check migration status, then confirm and run pending migrations. No Studio login is required. Setup does not create staff accounts or demo data. Remove the secret and redeploy to disable it afterward.
+Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 11 characters) in Vercel and redeploy. Open `/setup`, enter the secret and click **Start setup**. No Studio login is required. Setup does not create staff accounts or demo data. Remove the secret and redeploy to disable it afterward.
 
 ## Customer portal guides
 
