@@ -36,13 +36,13 @@ function Rail({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   return (
-    <section>
-      <div className="mb-4 flex items-end justify-between gap-4">
+    <section className="min-w-0">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[10px] uppercase tracking-[.2em] text-olive">
             {kicker}
           </p>
-          <h2 className="mt-1 font-serif text-2xl md:text-3xl">{title}</h2>
+          <h2 className="mt-1 font-serif text-2xl">{title}</h2>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {action}
@@ -52,7 +52,10 @@ function Rail({
             onClick={() =>
               ref.current?.scrollBy({
                 left: -ref.current.clientWidth * 0.85,
-                behavior: "smooth",
+                behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+                  .matches
+                  ? "instant"
+                  : "smooth",
               })
             }
           >
@@ -64,7 +67,10 @@ function Rail({
             onClick={() =>
               ref.current?.scrollBy({
                 left: ref.current.clientWidth * 0.85,
-                behavior: "smooth",
+                behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+                  .matches
+                  ? "instant"
+                  : "smooth",
               })
             }
           >
@@ -100,7 +106,7 @@ function EventArt({ title }: { title: string }) {
   );
 }
 const tile =
-  "w-[86%] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-paper sm:w-[340px]";
+  "w-full shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-paper";
 export function CustomerVisuals({
   requests,
   mockups,
@@ -120,11 +126,11 @@ export function CustomerVisuals({
   const active = (real.length ? real : requests)
     .filter((r) => r.stage < 10)
     .slice(0, 8);
-  function productRail(items: AarlaProduct[], offer: boolean) {
+  function productRail(items: AarlaProduct[]) {
     return (
       <Rail
-        kicker={offer ? "A little extra value" : "Fresh finds from our world"}
-        title={offer ? "Worth a little look" : "New from Aarla"}
+        kicker="New finds & offers"
+        title="Coming up at Aarla"
         action={
           <a
             href="https://aarla.in/collections/all"
@@ -152,7 +158,7 @@ export function CustomerVisuals({
                 sizes="340px"
                 className="object-cover"
               />
-              {offer && p.comparePaise && (
+              {p.comparePaise && (
                 <span className="absolute left-3 top-3 rounded-full bg-paper px-3 py-1 text-xs">
                   {Math.floor(
                     ((p.comparePaise - p.pricePaise) / p.comparePaise) * 100,
@@ -167,13 +173,13 @@ export function CustomerVisuals({
               </h3>
               <p className="mt-3 text-sm">
                 {money(p.pricePaise)}{" "}
-                {offer && p.comparePaise && (
+                {p.comparePaise && (
                   <del className="ml-2 text-xs text-muted-text">
                     {money(p.comparePaise)}
                   </del>
                 )}
               </p>
-              <p className="mt-3 inline-flex items-center gap-2 text-xs text-olive-dark">
+              <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-olive px-4 py-2 text-xs text-olive-dark">
                 View at Aarla <ArrowRight size={13} />
               </p>
             </div>
@@ -183,8 +189,8 @@ export function CustomerVisuals({
     );
   }
   return (
-    <div className="space-y-8">
-      {active.length > 0 && (
+    <div className="grid min-w-0 items-start gap-7 lg:grid-cols-3">
+      {active.length > 0 ? (
         <Rail kicker="Your stories, coming to life" title="Gifts taking shape">
           {active.map((r) => {
             const mock = mockups.find((m) => m.project_id === r.id);
@@ -223,7 +229,7 @@ export function CustomerVisuals({
                   <p className="mt-3 line-clamp-2 text-xs leading-5 text-muted-text">
                     {r.nextAction}
                   </p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-xs text-olive-dark">
+                  <span className="mt-3 inline-flex items-center gap-1 rounded-lg bg-olive-dark px-4 py-2 text-xs text-white">
                     Open your story <ArrowRight size={13} />
                   </span>
                 </div>
@@ -231,10 +237,25 @@ export function CustomerVisuals({
             );
           })}
         </Rail>
+      ) : (
+        <Rail kicker="Your stories, coming to life" title="Gifts taking shape">
+          <Link href="/tell-your-story" className={tile + " block p-6"}>
+            <Gift size={36} strokeWidth={1} />
+            <h3 className="mt-5 font-serif text-2xl">
+              Who are you gifting next?
+            </h3>
+            <p className="mt-3 text-sm text-muted-text">
+              Start with a person, a moment or a little idea.
+            </p>
+            <span className="mt-5 inline-block rounded-lg bg-olive-dark px-4 py-2 text-sm text-white">
+              Start a new gift
+            </span>
+          </Link>
+        </Rail>
       )}
       <Rail
         kicker="For the people and moments that matter"
-        title="Coming up in your world"
+        title="Upcoming occasions"
         action={
           <button onClick={onOccasions} className="shrink-0 text-xs underline">
             Add a date
@@ -247,7 +268,7 @@ export function CustomerVisuals({
           .map((o) => (
             <article
               key={o.id}
-              className="w-[230px] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-paper"
+              className="w-full shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-paper"
             >
               <div className="h-40 overflow-hidden">
                 {o.image ? (
@@ -276,7 +297,7 @@ export function CustomerVisuals({
                 </p>
                 <Link
                   href={o.href || "/tell-your-story"}
-                  className="mt-3 inline-flex items-center gap-1 text-xs text-olive-dark"
+                  className="mt-3 inline-flex items-center gap-1 rounded-lg bg-olive-dark px-4 py-2 text-xs text-white"
                 >
                   {o.href ? "Plan this gift" : "Find a gift"}{" "}
                   <ArrowRight size={13} />
@@ -301,11 +322,13 @@ export function CustomerVisuals({
           </button>
         )}
       </Rail>
-      {products.length > 0 ? (
-        productRail(products, false)
+      {products.length > 0 || offers.length > 0 ? (
+        productRail([
+          ...new Map([...products, ...offers].map((p) => [p.id, p])).values(),
+        ])
       ) : (
         <section className="rounded-2xl bg-surface p-6">
-          <p className="font-serif text-2xl">A little inspiration awaits</p>
+          <h2 className="font-serif text-2xl">Coming up at Aarla</h2>
           <p className="mt-2 text-sm text-muted-text">
             Explore the latest collections, books and gifts at Aarla.
           </p>
@@ -319,9 +342,8 @@ export function CustomerVisuals({
           </a>
         </section>
       )}
-      {offers.length > 0 && productRail(offers, true)}
       {(products.length > 0 || offers.length > 0) && (
-        <p className="text-xs text-muted-text">
+        <p className="text-xs text-muted-text lg:col-span-3">
           Explore and checkout at Aarla. Prices and availability are confirmed
           there.
         </p>
