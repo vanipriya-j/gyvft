@@ -1,0 +1,199 @@
+import {
+  ShopifyError,
+  shopifyConfigured,
+  syncShopifyCustomer,
+  syncPendingCustomers,
+  createOrSyncShopifyOrder,
+} from "@/lib/customer/shopify";
+import { logger } from "@/lib/logging/logger";
+import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { validSetupSecret } from "@/lib/security/setup-secret";
+import { assertPublicFormRateLimit } from "@/lib/security/memory-guards";
+import {
+  mutatePilot,
+  pilotList,
+  pilotDetail,
+  PilotError,
+} from "@/lib/customer/pilot-admin";
+import {
+  deliverNotifications,
+  scheduleNotifications,
+} from "@/lib/customer/notifications";
+import { getSql } from "@/lib/database/client";
+import {
+  publishGiftOption,
+  setGiftVisibility,
+  GiftWorkspaceError,
+} from "@/lib/customer/gift-workspace";
+import { validImage } from "@/lib/customer/images";
+export const runtime = "nodejs";
+export const maxDuration = 60;
+const reply = (body: unknown, status = 200) =>
+  NextResponse.json(body, {
+    status,
+    headers: { "Cache-Control": "no-store", Pragma: "no-cache" },
+  });
+export async function POST(request: Request) {
+  try {
+    assertPublicFormRateLimit({
+      ip:
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        "unknown",
+      formKey: "b2c-admin",
+      limit: 90,
+      windowMs: 60000,
+    });
+  } catch {
+    return reply(
+      { ok: false, message: "Too many requests. Please wait a minute." },
+      429,
+    );
+  }
+  if (!validSetupSecret(request.headers.get("x-setup-secret")))
+    return reply(
+      { ok: false, message: "Operator access could not be verified." },
+      401,
+    );
+  try {
+    const reader = request.body?.getReader();
+    if (!reader) return reply({ ok: false, message: "Missing action." }, 400);
+    const chunks: Uint8Array[] = [];
+    let length = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > 3 * 1024 * 1024) {
+        await reader.cancel();
+        return reply({ ok: false, message: "Use an image under 2 MB." }, 413);
+      }
+      chunks.push(value);
+    }
+    const raw = JSON.parse(Buffer.concat(chunks).toString()) as Record<
+      string,
+      unknown
+    >;
+    if (raw.op === "list")
+      return reply({
+        ok: true,
+        requests: await pilotList(String(raw.query || "")),
+        shopifyConfigured: shopifyConfigured(),
+      });
+    if (raw.op === "upi_settings") {
+      const parsed = z
+        .object({
+          upi_id: z
+            .string()
+            .trim()
+            .regex(/^[a-zA-Z0-9._-]{2,}@[a-zA-Z][a-zA-Z0-9.-]{1,}$/)
+            .max(160),
+          payee_name: z.string().trim().min(2).max(100),
+        })
+        .parse(raw);
+      let image: Buffer | null = null,
+        mime: string | null = null;
+      if (raw.image) {
+        const pic = z
+          .object({ data: z.string().max(2800000), mime: z.string() })
+          .parse(raw.image);
+        image = Buffer.from(pic.data, "base64");
+        mime = pic.mime;
+        if (!validImage(image, mime))
+          throw new PilotError(
+            "Use a valid PNG, JPEG or WebP QR image under 2 MB.",
+          );
+        if (raw.confirmed_payee !== true)
+          throw new PilotError(
+            "Confirm that the QR pays the same receiving account.",
+          );
+      }
+      await getSql()`INSERT INTO gyvft_customer_upi_settings(singleton,upi_id,payee_name,qr_data,qr_type) VALUES(true,${parsed.upi_id},${parsed.payee_name},${image},${mime}) ON CONFLICT(singleton) DO UPDATE SET upi_id=EXCLUDED.upi_id,payee_name=EXCLUDED.payee_name,qr_data=CASE WHEN gyvft_customer_upi_settings.upi_id=EXCLUDED.upi_id THEN COALESCE(EXCLUDED.qr_data,gyvft_customer_upi_settings.qr_data) ELSE EXCLUDED.qr_data END,qr_type=CASE WHEN gyvft_customer_upi_settings.upi_id=EXCLUDED.upi_id THEN COALESCE(EXCLUDED.qr_type,gyvft_customer_upi_settings.qr_type) ELSE EXCLUDED.qr_type END,updated_at=now()`;
+      revalidatePath("/account");
+      return reply({ ok: true, message: "Receiving UPI account saved." });
+    }
+    if (raw.op === "sync_customers") {
+      const linked = await syncPendingCustomers();
+      return reply({
+        ok: true,
+        message: `Linked ${linked} pending customer accounts. Run again for the next batch.`,
+      });
+    }
+    const id = z.string().uuid().parse(raw.id);
+    if (raw.op === "shopify_customer") {
+      const [p] =
+        await getSql()`SELECT customer_account_id FROM customer_projects WHERE id=${id}::uuid`;
+      if (!p?.customer_account_id)
+        throw new PilotError(
+          "The customer must connect their GYVFT account first.",
+        );
+      const linked = await syncShopifyCustomer(p.customer_account_id);
+      return reply({
+        ok: true,
+        message: linked
+          ? "Shopify customer linked."
+          : "Customer linking is pending.",
+      });
+    }
+    if (raw.op === "shopify_order") {
+      const reference = await createOrSyncShopifyOrder(
+        id,
+        raw.confirm_order === true,
+      );
+      revalidatePath(`/account/projects/${id}`);
+      return reply({ ok: true, message: `Shopify order linked: ${reference}` });
+    }
+    if (raw.op === "detail")
+      return reply({ ok: true, ...(await pilotDetail(id)) });
+    if (raw.op === "retry_notifications") {
+      await deliverNotifications(id);
+      return reply({ ok: true, message: "Notification retry completed." });
+    }
+    if (raw.op === "publish_gift_option")
+      await publishGiftOption(id, z.string().uuid().parse(raw.request_id), raw);
+    else if (raw.op === "gift_visibility")
+      await setGiftVisibility(
+        id,
+        z.string().uuid().parse(raw.option_id),
+        z.enum(["curated", "draft"]).parse(raw.kind),
+        z.boolean().parse(raw.hidden),
+      );
+    else await mutatePilot(raw);
+    scheduleNotifications(id);
+    revalidatePath("/account");
+    revalidatePath(`/account/projects/${id}`);
+    revalidatePath(`/account/projects/${id}/options`);
+    return reply({
+      ok: true,
+      message: "Saved. Customer-visible details are updated.",
+    });
+  } catch (error) {
+    if (
+      error instanceof PilotError ||
+      error instanceof ShopifyError ||
+      error instanceof GiftWorkspaceError
+    )
+      return reply({ ok: false, message: error.message }, 409);
+    if (error instanceof z.ZodError || error instanceof SyntaxError)
+      return reply(
+        { ok: false, message: "Check the required fields and amounts." },
+        400,
+      );
+    const code =
+      error && typeof error === "object" && "code" in error ? error.code : "";
+    logger.error("B2C operation could not be confirmed", {
+      code: typeof code === "string" ? code : "B2C_OPERATION_FAILED",
+    });
+    return reply(
+      {
+        ok: false,
+        message:
+          code === "42P01" || code === "42703"
+            ? "Run the latest customer setup before using the B2C admin view."
+            : "This operation could not be confirmed. Refresh the request before retrying.",
+      },
+      503,
+    );
+  }
+}

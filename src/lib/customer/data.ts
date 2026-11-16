@@ -24,6 +24,8 @@ export type CustomerProject = {
   razorpay_url: string | null;
   upi_id: string | null;
   shopify_order_reference: string | null;
+  tracking_reference?:string|null;
+  tracking_url?:string|null;
   created_at: string;
 };
 export async function projectsFor(accountId: string) {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { aarlaCatalogue } from "@/lib/customer/catalogue";
 import { ArrowUpRight, Plus } from "lucide-react";
 import { projectsFor } from "@/lib/customer/data";
 import { requireCustomerAccount } from "@/lib/customer/session";
@@ -10,9 +11,10 @@ import { signOut } from "./actions";
 export const dynamic = "force-dynamic";
 export default async function AccountPage() {
   const account = await requireCustomerAccount();
-  const [projects, extras] = await Promise.all([
+  const [projects, extras, catalogue] = await Promise.all([
     projectsFor(account.id),
     dashboardExtrasFor(account.id),
+    aarlaCatalogue(),
   ]);
   const selected = [
     "private-diwali-hampers",
@@ -71,6 +73,8 @@ export default async function AccountPage() {
         </div>
       </div>
       <GiftingDashboard
+        products={catalogue.products}
+        offers={catalogue.offers}
         requests={summarizeRequests(projects)}
         {...extras}
         ideas={ideas}

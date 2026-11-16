@@ -1,4 +1,9 @@
+/* eslint-disable @next/next/no-img-element -- Private mockups use the customer session cookie. */
 import Link from "next/link";
+import { GiftSnapshot } from "@/components/customer/gift-workspace";
+import type { GiftSelection } from "@/lib/customer/gift-workspace-model";
+import type { OrderItem } from "@/lib/customer/pilot-model";
+import { UPIPayment } from "@/components/customer/upi-payment";
 import { saveRequestDates } from "../../dashboard-actions";
 import { dateKey } from "@/lib/customer/dashboard-model";
 import { CustomerStoryDetails } from "@/components/customer/story-details";
@@ -14,7 +19,12 @@ import {
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { getSql } from "@/lib/database/client";
 import { ActionForm } from "@/components/customer/action-form";
-import { sendMessage, submitPayment, decideApproval } from "../../actions";
+import {
+  sendMessage,
+  submitPayment,
+  decideApproval,
+  saveDeliveryAddress,
+} from "../../actions";
 export const dynamic = "force-dynamic";
 const card = "rounded-3xl border border-border bg-paper p-6 md:p-8";
 const input =
@@ -36,28 +46,48 @@ export default async function ProjectPage({
   const project = await ownedProject(id, account.id);
   if (!project) notFound();
   const sql = getSql();
-  const [events, messages, payments, approvals] = await Promise.all([
-    sql<
-      { id: string; title: string; body: string; created_at: string }[]
-    >`SELECT * FROM customer_project_events WHERE project_id = ${id}::uuid ORDER BY created_at ASC`,
-    sql<
-      { id: string; sender: string; body: string; created_at: string }[]
-    >`SELECT * FROM customer_project_messages WHERE project_id = ${id}::uuid ORDER BY created_at`,
-    sql<
-      { id: string; amount_paise: number; status: string; reference: string }[]
-    >`SELECT * FROM customer_payment_submissions WHERE project_id = ${id}::uuid ORDER BY created_at DESC`,
-    sql<
-      {
-        id: string;
-        title: string;
-        kind: string;
-        version: number;
-        description: string;
-        status: string;
-        customer_response: string | null;
-      }[]
-    >`SELECT * FROM customer_project_approvals WHERE project_id = ${id}::uuid ORDER BY created_at DESC`,
-  ]);
+  const [events, messages, payments, approvals, giftSelections] =
+    await Promise.all([
+      sql<
+        { id: string; title: string; body: string; created_at: string }[]
+      >`SELECT * FROM customer_project_events WHERE project_id = ${id}::uuid ORDER BY created_at ASC`,
+      sql<
+        { id: string; sender: string; body: string; created_at: string }[]
+      >`SELECT * FROM customer_project_messages WHERE project_id = ${id}::uuid ORDER BY created_at`,
+      sql<
+        {
+          id: string;
+          amount_paise: number;
+          status: string;
+          reference: string;
+          has_evidence: boolean;
+          created_at: string;
+        }[]
+      >`SELECT id,amount_paise,status,reference,created_at,evidence_data IS NOT NULL AS has_evidence FROM customer_payment_submissions WHERE project_id = ${id}::uuid ORDER BY created_at DESC`,
+      sql<
+        {
+          id: string;
+          title: string;
+          kind: string;
+          gift_selection_id: string | null;
+          version: number;
+          description: string;
+          status: string;
+          customer_response: string | null;
+          amount_paise: number | null;
+          has_image: boolean;
+          items: OrderItem[] | null;
+        }[]
+      >`SELECT id,title,kind,version,description,status,customer_response,amount_paise,items,gift_selection_id,image_data IS NOT NULL AS has_image FROM customer_project_approvals WHERE project_id = ${id}::uuid ORDER BY created_at DESC`,
+      sql<
+        GiftSelection[]
+      >`SELECT id,draft_version,snapshot FROM gyvft_gift_selections WHERE project_id=${id}::uuid ORDER BY created_at DESC,id DESC`,
+    ]);
+  const [address] =
+    await sql`SELECT * FROM customer_delivery_addresses WHERE project_id=${id}::uuid`;
+  const [upi] =
+    await sql`SELECT upi_id,payee_name,qr_data IS NOT NULL AS has_qr FROM gyvft_customer_upi_settings WHERE singleton=true`;
+  const upiId = project.upi_id || upi?.upi_id;
   const total =
     project.total_paise === null ? null : Number(project.total_paise);
   const paid = Number(project.paid_paise);
@@ -85,6 +115,25 @@ export default async function ProjectPage({
           {project.target_date ? ` · Target ${date(project.target_date)}` : ""}
         </p>
       </div>
+      <section className="mb-8 rounded-xl border border-border bg-paper p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="font-serif text-2xl">
+              Gift options & your workspace
+            </h2>
+            <p className="mt-2 text-sm text-muted-text">
+              Explore curated hampers, build alternatives and select a gift for
+              a quote.
+            </p>
+          </div>
+          <Link
+            href={`/account/projects/${id}/options`}
+            className="rounded-lg bg-olive-dark px-5 py-3 text-sm text-white"
+          >
+            Explore gift options
+          </Link>
+        </div>
+      </section>
       <section className="mb-8 rounded-3xl bg-olive-dark p-7 text-white">
         <p className="text-xs uppercase tracking-widest opacity-70">
           Where we are
@@ -111,6 +160,22 @@ export default async function ProjectPage({
               </p>
             )}
           </section>
+          {project.tracking_reference && (
+            <section className={card}>
+              <h2 className="font-serif text-2xl">Delivery tracking</h2>
+              <p className="mt-3 text-sm">{project.tracking_reference}</p>
+              {project.tracking_url && (
+                <a
+                  href={project.tracking_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-block text-sm underline"
+                >
+                  Track delivery ↗
+                </a>
+              )}
+            </section>
+          )}
           <section className={card}>
             <h2 className="font-serif text-2xl">Occasion & delivery</h2>
             <p className="mt-3 text-sm leading-6 text-muted-text">
@@ -148,6 +213,53 @@ export default async function ProjectPage({
               </p>
             </ActionForm>
           </section>
+          {project.kind === "project" && (
+            <section className={card}>
+              <h2 className="font-serif text-2xl">
+                Where should we send your gifts?
+              </h2>
+              {project.stage >= 9 ? (
+                <div className="mt-4 text-sm leading-6">
+                  <p>{address?.recipient_name}</p>
+                  <p>{address?.address}</p>
+                  <p>
+                    {address?.city}, {address?.state} {address?.postal_code}
+                  </p>
+                  <p className="mt-3 text-muted-text">
+                    Your gifts have been dispatched. Message the team if you
+                    need help with delivery.
+                  </p>
+                </div>
+              ) : (
+                <ActionForm
+                  action={saveDeliveryAddress.bind(null, id)}
+                  label="Save delivery details"
+                >
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    {[
+                      ["recipient_name", "Recipient name"],
+                      ["phone", "Phone"],
+                      ["address", "Full delivery address"],
+                      ["city", "City"],
+                      ["state", "State"],
+                      ["postal_code", "PIN code"],
+                    ].map(([name, label]) => (
+                      <label key={name} className="block text-sm">
+                        {label}
+                        <input
+                          name={name}
+                          defaultValue={address?.[name] || ""}
+                          required
+                          maxLength={name === "address" ? 1500 : 120}
+                          className={input}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </ActionForm>
+              )}
+            </section>
+          )}
           <CustomerStoryDetails value={project.gift_brief} />
           <CustomerGiftBrief value={project.gift_brief} />
           {approvals.length > 0 && (
@@ -160,13 +272,77 @@ export default async function ProjectPage({
                     className="rounded-2xl border border-border p-5"
                   >
                     <p className="text-xs uppercase tracking-wider text-olive">
-                      {a.kind} · Version {a.version}
+                      {a.kind === "proposal" ? "Quote" : "Production design"} ·
+                      Version {a.version}
                     </p>
                     <h3 className="mt-2 font-medium">{a.title}</h3>
                     <p className="my-4 whitespace-pre-wrap text-sm text-muted-text">
                       {a.description}
                     </p>
+                    {a.gift_selection_id &&
+                      giftSelections.find(
+                        (s) => s.id === a.gift_selection_id,
+                      ) && (
+                        <details className="mb-4 rounded-lg bg-surface p-4">
+                          <summary className="text-sm">
+                            Your selected gift for this quote
+                          </summary>
+                          <GiftSnapshot
+                            document={
+                              giftSelections.find(
+                                (s) => s.id === a.gift_selection_id,
+                              )!.snapshot
+                            }
+                          />
+                        </details>
+                      )}
+                    {a.items?.length ? (
+                      <ul
+                        aria-label="Quote items"
+                        className="mb-4 divide-y divide-border text-sm"
+                      >
+                        {a.items.map((item, index) => (
+                          <li key={index} className="py-3">
+                            <div className="flex justify-between gap-3">
+                              <span>
+                                {item.quantity} × {item.name}
+                              </span>
+                              <span>
+                                {money(item.quantity * item.unit_paise)}
+                              </span>
+                            </div>
+                            {item.personalisation && (
+                              <p className="mt-1 text-xs text-muted-text">
+                                {item.personalisation}
+                              </p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {a.amount_paise && (
+                      <p className="mb-3 font-medium">
+                        Quoted total (applicable taxes included):{" "}
+                        {money(Number(a.amount_paise))}
+                      </p>
+                    )}
+                    {a.has_image && (
+                      <a
+                        href={`/api/customer-assets/approval/${a.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <img
+                          src={`/api/customer-assets/approval/${a.id}`}
+                          alt={`${a.title} mockup · version ${a.version}`}
+                          className="mb-4 max-h-96 w-full rounded-xl object-contain"
+                        />
+                      </a>
+                    )}
                     {a.status === "pending" &&
+                    (a.kind !== "proposal" ||
+                      !giftSelections.length ||
+                      a.gift_selection_id === giftSelections[0].id) &&
                     !approvals.some(
                       (newer) =>
                         newer.kind === a.kind && newer.version > a.version,
@@ -333,14 +509,29 @@ export default async function ProjectPage({
                           Pay securely with Razorpay ↗
                         </a>
                       )}
-                      {project.upi_id && (
+                      {upiId && (
                         <div className="mt-5">
                           <p className="text-sm">
                             Pay directly with GPay or another UPI app
                           </p>
                           <p className="my-3 break-all rounded-xl bg-surface p-3 font-medium">
-                            {project.upi_id}
+                            {upiId}
                           </p>
+                          <UPIPayment
+                            id={id}
+                            upiId={upiId}
+                            payee={upi?.payee_name || "GYVFT"}
+                            amount={
+                              summary.advanceDue > 0
+                                ? summary.advanceDue
+                                : summary.balance
+                            }
+                            hasQR={
+                              Boolean(upi?.has_qr) &&
+                              (!project.upi_id ||
+                                project.upi_id === upi?.upi_id)
+                            }
+                          />
                           <ActionForm
                             action={submitPayment.bind(null, id)}
                             label="Submit payment reference"
@@ -367,6 +558,16 @@ export default async function ProjectPage({
                                 className={input}
                               />
                             </label>
+                            <label className="mt-3 block text-sm">
+                              Transaction screenshot (PNG/JPEG/WebP, up to 2 MB)
+                              <input
+                                name="evidence"
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                required
+                                className={input}
+                              />
+                            </label>
                             <p className="text-xs leading-relaxed text-muted-text">
                               Your payment stays pending until our team verifies
                               receipt. Please don’t share your UPI PIN.
@@ -374,7 +575,7 @@ export default async function ProjectPage({
                           </ActionForm>
                         </div>
                       )}
-                      {!paymentUrl && !project.upi_id && (
+                      {!paymentUrl && !upiId && (
                         <p className="text-sm text-muted-text">
                           Our team will share payment instructions here.
                         </p>
@@ -394,8 +595,21 @@ export default async function ProjectPage({
                     <p key={p.id} className="break-all text-sm">
                       {money(Number(p.amount_paise))} · {p.reference}
                       <span className="block text-xs text-muted-text">
+                        Submitted {date(p.created_at)}
+                      </span>
+                      {p.has_evidence && (
+                        <a
+                          href={`/api/customer-assets/payment/${p.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-xs underline"
+                        >
+                          View your screenshot
+                        </a>
+                      )}
+                      <span className="block text-xs text-muted-text">
                         {p.status === "pending"
-                          ? "Awaiting verification"
+                          ? "Pending verification · allow up to 24 hours"
                           : p.status === "verified"
                             ? "Verified"
                             : "Could not verify — please contact us"}

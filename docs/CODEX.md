@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: *Your story. Our telling.*
 
+## Gift options and workspace — 16 November 2026
+
+The reviewed customer flow now includes a two-column curated options page, separate saved customer workspaces, optional indicative pricing, Show/Hide controls and immutable quote selections. Operations publishes manual hamper visuals/contents and links quotes to the latest selected snapshot. Start at [`GIFT-WORKSPACE.md`](GIFT-WORKSPACE.md) for rollout, customer/admin usage and local verification. Apply `20261116000001_gift_workspace.sql` through the customer-only `/setup` manifest before using the new screens.
+
 ## Customer portal update — 14 November 2026
 
 The current customer release uses **GYVFT-owned email/password accounts and database sessions**, independent of the legacy Studio Supabase Auth code described below. Start with [`CUSTOMER-PORTAL.md`](CUSTOMER-PORTAL.md), [`USER-MANUAL.md`](USER-MANUAL.md) and [`PRODUCT-BACKLOG.md`](PRODUCT-BACKLOG.md). `/setup` installs only the explicit customer migration manifest; `/operations` provides app reports using the existing operator secret. Infrastructure monitoring remains on Vercel; no OpenTelemetry/Grafana service is required. Production still needs the new migrations applied before accounts can be created.
