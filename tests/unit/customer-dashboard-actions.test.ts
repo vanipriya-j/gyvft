@@ -55,6 +55,8 @@ describe("private gifting dashboard actions", () => {
       "Family birthday",
       "2027-01-10",
       true,
+      null,
+      null,
     ]);
     expect(mocks.sql.mock.calls[0][0].join("")).toContain(
       "ON CONFLICT DO NOTHING",
@@ -164,7 +166,7 @@ describe("owner-scoped dashboard reads", () => {
   });
   it("scopes calendar, saved ideas and approvals to the account and excludes stale approval versions", async () => {
     await dashboardExtrasFor(owner);
-    expect(mocks.sql).toHaveBeenCalledTimes(3);
+    expect(mocks.sql).toHaveBeenCalledTimes(4);
     for (const call of mocks.sql.mock.calls)
       expect(call.slice(1)).toEqual([owner]);
     const query = mocks.sql.mock.calls[2][0].join("");
@@ -174,6 +176,7 @@ describe("owner-scoped dashboard reads", () => {
   it("keeps existing requests usable while a new schema migration is pending", async () => {
     mocks.sql.mockRejectedValue({ code: "42P01" });
     expect(await dashboardExtrasFor(owner)).toEqual({
+      mockups: [],
       occasions: [],
       savedSlugs: [],
       approvals: [],

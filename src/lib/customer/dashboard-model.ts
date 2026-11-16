@@ -25,6 +25,7 @@ export type Occasion = {
   title: string;
   occasion_date: string;
   repeats_annually: boolean;
+  has_photo?: boolean;
 };
 export type PendingApproval = {
   id: string;
@@ -128,6 +129,7 @@ export type Upcoming = {
   kind: "occasion" | "delivery";
   href: string | null;
   annual: boolean;
+  image?: string;
 };
 export function upcomingDates(
   requests: RequestRow[],
@@ -146,6 +148,9 @@ export function upcomingDates(
         kind: "occasion",
         href: null,
         annual: o.repeats_annually,
+        image: o.has_photo
+          ? `/api/customer-assets/occasion/${o.id}`
+          : undefined,
       });
   }
   for (const r of requests.filter(

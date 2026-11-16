@@ -10,6 +10,7 @@ export const customerEventTypes = [
   "session.failed",
   "enquiry.created",
   "message.sent",
+  "gift.quote_requested",
   "app.error",
   "setup.completed",
   "setup.failed",
@@ -27,6 +28,7 @@ const operations = new Set([
   "capture-enquiry",
   "send-message",
   "migrate",
+  "gift-workspace",
   "status",
 ]);
 const routes = new Set([

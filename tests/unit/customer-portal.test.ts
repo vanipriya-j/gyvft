@@ -23,6 +23,10 @@ vi.mock("@/lib/customer/session", () => ({
   destroyCustomerSession: destroySession,
 }));
 vi.mock("@/lib/database/client", () => ({ getSql: () => query }));
+vi.mock("@/lib/customer/notifications", () => ({
+  queueNotification: vi.fn(),
+  scheduleNotifications: vi.fn(),
+}));
 vi.mock("next/navigation", () => ({ redirect }));
 import { customerEmail, ownedProject, projectsFor } from "@/lib/customer/data";
 import {
@@ -36,6 +40,9 @@ describe("customer portal trust boundaries", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     query.mockReset().mockResolvedValue([]);
+    Object.assign(query, {
+      begin: (fn: (tx: typeof query) => unknown) => fn(query),
+    });
     requireAccount.mockReset().mockResolvedValue(account);
     getAccount.mockReset().mockResolvedValue(account);
     destroySession.mockReset().mockResolvedValue(undefined);
@@ -133,10 +140,20 @@ describe("customer portal trust boundaries", () => {
   });
 
   it("records UPI references as pending without increasing verified receipts", async () => {
-    query.mockResolvedValueOnce([{ id: projectId }]).mockResolvedValueOnce([]);
+    query
+      .mockResolvedValueOnce([{ id: projectId }])
+      .mockResolvedValueOnce([{ id: "receipt-id" }]);
     const data = new FormData();
     data.set("amount", "2500.50");
     data.set("reference", "123456789012");
+    data.set(
+      "evidence",
+      new File(
+        [new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0])],
+        "receipt.png",
+        { type: "image/png" },
+      ),
+    );
     expect((await submitPayment(projectId, data)).ok).toBe(true);
     const mutation = query.mock.calls[1];
     expect(mutation[0].join("?")).toContain(
@@ -177,12 +194,12 @@ describe("customer portal trust boundaries", () => {
         )
       ).ok,
     ).toBe(false);
-    const mutation = query.mock.calls[1][0].join("?");
+    const mutation = query.mock.calls[2][0].join("?");
     expect(mutation).toContain("a.status = 'pending'");
     expect(mutation).toContain("newer.version > a.version");
     expect(mutation).toContain("INSERT INTO customer_project_events");
     expect(mutation).toContain("customer_account_id =");
-    expect(query.mock.calls[1].slice(1)).toContain(account.id);
+    expect(query.mock.calls[2].slice(1)).toContain(account.id);
   });
 
   it("revokes the database session on sign out", async () => {

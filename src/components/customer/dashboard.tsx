@@ -1,4 +1,6 @@
 "use client";
+import { CustomerVisuals, type Mockup } from "./visual-dashboard";
+import type { AarlaProduct } from "@/lib/customer/catalogue";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -54,6 +56,9 @@ const fullDate = (value: string) =>
   }).format(new Date(value + "T00:00:00Z"));
 type View = "overview" | "requests" | "occasions" | "ideas";
 type Props = {
+  products: AarlaProduct[];
+  offers: AarlaProduct[];
+  mockups: Mockup[];
   requests: RequestRow[];
   occasions: Occasion[];
   approvals: PendingApproval[];
@@ -560,6 +565,9 @@ export function GiftingDashboard({
   ideas,
   today,
   setupRequired,
+  products,
+  offers,
+  mockups,
 }: Props) {
   const [view, setView] = useState<View>("overview");
   const [addOpen, setAddOpen] = useState(false);
@@ -748,6 +756,22 @@ export function GiftingDashboard({
               are examples; sample budgets are excluded from money totals.
             </p>
           )}
+          <CustomerVisuals
+            requests={requests}
+            mockups={mockups}
+            upcoming={upcoming}
+            products={products}
+            offers={offers}
+            onOccasions={() => {
+              go("occasions");
+              setAddOpen(true);
+            }}
+          />
+          <div className="border-t border-border pt-6">
+            <p className="text-xs uppercase tracking-widest text-olive">
+              Your gifting, at a glance
+            </p>
+          </div>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
               {
@@ -989,6 +1013,15 @@ export function GiftingDashboard({
                             type="date"
                             name="occasion_date"
                             required
+                            className={field}
+                          />
+                        </label>
+                        <label className="block space-y-2 text-sm">
+                          Person or event photo (optional, up to 2 MB)
+                          <input
+                            name="photo"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp"
                             className={field}
                           />
                         </label>

@@ -18,7 +18,13 @@ export type PublicEmailAttachment = {
   contentType?: string;
 };
 
-function readRuntime(name: "RESEND_API_KEY" | "RESEND_FROM_EMAIL" | "RESEND_FROM_NAME" | "GYVFT_LEADS_EMAIL") {
+function readRuntime(
+  name:
+    | "RESEND_API_KEY"
+    | "RESEND_FROM_EMAIL"
+    | "RESEND_FROM_NAME"
+    | "GYVFT_LEADS_EMAIL",
+) {
   const direct = process.env[name]?.trim();
   if (direct) return direct;
   const env = getEnv();
@@ -28,28 +34,36 @@ function readRuntime(name: "RESEND_API_KEY" | "RESEND_FROM_EMAIL" | "RESEND_FROM
 
 export function getPublicResendConfigStatus() {
   const apiKey = Boolean(readRuntime("RESEND_API_KEY"));
-  const fromEmail = Boolean(readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_FROM_EMAIL);
+  const fromEmail = Boolean(
+    readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_FROM_EMAIL,
+  );
   const leadsEmail = Boolean(
     readRuntime("GYVFT_LEADS_EMAIL") ||
-      readRuntime("RESEND_FROM_EMAIL") ||
-      DEFAULT_PUBLIC_LEADS_EMAIL,
+    readRuntime("RESEND_FROM_EMAIL") ||
+    DEFAULT_PUBLIC_LEADS_EMAIL,
   );
   return {
     configured: apiKey && fromEmail && leadsEmail,
     hasApiKey: apiKey,
     hasFromEmail: fromEmail,
     hasLeadsEmail: leadsEmail,
-    leadsEmail: readRuntime("GYVFT_LEADS_EMAIL") || readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_LEADS_EMAIL,
+    leadsEmail:
+      readRuntime("GYVFT_LEADS_EMAIL") ||
+      readRuntime("RESEND_FROM_EMAIL") ||
+      DEFAULT_PUBLIC_LEADS_EMAIL,
   };
 }
 
 function requireResendConfig() {
   const apiKey = readRuntime("RESEND_API_KEY");
-  const fromEmail = readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_FROM_EMAIL;
+  const fromEmail =
+    readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_FROM_EMAIL;
   const fromName = readRuntime("RESEND_FROM_NAME") || "GYVFT by Aarla";
   // Always deliver lead notifications to the Aarla inbox unless explicitly overridden.
   const leadsEmail =
-    readRuntime("GYVFT_LEADS_EMAIL") || readRuntime("RESEND_FROM_EMAIL") || DEFAULT_PUBLIC_LEADS_EMAIL;
+    readRuntime("GYVFT_LEADS_EMAIL") ||
+    readRuntime("RESEND_FROM_EMAIL") ||
+    DEFAULT_PUBLIC_LEADS_EMAIL;
 
   const missing = [!apiKey ? "RESEND_API_KEY" : null].filter(Boolean);
 
@@ -72,11 +86,16 @@ function formatFrom(fromName: string, fromEmail: string) {
 
 function isUnverifiedDomainError(message: string): boolean {
   const lower = message.toLowerCase();
-  return lower.includes("domain is not verified") || lower.includes("verify a domain");
+  return (
+    lower.includes("domain is not verified") ||
+    lower.includes("verify a domain")
+  );
 }
 
 function isTestingRecipientRestriction(message: string): boolean {
-  return message.toLowerCase().includes("only send testing emails to your own email");
+  return message
+    .toLowerCase()
+    .includes("only send testing emails to your own email");
 }
 
 async function sendOnce(input: {
@@ -88,21 +107,25 @@ async function sendOnce(input: {
   html?: string;
   replyTo?: string;
   attachments?: PublicEmailAttachment[];
+  idempotencyKey?: string;
 }): Promise<{ id?: string }> {
   const resend = new Resend(input.apiKey);
-  const result = await resend.emails.send({
-    from: input.from,
-    to: input.to,
-    subject: input.subject,
-    text: input.text,
-    html: input.html,
-    replyTo: input.replyTo,
-    attachments: input.attachments?.map((file) => ({
-      filename: file.filename,
-      content: file.content.toString("base64"),
-      contentType: file.contentType,
-    })),
-  });
+  const result = await resend.emails.send(
+    {
+      from: input.from,
+      to: input.to,
+      subject: input.subject,
+      text: input.text,
+      html: input.html,
+      replyTo: input.replyTo,
+      attachments: input.attachments?.map((file) => ({
+        filename: file.filename,
+        content: file.content.toString("base64"),
+        contentType: file.contentType,
+      })),
+    },
+    { idempotencyKey: input.idempotencyKey },
+  );
 
   if (result.error) {
     const error = new Error(result.error.message) as Error & { code?: string };
@@ -120,6 +143,7 @@ export async function sendPublicResendEmail(input: {
   html?: string;
   replyTo?: string;
   attachments?: PublicEmailAttachment[];
+  idempotencyKey?: string;
 }): Promise<{ id?: string }> {
   const config = requireResendConfig();
   const to = (Array.isArray(input.to) ? input.to : [input.to]).filter(Boolean);
@@ -132,6 +156,7 @@ export async function sendPublicResendEmail(input: {
   try {
     return await sendOnce({
       apiKey: config.apiKey,
+      idempotencyKey: input.idempotencyKey,
       from: primaryFrom,
       to,
       subject: input.subject,
@@ -141,20 +166,25 @@ export async function sendPublicResendEmail(input: {
       attachments: input.attachments,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Email send failed";
+    const message =
+      error instanceof Error ? error.message : "Email send failed";
 
     // Custom domain not verified yet — retry with Resend's testing sender so leads still deliver.
     if (
       isUnverifiedDomainError(message) &&
       config.fromEmail.toLowerCase() !== RESEND_TESTING_FROM_EMAIL
     ) {
-      logger.warn("Resend from-domain unverified; retrying with testing sender", {
-        configuredFrom: config.fromEmail,
-        fallbackFrom: RESEND_TESTING_FROM_EMAIL,
-      });
+      logger.warn(
+        "Resend from-domain unverified; retrying with testing sender",
+        {
+          configuredFrom: config.fromEmail,
+          fallbackFrom: RESEND_TESTING_FROM_EMAIL,
+        },
+      );
       try {
         return await sendOnce({
           apiKey: config.apiKey,
+          idempotencyKey: input.idempotencyKey,
           from: formatFrom(config.fromName, RESEND_TESTING_FROM_EMAIL),
           to,
           subject: input.subject,
@@ -165,10 +195,13 @@ export async function sendPublicResendEmail(input: {
         });
       } catch (fallbackError) {
         const fallbackMessage =
-          fallbackError instanceof Error ? fallbackError.message : "Email send failed";
+          fallbackError instanceof Error
+            ? fallbackError.message
+            : "Email send failed";
         logger.warn("Resend send failed after testing-sender fallback", {
           message: fallbackMessage,
-          testingRecipientRestricted: isTestingRecipientRestriction(fallbackMessage),
+          testingRecipientRestricted:
+            isTestingRecipientRestriction(fallbackMessage),
         });
         throw fallbackError;
       }

@@ -1,4 +1,5 @@
 "use server";
+import { validImage } from "@/lib/customer/images";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireCustomerAccount } from "@/lib/customer/session";
@@ -56,7 +57,18 @@ export async function addOccasion(data: FormData) {
     };
   try {
     limit(account.id);
-    await getSql()`INSERT INTO gyvft_customer_occasions (account_id,title,occasion_date,repeats_annually) VALUES (${account.id}::uuid,${parsed.data.title},${parsed.data.occasion_date}::date,${data.get("repeats_annually") === "on"}) ON CONFLICT DO NOTHING`;
+    const file = data.get("photo");
+    let bytes: Buffer | null = null,
+      mime: string | null = null;
+    if (file instanceof File && file.size) {
+      if (file.size > 2 * 1024 * 1024)
+        return { ok: false, message: "Use a photo under 2 MB." };
+      bytes = Buffer.from(await file.arrayBuffer());
+      mime = file.type;
+      if (!validImage(bytes, mime))
+        return { ok: false, message: "Use a valid PNG, JPEG or WebP photo." };
+    }
+    await getSql()`INSERT INTO gyvft_customer_occasions (account_id,title,occasion_date,repeats_annually,photo_data,photo_type) VALUES (${account.id}::uuid,${parsed.data.title},${parsed.data.occasion_date}::date,${data.get("repeats_annually") === "on"},${bytes},${mime}) ON CONFLICT DO NOTHING`;
     revalidatePath("/account");
     return { ok: true, message: "Occasion saved to your private calendar." };
   } catch (error) {

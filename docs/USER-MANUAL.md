@@ -42,9 +42,9 @@ A generic recovery message does not reveal whether an email has an account. If t
 
 ### Conversations, approvals and payments
 
-Customer messages are saved against the request. The operational delivery/reply integration with Aarla OS is separate work. Do not rely on the portal for urgent communication until that loop is connected.
+Customer messages are saved against the request. The GYVFT Operations customer desk lets the pilot team reply directly; Aarla OS synchronization is separate work.
 
-When a real project has a published versioned proposal/design, approve that version or request changes with comments. Payment/production views appear only on converted projects. The agreed business policy remains 50% advance and the remaining 50% before dispatch; direct UPI references are pending until receipt is verified. These operational/payment/Shopify integrations are not completed merely by loading this portal.
+When a real project has a published versioned proposal/design, approve that version or request changes with comments. Payment/production views appear only on converted projects. The agreed business policy remains 50% advance and the remaining 50% before dispatch; direct UPI references are pending until receipt is verified. Use the [B2C pilot guide](B2C-PILOT.md) for payment evidence, independent verification, delivery details and Shopify setup.
 
 ### Your gifting space
 
@@ -67,7 +67,7 @@ The public seven-step Tell Your Story form remains unchanged.
 
 1. Confirm GYVFT's Vercel Production environment has `DATABASE_URL` and `SETUP_SECRET` (at least 11 characters).
 2. Deploy the new app version.
-3. Open `/setup`, enter the secret and choose **Start setup** once. The dashboard update adds private occasion/saved-idea tables and separate request date columns through `20261114000005_customer_dashboard.sql`.
+3. Open `/setup`, enter the secret and choose **Start setup** once. The B2C pilot adds private images, receipts, order items and delivery details through `20261115000001_b2c_pilot.sql`.
 4. Watch the check → apply → save progress. Wait for **Your database is ready**. Do not repeatedly click while it runs.
 5. Open `/account/login` and create the customer account for the test journey.
 
@@ -104,3 +104,11 @@ Use the reviewed `scripts/sql/remove-customer-demo.sql` only when the three DEMO
 - Verify operator reports exclude DEMO enquiries and require the secret.
 
 The staged product scope remains in `docs/PRODUCT-BACKLOG.md` and the product roadmap. Company onboarding, accepted circles and cross-company gifting are future steps after this customer journey passes.
+
+## Gift options and your workspace
+
+From your request, choose **Explore gift options**. Options use a two-column grid; **Build my option** opens your personal workspace. Copying or customising a published option creates your own alternative. Drag products from the line-icon carousel inside the workspace, or use **Choose & add**. Product dialogs collect frame size/orientation, bottle capacity or T-shirt kids/adult sizes.
+
+Set recipients, per-recipient quantities, design/personalisation and packaging, then review and select an option for a quote. Drafts save automatically; the selected snapshot stays unchanged if you experiment later. Each option has a **Show/Hide** switch, with **Show hidden options** available to restore it.
+
+Indicative prices/ranges are optional and separate from the final quote. Original estimates remain references when you customise. Packaging depends on hamper size and choice; delivery is separate at actuals. See [Gift workspace guide](GIFT-WORKSPACE.md) for the matching team publication and quoting workflow.

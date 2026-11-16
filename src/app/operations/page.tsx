@@ -117,6 +117,7 @@ export default function OperationsPage() {
             GYVFT
           </Link>
           <h1 className="mt-3 font-serif text-3xl md:text-4xl">Operations</h1>
+          <Link href="/operations/requests" className="mt-3 inline-block text-sm underline">Open customer desk →</Link>
           <p className="mt-2 text-sm text-muted-text">
             Operator-only analytics, reporting and application health.
           </p>

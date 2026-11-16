@@ -1,4 +1,5 @@
 "use server";
+import { scheduleCustomerSync } from "@/lib/customer/shopify";
 import { z } from "zod";
 import { getSql } from "@/lib/database/client";
 import {
@@ -57,6 +58,7 @@ export async function registerCustomerAction(
     });
     await claimCustomerEnquiries(rows[0]);
     await createCustomerSession(rows[0].id);
+    scheduleCustomerSync(rows[0].id);
     await recordCustomerEvent("session.started", {
       accountId: rows[0].id,
       metadata: { route: "/account/login", operation: "register", status: 200 },
@@ -110,6 +112,7 @@ export async function loginCustomerAction(
     }
     await claimCustomerEnquiries(account);
     await createCustomerSession(account.id);
+    scheduleCustomerSync(account.id);
     await recordCustomerEvent("session.started", {
       accountId: account.id,
       metadata: { route: "/account/login", operation: "login", status: 200 },

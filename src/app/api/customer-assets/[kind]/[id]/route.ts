@@ -1,0 +1,38 @@
+import { getSql } from "@/lib/database/client";
+import { getCustomerAccount } from "@/lib/customer/session";
+import { validSetupSecret } from "@/lib/security/setup-secret";
+import { uuidPattern } from "@/lib/customer/model";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ kind: string; id: string }> },
+) {
+  const { kind, id } = await params;
+  if (
+    !uuidPattern.test(id) ||
+    !["approval", "payment", "occasion", "gift-option"].includes(kind)
+  )
+    return new Response(null, { status: 404 });
+  const operator = validSetupSecret(request.headers.get("x-setup-secret"));
+  const account = operator ? null : await getCustomerAccount();
+  if (!operator && !account) return new Response(null, { status: 404 });
+  const sql = getSql();
+  const rows =
+    kind === "gift-option"
+      ? await sql`SELECT a.image_data AS data,a.image_type AS mime FROM gyvft_gift_options a JOIN customer_projects p ON p.id=a.project_id WHERE a.id=${id}::uuid AND (${operator} OR p.customer_account_id=${account?.id || null}::uuid)`
+      : kind === "occasion"
+      ? await sql`SELECT photo_data AS data,photo_type AS mime FROM gyvft_customer_occasions WHERE id=${id}::uuid AND (${operator} OR account_id=${account?.id || null}::uuid)`
+      : kind === "approval"
+        ? await sql`SELECT a.image_data AS data,a.image_type AS mime FROM customer_project_approvals a JOIN customer_projects p ON p.id=a.project_id WHERE a.id=${id}::uuid AND (${operator} OR p.customer_account_id=${account?.id || null}::uuid)`
+        : await sql`SELECT a.evidence_data AS data,a.evidence_type AS mime FROM customer_payment_submissions a JOIN customer_projects p ON p.id=a.project_id WHERE a.id=${id}::uuid AND (${operator} OR p.customer_account_id=${account?.id || null}::uuid)`;
+  if (!rows[0]?.data) return new Response(null, { status: 404 });
+  return new Response(new Uint8Array(rows[0].data), {
+    headers: {
+      "Content-Type": rows[0].mime,
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "default-src 'none'; sandbox",
+    },
+  });
+}

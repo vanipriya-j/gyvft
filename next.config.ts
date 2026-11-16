@@ -29,6 +29,17 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cdn.shopify.com",
+        pathname: "/s/files/**",
+      },
+      { protocol: "https", hostname: "aarla.in", pathname: "/cdn/**" },
+    ],
+  },
+  experimental: { serverActions: { bodySizeLimit: "3mb" } },
   outputFileTracingIncludes: {
     "/api/setup": ["./supabase/migrations/*.sql"],
     "/studio/settings/migrations": ["./supabase/migrations/*.sql"],
