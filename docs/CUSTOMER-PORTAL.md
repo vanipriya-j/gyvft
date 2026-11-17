@@ -77,3 +77,7 @@ Open `/operations` and unlock it with the existing operator setup secret. It sho
 The native Next.js request-error hook writes structured JSON to Vercel logs and a safe app error record with a correlation ID. `/api/health` reports database/account-schema readiness and mail configuration, without returning credentials. Infrastructure/deployment/performance monitoring stays in Vercel. No Grafana/ELK/OpenTelemetry service or SDK is installed for this release.
 
 Keep `SETUP_SECRET` configured if using the operator dashboard. Removing it and redeploying disables both operator entrypoints. Restrict operator-secret access to the people who manage the app. Event/session cleanup and retention policy should be set before sustained production traffic; event summaries currently use a 30-day window.
+
+## Approved Home API — 17 November 2026
+
+The approved Home backend is described in [CUSTOMER-HOME-ARCHITECTURE.md](CUSTOMER-HOME-ARCHITECTURE.md). `GET /api/customer/home` composes account-scoped gifts, upcoming occasions, Aarla catalogue cards, saved ideas, editorial inspiration and verified-payment summaries with independent section states and carousel totals/pagination. `PUT`/`DELETE /api/customer/saved-ideas` save explicit story/product references. The new customer-only migration adds private saved Aarla products without changing existing stories, occasions or public forms. The approved desktop/mobile UI integration remains the next step.

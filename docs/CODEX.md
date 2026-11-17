@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: *Your story. Our telling.*
 
+## Approved customer Home backend — 17 November 2026
+
+The desktop/mobile Home designs share a new authenticated section API and data service. See [`CUSTOMER-HOME-ARCHITECTURE.md`](CUSTOMER-HOME-ARCHITECTURE.md) for contracts, ownership, carousel pagination, financial-year semantics and rollout. Apply `20261117000001_customer_home.sql` through customer setup for saved Aarla products. This backend change does not yet replace the current dashboard UI with the approved mocks.
+
 ## Gift options and workspace — 16 November 2026
 
 The reviewed customer flow now includes a two-column curated options page, separate saved customer workspaces, optional indicative pricing, Show/Hide controls and immutable quote selections. Operations publishes manual hamper visuals/contents and links quotes to the latest selected snapshot. Start at [`GIFT-WORKSPACE.md`](GIFT-WORKSPACE.md) for rollout, customer/admin usage and local verification. Apply `20261116000001_gift_workspace.sql` through the customer-only `/setup` manifest before using the new screens.

@@ -29,10 +29,13 @@ const operations = new Set([
   "send-message",
   "migrate",
   "gift-workspace",
+  "home",
   "status",
 ]);
 const routes = new Set([
   "/account",
+  "/api/customer/home",
+  "/api/customer/saved-ideas",
   "/account/login",
   "/api/setup",
   "/api/health",

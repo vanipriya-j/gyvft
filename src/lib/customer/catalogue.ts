@@ -22,6 +22,7 @@ export function parseCatalogue(raw: unknown): AarlaProduct[] {
     if (
       !p ||
       typeof p !== "object" ||
+      !/^\d{1,30}$/.test(String(p.id)) ||
       typeof p.title !== "string" ||
       typeof p.handle !== "string" ||
       !Array.isArray(p.variants)
@@ -52,6 +53,7 @@ export function parseCatalogue(raw: unknown): AarlaProduct[] {
     }
     if (
       url.protocol !== "https:" ||
+      Boolean(url.username || url.password) ||
       !["cdn.shopify.com", "aarla.in"].includes(url.hostname)
     )
       continue;
@@ -93,11 +95,12 @@ export async function aarlaCatalogue() {
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
     return {
+      allProducts: unique,
       products: unique.filter((p) => p.available).slice(0, 12),
       offers: unique.filter((p) => p.available && p.comparePaise).slice(0, 10),
       available: true,
     };
   } catch {
-    return { products: [], offers: [], available: false };
+    return { allProducts: [], products: [], offers: [], available: false };
   }
 }
