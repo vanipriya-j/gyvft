@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   payments: vi.fn(),
   catalogue: vi.fn(),
   event: vi.fn(),
+  sql: vi.fn(),
 }));
 vi.mock("@/lib/customer/home-data", () => ({
   homeGifts: mocks.gifts,
@@ -19,11 +20,13 @@ vi.mock("@/lib/customer/catalogue", () => ({
 vi.mock("@/lib/customer/observability", () => ({
   recordCustomerEvent: mocks.event,
 }));
+vi.mock("@/lib/database/client", () => ({ getSql: () => mocks.sql }));
 import { customerHome, homeQuery } from "@/lib/customer/home";
 const account = { id: "owner", email: "owner@example.test" };
 describe("independent Home sections", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.sql.mockResolvedValue([]);
     for (const fn of [
       mocks.gifts,
       mocks.occasions,
@@ -59,6 +62,25 @@ describe("independent Home sections", () => {
     expect(mocks.gifts).toHaveBeenCalledWith("owner", 6, 3);
     expect(mocks.catalogue).not.toHaveBeenCalled();
     expect(mocks.payments).not.toHaveBeenCalled();
+  });
+  it("keeps Aarla discovery available while the saved-product migration is pending", async () => {
+    mocks.catalogue.mockResolvedValue({
+      available: true,
+      allProducts: [{ id: "123", available: true, title: "A gift" }],
+    });
+    mocks.sql.mockRejectedValue({ code: "42P01" });
+    const result = await customerHome(
+      account,
+      homeQuery.parse({ section: "aarla" }),
+    );
+    expect(result.sections.aarla).toMatchObject({
+      status: "ready",
+      data: {
+        savingAvailable: false,
+        total: 1,
+        items: [{ id: "123", saved: false }],
+      },
+    });
   });
   it("distinguishes a real zero from an unavailable payment summary", async () => {
     mocks.payments.mockRejectedValue(new Error("password=private"));

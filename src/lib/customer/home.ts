@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { getSql } from "@/lib/database/client";
 import type { CustomerAccount } from "./session";
 import { indiaToday } from "./dashboard-model";
 import { pageOf } from "./home-model";
@@ -65,13 +66,39 @@ export async function customerHome(
     occasions: () => homeOccasions(account.id, today, offset, limit),
     saved: () => savedIdeasFor(account.id, offset, limit),
     payments: () => homePayments(account.id, today, offset, limit),
-    inspiration: async () => homeInspiration(),
+    inspiration: async () => {
+      const idea = homeInspiration();
+      if (!idea) return null;
+      const rows =
+        await getSql()`SELECT story_slug FROM gyvft_customer_saved_ideas WHERE account_id=${account.id}::uuid AND story_slug=${idea.id}`;
+      return { ...idea, saved: rows.length > 0 };
+    },
     aarla: async () => {
       const catalogue = await aarlaCatalogue();
       if (!catalogue.available) throw new CatalogueUnavailable();
-      const available = catalogue.allProducts.filter((p) => p.available);
+      let saved: { product_id: string }[] = [],
+        savingAvailable = true;
+      try {
+        saved = await getSql()<
+          { product_id: string }[]
+        >`SELECT product_id FROM gyvft_customer_saved_products WHERE account_id=${account.id}::uuid`;
+      } catch (error) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "code" in error &&
+          (error.code === "42P01" || error.code === "42703")
+        )
+          savingAvailable = false;
+        else throw error;
+      }
+      const savedIds = new Set(saved.map((s) => s.product_id));
+      const available = catalogue.allProducts
+        .filter((p) => p.available)
+        .map((p) => ({ ...p, saved: savedIds.has(p.id) }));
       return {
         ...pageOf(available, offset, limit),
+        savingAvailable,
         currency: "INR",
         priceNotice: "Prices and availability are confirmed at Aarla.",
       };

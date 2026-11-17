@@ -56,6 +56,8 @@ const fullDate = (value: string) =>
   }).format(new Date(value + "T00:00:00Z"));
 type View = "overview" | "requests" | "occasions" | "ideas";
 type Props = {
+  initialView?: View;
+  showNavigation?: boolean;
   products: AarlaProduct[];
   offers: AarlaProduct[];
   mockups: Mockup[];
@@ -558,6 +560,8 @@ function MoreToDiscover() {
 }
 
 export function GiftingDashboard({
+  initialView = "overview",
+  showNavigation = true,
   requests,
   occasions,
   approvals,
@@ -569,7 +573,7 @@ export function GiftingDashboard({
   offers,
   mockups,
 }: Props) {
-  const [view, setView] = useState<View>("overview");
+  const [view, setView] = useState<View>(initialView);
   const [addOpen, setAddOpen] = useState(false);
   const [ideaFilter, setIdeaFilter] = useState("all");
   const stats = dashboardStats(requests),
@@ -714,31 +718,33 @@ export function GiftingDashboard({
   }
   return (
     <div>
-      <nav
-        aria-label="Gifting workspace"
-        className="mb-7 flex gap-1 overflow-x-auto border-b border-border"
-      >
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            aria-pressed={view === tab.id}
-            onClick={() => go(tab.id)}
-            className={`inline-flex flex-1 shrink-0 items-center justify-center gap-1.5 border-b-2 px-2 py-3 text-xs transition sm:flex-none sm:gap-2 sm:px-3 sm:text-sm md:px-5 ${view === tab.id ? "border-olive text-olive-dark" : "border-transparent text-muted-text hover:text-ink"}`}
-          >
-            <tab.icon size={15} className="hidden sm:block" />
-            {tab.label}
-            {tab.id === "ideas" && savedSlugs.length > 0 && (
-              <span
-                aria-hidden="true"
-                className="rounded-full bg-surface px-1.5 text-[10px]"
-              >
-                {savedSlugs.length}
-              </span>
-            )}
-          </button>
-        ))}
-      </nav>
+      {showNavigation && (
+        <nav
+          aria-label="Gifting workspace"
+          className="mb-7 flex gap-1 overflow-x-auto border-b border-border"
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              aria-pressed={view === tab.id}
+              onClick={() => go(tab.id)}
+              className={`inline-flex flex-1 shrink-0 items-center justify-center gap-1.5 border-b-2 px-2 py-3 text-xs transition sm:flex-none sm:gap-2 sm:px-3 sm:text-sm md:px-5 ${view === tab.id ? "border-olive text-olive-dark" : "border-transparent text-muted-text hover:text-ink"}`}
+            >
+              <tab.icon size={15} className="hidden sm:block" />
+              {tab.label}
+              {tab.id === "ideas" && savedSlugs.length > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="rounded-full bg-surface px-1.5 text-[10px]"
+                >
+                  {savedSlugs.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+      )}
       {setupRequired && (
         <div
           role="status"

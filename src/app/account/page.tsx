@@ -1,16 +1,44 @@
-import Link from "next/link";
+import {
+  HomeDashboard,
+  SavedIdeasPage,
+  PaymentsPage,
+} from "@/components/customer/home-dashboard";
+import { customerHome, homeQuery } from "@/lib/customer/home";
 import { aarlaCatalogue } from "@/lib/customer/catalogue";
-import { ArrowUpRight, Plus } from "lucide-react";
+
 import { projectsFor } from "@/lib/customer/data";
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { dashboardExtrasFor } from "@/lib/customer/dashboard-data";
 import { indiaToday, summarizeRequests } from "@/lib/customer/dashboard-model";
 import { GiftingDashboard } from "@/components/customer/dashboard";
 import { stories } from "@/content/stories";
-import { signOut } from "./actions";
+
 export const dynamic = "force-dynamic";
-export default async function AccountPage() {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
   const account = await requireCustomerAccount();
+  const { view = "home" } = await searchParams;
+  if (
+    ["home", "saved", "payments"].includes(view) ||
+    !["requests", "occasions", "ideas"].includes(view)
+  ) {
+    const query = homeQuery.parse(
+      view === "saved"
+        ? { section: "saved", limit: 20 }
+        : view === "payments"
+          ? { section: "payments", limit: 20 }
+          : {},
+    );
+    const data = await customerHome(account, query);
+    if (view === "saved")
+      return <SavedIdeasPage key={data.generatedAt} data={data} />;
+    if (view === "payments")
+      return <PaymentsPage key={data.generatedAt} data={data} />;
+    return <HomeDashboard key={data.generatedAt} data={data} />;
+  }
   const [projects, extras, catalogue] = await Promise.all([
     projectsFor(account.id),
     dashboardExtrasFor(account.id),
@@ -45,47 +73,22 @@ export default async function AccountPage() {
       alt: s!.hero.alt,
     }));
   return (
-    <>
-      <div className="mb-7 flex flex-wrap items-start justify-between gap-5">
-        <div>
-          <p className="text-[10px] uppercase tracking-[.22em] text-olive">
-            My GYVFT
-          </p>
-          <h1 className="mt-2 font-serif text-3xl leading-tight md:text-4xl">
-            A little thought. A lasting connection.
-          </h1>
-          <p className="mt-2 text-sm text-muted-text">
-            Your gifting space, for home, work and the people who matter.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href="/tell-your-story"
-            className="inline-flex items-center gap-2 rounded-full bg-olive-dark px-5 py-2.5 text-sm text-white"
-          >
-            <Plus size={15} /> Start a new story
-          </Link>
-          <form action={signOut}>
-            <button className="rounded-full border border-border px-4 py-2.5 text-xs">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </div>
-      <GiftingDashboard
-        products={catalogue.products}
-        offers={catalogue.offers}
-        requests={summarizeRequests(projects)}
-        {...extras}
-        ideas={ideas}
-        today={indiaToday()}
-      />
-      <div className="mt-9 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-xs text-muted-text">
-        <span className="min-w-0 break-all">Signed in as {account.email}</span>
-        <Link href="/stories" className="inline-flex items-center gap-1">
-          More stories worth sharing <ArrowUpRight size={13} />
-        </Link>
-      </div>
-    </>
+    <GiftingDashboard
+      key={view}
+      initialView={
+        view === "requests"
+          ? "requests"
+          : view === "ideas"
+            ? "ideas"
+            : "occasions"
+      }
+      showNavigation={false}
+      products={catalogue.products}
+      offers={catalogue.offers}
+      requests={summarizeRequests(projects)}
+      {...extras}
+      ideas={ideas}
+      today={indiaToday()}
+    />
   );
 }

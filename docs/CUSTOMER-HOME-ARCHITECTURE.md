@@ -2,7 +2,7 @@
 
 The approved Home design has three carousels: Gifts taking shape, Upcoming occasions, Coming up at Aarla. Desktop also includes the slogan, editorial inspiration, saved ideas and a payment summary. Mobile has a compact layout. These are two presentations of the same customer data; there is no device-specific database or API. The full gift list is a separate destination, rather than a repeated Home worklist.
 
-This change implements backend support. It does not replace the current dashboard component with the approved mock. The UI integration is the next step.
+The approved Home is now connected to these services. Desktop retains the slogan and the lower inspiration/saved/payment area; mobile uses compact cards and ends with Aarla, followed by navigation. The full request list, occasion manager, saved ideas and verified-payment history remain reachable through navigation/profile. The individual gift detail redesign remains a mock for design review. See [application typography and spacing standards](APPLICATION-UI-STANDARDS.md).
 
 ## Boundaries
 
@@ -82,7 +82,7 @@ Annual recurrence is computed before sorting/paging. Leap-day anniversaries disp
 
 Read-only product cards from the existing public catalogue feed, available products only, newest first. Products carry current feed pricing, any compare-at price, image and a tracked Aarla product link. Prices are INR paise. The API includes a reminder that checkout prices and availability are confirmed at Aarla; compare-at prices support an offer display without invented discounts.
 
-The feed is bounded to three pages of 100 products. `total` is the number of eligible products in that fetched window, not the entire Shopify store. It is intentionally not shown as a store-wide count. Catalogue outages return `unavailable`; they never empty the customer's gifts or saved ideas. No Shopify Admin API credentials are needed for this read path.
+The feed is bounded to three pages of 100 products. `total` is the number of eligible products in that fetched window, not the entire Shopify store. It is intentionally not shown as a store-wide count. Catalogue outages return `unavailable`; they never empty the customer's gifts or saved ideas. If only the saved-product migration is pending, discovery still loads with `savingAvailable:false` and its Save control is omitted. No Shopify Admin API credentials are needed for this read path.
 
 ### Inspiration and saved ideas
 
@@ -110,7 +110,7 @@ Operations are explicit and idempotent, rather than toggle operations that rever
 
 `20261117000001_customer_home.sql` is included in the customer-only `/setup` manifest. It adds the saved-product table, enables RLS/revokes browser roles and adds supporting indexes on existing customer tables. It does not modify Aarla OS or the legacy Studio CRM, truncate enquiries, migrate authentication or seed fictional money.
 
-After deployment, run pending customer migrations once through `/setup`. Existing UI continues to work before the new dashboard is wired. A missing new saved-product table yields a setup-required saved section rather than a false “you have no saved ideas” state.
+After deployment, run pending customer migrations once through `/setup`. The new Home is the default `/account` view; existing gift options and enquiry details retain their routes. A missing new saved-product table yields a setup-required saved section rather than a false “you have no saved ideas” state.
 
 ## Verification
 
