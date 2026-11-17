@@ -97,6 +97,102 @@ describe("Shopify customer identity and retry boundaries", () => {
     );
     expect(fetch).not.toHaveBeenCalled();
   });
+  it("records only a fully verified outstanding balance without the Plus-only amount field", async () => {
+    mocks.sql
+      .mockResolvedValueOnce([
+        {
+          id: owner,
+          kind: "project",
+          customer_type: "b2c",
+          total_paise: 100000,
+          paid_paise: 100000,
+          shopify_customer_id: "gid://shopify/Customer/1",
+          shopify_order_id: "gid://shopify/Order/1",
+          shopify_payment_version: 0,
+        },
+      ])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: owner }])
+      .mockResolvedValue([]);
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({
+          data: {
+            orders: {
+              nodes: [
+                {
+                  id: "gid://shopify/Order/1",
+                  name: "#1",
+                  customer: { id: "gid://shopify/Customer/1" },
+                  totalPriceSet: {
+                    shopMoney: { amount: "1000.00", currencyCode: "INR" },
+                  },
+                  totalReceivedSet: {
+                    shopMoney: { amount: "500.00", currencyCode: "INR" },
+                  },
+                },
+              ],
+            },
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          data: {
+            orderCreateManualPayment: {
+              order: { id: "gid://shopify/Order/1" },
+              userErrors: [],
+            },
+          },
+        }),
+      );
+    vi.stubGlobal("fetch", fetch);
+    expect(await createOrSyncShopifyOrder(owner, true)).toBe("#1");
+    const mutation = JSON.parse(fetch.mock.calls[1][1].body);
+    expect(mutation.query).not.toContain("amount");
+    expect(mutation.variables).toEqual({ id: "gid://shopify/Order/1" });
+  });
+  it("keeps an additional partial receipt in GYVFT without marking the whole Shopify order paid", async () => {
+    mocks.sql
+      .mockResolvedValueOnce([
+        {
+          id: owner,
+          kind: "project",
+          customer_type: "b2c",
+          total_paise: 100000,
+          paid_paise: 75000,
+          shopify_customer_id: "gid://shopify/Customer/1",
+        },
+      ])
+      .mockResolvedValue([]);
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        data: {
+          orders: {
+            nodes: [
+              {
+                id: "gid://shopify/Order/1",
+                name: "#1",
+                customer: { id: "gid://shopify/Customer/1" },
+                totalPriceSet: {
+                  shopMoney: { amount: "1000.00", currencyCode: "INR" },
+                },
+                totalReceivedSet: {
+                  shopMoney: { amount: "500.00", currencyCode: "INR" },
+                },
+              },
+            ],
+          },
+        },
+      }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    await expect(createOrSyncShopifyOrder(owner, true)).rejects.toThrow(
+      "Additional partial receipts",
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
   it("maps Indian state names and codes without inventing unknown states", () => {
     expect(provinceCode("Tamil Nadu")).toBe("TN");
     expect(provinceCode("KA")).toBe("KA");

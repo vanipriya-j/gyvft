@@ -51,7 +51,7 @@ Desktop Home retains the slogan, three aligned carousel columns and the lower in
 
 Within each carousel, show only centred previous/next controls; heading totals communicate collection size. No simultaneous visible scrollbars, autoplay or duplicate active-request list on Home. Controls need accessible labels, keyboard focus, loading/disabled states and truthful empty/error states.
 
-The individual gift page should be a task workspace: compact identifying header, visible visual direction and current action, concise stage progression, then clearly labelled Options, Quote/payment, Brief, Activity and Messages as appropriate to the current stage. Do not make every field a full-width card or present an enquiry as if it were already an approved order. Mock this screen before implementation.
+The individual gift page should be a task workspace: compact identifying header, visible visual direction and current action, the current domain status (without a redundant journey strip), then clearly labelled Options, Quote/payment, Brief, Activity and Messages as appropriate to the current stage. Do not make every field a full-width card or present an enquiry as if it were already an approved order. Mock this screen before implementation.
 
 ## Review checks
 

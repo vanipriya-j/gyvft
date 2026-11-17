@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { RequestNavigation } from "@/components/customer/request-navigation";
+import styles from "@/components/customer/request.module.css";
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { ownedProject } from "@/lib/customer/data";
 import { giftWorkspace } from "@/lib/customer/gift-workspace";
@@ -16,19 +18,28 @@ export default async function GiftOptionsPage({
   if (!project) notFound();
   const data = await giftWorkspace(id);
   return (
-    <>
+    <div className={styles.workspace}>
       <Link
         href={`/account/projects/${id}`}
         className="text-sm text-muted-text"
       >
         ← Back to your request
       </Link>
-      <div className="my-7">
+      <div className="my-3">
         <p className="text-xs uppercase tracking-widest text-olive">
           Your gifting request
         </p>
-        <h1 className="mt-2 font-serif text-4xl">{project.title}</h1>
+        <h1 className="mt-2 font-serif text-2xl md:text-3xl">
+          {project.title}
+        </h1>
       </div>
+      <RequestNavigation
+        id={id}
+        view="options"
+        optionCount={
+          data.options.filter((o) => o.published && !o.hidden).length
+        }
+      />
       <GiftWorkspace
         key={id}
         projectId={id}
@@ -38,6 +49,6 @@ export default async function GiftOptionsPage({
           String(project.submission_key || "").startsWith("gyvft-demo-")
         }
       />
-    </>
+    </div>
   );
 }

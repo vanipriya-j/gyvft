@@ -4,9 +4,13 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: *Your story. Our telling.*
 
+## Working customer and Operations gifting flow — 17 November 2026
+
+The individual gift workspace is implemented: compact Overview, Options, Quote & payment, Activity and Messages, with separate occasion/delivery details. Operations groups the same request into brief/next steps, options, quote/design, payments, fulfilment, messages and activity. `request.ts` reads the owned request aggregate; `request-workflow.ts` resolves its domain state for both roles. Existing commands retain authoritative ownership, immutable selections/approval versions and payment/fulfilment checks. No screen-specific endpoint or migration was added. See [CUSTOMER-PORTAL.md](CUSTOMER-PORTAL.md#working-gift-workspace-and-operations) for usage, testing and Shopify limitations. AI curation remains future work.
+
 ## Approved customer Home backend — 17 November 2026
 
-The desktop/mobile Home designs share a new authenticated section API and data service. See [`CUSTOMER-HOME-ARCHITECTURE.md`](CUSTOMER-HOME-ARCHITECTURE.md) for contracts, ownership, carousel pagination, financial-year semantics and rollout. Apply `20261117000001_customer_home.sql` through customer setup for saved Aarla products. The approved desktop/mobile Home is connected to these services, using tighter [application typography and spacing](APPLICATION-UI-STANDARDS.md). Request history and occasion management remain reachable; saved ideas and verified-payment history have dedicated views. The individual gift detail redesign remains a mock for review.
+The desktop/mobile Home designs share a new authenticated section API and data service. See [`CUSTOMER-HOME-ARCHITECTURE.md`](CUSTOMER-HOME-ARCHITECTURE.md) for contracts, ownership, carousel pagination, financial-year semantics and rollout. Apply `20261117000001_customer_home.sql` through customer setup for saved Aarla products. The approved desktop/mobile Home is connected to these services, using tighter [application typography and spacing](APPLICATION-UI-STANDARDS.md). Request history and occasion management remain reachable; saved ideas and verified-payment history have dedicated views. The individual gift detail workspace is now implemented; see the working-flow note above.
 
 ## Gift options and workspace — 16 November 2026
 

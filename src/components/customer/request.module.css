@@ -1,0 +1,268 @@
+.workspace {
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  min-width: 0;
+}
+.back {
+  display: inline-block;
+  font-size: 0.8125rem;
+  color: var(--muted-text);
+  margin-bottom: 8px;
+}
+.header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.header h1 {
+  font:
+    1.75rem/2.25rem var(--font-display),
+    Georgia,
+    serif;
+  overflow-wrap: anywhere;
+}
+.status {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: var(--surface);
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-top: 8px;
+  color: var(--muted-text);
+  font-size: 0.8125rem;
+}
+.facts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.facts svg {
+  width: 16px;
+  height: 16px;
+}
+.facts a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  border-bottom: 1px solid var(--border);
+  margin: 16px 0;
+}
+.nav a {
+  min-height: 44px;
+  padding: 10px 0;
+  border-bottom: 2px solid transparent;
+}
+.nav a[aria-current] {
+  border-color: var(--olive-dark);
+  color: var(--olive-dark);
+}
+.overview,
+.lower {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 16px;
+}
+.lower {
+  margin-top: 16px;
+}
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  background: var(--paper);
+  min-width: 0;
+}
+.card h2 {
+  font:
+    1.25rem/1.5rem var(--font-display),
+    Georgia,
+    serif;
+}
+.card p,
+.card .link {
+  margin-top: 8px;
+}
+.visual {
+  position: relative;
+  min-width: 0;
+  min-height: 240px;
+  max-height: 320px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.visual > a {
+  display: block;
+  height: 100%;
+}
+.visual img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.visual > a > img {
+  position: absolute;
+  inset: 0;
+  object-fit: contain;
+}
+.visual figcaption {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  right: 12px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  padding: 4px 8px;
+  background: var(--paper);
+  border-radius: 5px;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+.actionPanel {
+  display: flex;
+  align-items: start;
+  flex-direction: column;
+  gap: 12px;
+}
+.actionPanel h2 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+.actionPanel p,
+.actionPanel .link {
+  margin: 0;
+}
+.eyebrow {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--muted-text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.muted {
+  color: var(--muted-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.primary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  border-radius: 7px;
+  background: var(--olive-dark);
+  color: white;
+  padding: 10px 14px;
+}
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.next {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: auto;
+  width: 100%;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  color: var(--muted-text);
+}
+.next strong {
+  color: var(--foreground);
+  font-weight: 500;
+}
+.excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.meta,
+.sample {
+  color: var(--muted-text);
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+.sample {
+  padding: 8px 12px;
+  background: var(--surface);
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+.quoteGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+.reading {
+  max-width: 760px;
+}
+@media (max-width: 750px) {
+  .header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .header h1 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  .overview,
+  .lower,
+  .detailGrid,
+  .quoteGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .visual {
+    height: 170px;
+    min-height: 170px;
+  }
+  .nav {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0 8px;
+  }
+  .nav a {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-align: center;
+    align-content: center;
+    min-width: 0;
+    padding: 8px 0;
+  }
+  .facts {
+    gap: 4px 12px;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+  }
+  .actionPanel {
+    gap: 8px;
+  }
+  .actionPanel h2 {
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+  }
+  .next {
+    margin-top: 4px;
+  }
+}
