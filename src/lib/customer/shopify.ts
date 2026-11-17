@@ -6,7 +6,9 @@ export const CUSTOMER_LOOKUP = `query GYVFTCustomer($query:String!){customers(fi
 export const CUSTOMER_CREATE = `mutation GYVFTCustomerCreate($input:CustomerInput!){customerCreate(input:$input){customer{id email} userErrors{field message}}}`;
 export const ORDER_LOOKUP = `query GYVFTOrder($query:String!){orders(first:2,query:$query){nodes{id name customer{id} totalPriceSet{shopMoney{amount currencyCode}} totalReceivedSet{shopMoney{amount currencyCode}}}}}`;
 export const ORDER_CREATE = `mutation GYVFTOrderCreate($order:OrderCreateOrderInput!,$options:OrderCreateOptionsInput){orderCreate(order:$order,options:$options){order{id name} userErrors{field message}}}`;
-export const RECORD_PAYMENT = `mutation GYVFTRecordPayment($id:ID!,$amount:MoneyInput!){orderCreateManualPayment(id:$id,amount:$amount,paymentMethodName:"GYVFT verified direct UPI"){order{id name} userErrors{field message}}}`;
+// A specified partial amount is Shopify Plus-only. Omit it to record the full
+// outstanding balance, and call only when GYVFT has verified the whole total.
+export const RECORD_PAYMENT = `mutation GYVFTRecordPayment($id:ID!){orderCreateManualPayment(id:$id,paymentMethodName:"GYVFT verified direct UPI"){order{id name} userErrors{field message}}}`;
 export class ShopifyError extends Error {}
 type Customer = { id: string; email: string | null };
 type ShopOrder = {
@@ -214,6 +216,10 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
     if (received === verified) {
       await sql`UPDATE customer_projects SET shopify_payment_state='idle' WHERE id=${id}::uuid`;
     } else if (confirmed) {
+      if (verified !== Number(p.total_paise))
+        throw new ShopifyError(
+          "The order is linked. Additional partial receipts remain verified in GYVFT; sync the Shopify balance after the full order total is verified, or reconcile it manually in Shopify.",
+        );
       const [lock] =
         await sql`UPDATE customer_projects SET shopify_payment_state='syncing',shopify_payment_version=shopify_payment_version+1 WHERE id=${id}::uuid AND shopify_payment_state='idle' AND shopify_payment_version=${p.shopify_payment_version} RETURNING id`;
       if (!lock)
@@ -225,12 +231,11 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
           orderCreateManualPayment: { order: unknown; userErrors: unknown[] };
         }>(RECORD_PAYMENT, {
           id: order.id,
-          amount: {
-            amount: ((verified - received) / 100).toFixed(2),
-            currencyCode: "INR",
-          },
         });
-        if (result.orderCreateManualPayment.userErrors.length)
+        if (
+          !result.orderCreateManualPayment.order ||
+          result.orderCreateManualPayment.userErrors.length
+        )
           throw new ShopifyError("Shopify payment recording needs review.");
         await sql`UPDATE customer_projects SET shopify_payment_state='idle' WHERE id=${id}::uuid`;
       } catch (error) {

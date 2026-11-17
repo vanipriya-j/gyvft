@@ -50,7 +50,7 @@ Lead emails already render the form answers. Aarla's existing fields retain thei
 
 `customer_projects` holds enquiries/projects and current status. Published events and conversations are separate customer-visible tables; never copy internal notes into them. New public submissions still email the existing inbox and forward to Aarla OS, with a secondary customer-portal mirror. Mirror failure is logged rather than turning a successfully emailed submission into a duplicate retry.
 
-Enquiry pages show the request, status, timeline and conversations. Payment/production sidebars appear only after an explicit project conversion. B2B/B2C conversion, operational replies/status syncing, payment receipt verification and Shopify order creation remain separate integration work.
+Enquiry pages show the request, status, timeline and conversations. Payment/production sidebars appear only after an explicit project conversion. The B2C Operations desk provides conversion, replies, versioned approvals, verified receipts and fulfilment. Shopify handoff is optional and requires its server connection; B2B circles and Aarla OS synchronisation remain later work.
 
 ## Canned data and cleanup
 
@@ -81,3 +81,44 @@ Keep `SETUP_SECRET` configured if using the operator dashboard. Removing it and 
 ## Approved Home API — 17 November 2026
 
 The approved Home backend is described in [CUSTOMER-HOME-ARCHITECTURE.md](CUSTOMER-HOME-ARCHITECTURE.md). `GET /api/customer/home` composes account-scoped gifts, upcoming occasions, Aarla catalogue cards, saved ideas, editorial inspiration and verified-payment summaries with independent section states and carousel totals/pagination. `PUT`/`DELETE /api/customer/saved-ideas` save explicit story/product references. The new customer-only migration adds private saved Aarla products without changing existing stories, occasions or public forms. The approved desktop/mobile Home is now connected, with separate compact mobile and fuller desktop presentations; see the architecture guide for navigation, loading/error states and rollout.
+
+## Working gift workspace and Operations
+
+Open a gift from Home or My gifts. Overview shows the actual current action, latest available option/approval image, a brief summary and the latest team message. Original images can be opened at full size. Generic imagery is labelled as inspiration and is never represented as a prepared option. The current status replaces the redundant journey strip.
+
+- **Options** opens the existing curated options/customer workspace. Visible curated-option counts respect Show/Hide; a customised draft and its submitted selection remain separate from the team's original.
+- **Quote & payment** contains versioned quotes/designs, the linked selection snapshot, decisions and, after conversion, payment instructions and receipt history. Only the latest eligible version can receive a decision. A pending receipt never counts as paid.
+- **Edit details** opens the original brief plus separate occasion/requested-delivery dates and the delivery address after conversion. The public enquiry form is unchanged. Address edits lock after dispatch.
+- **Activity** and **Messages** provide focused history and conversation views without repeating the whole request page.
+
+At `/operations/requests`, unlock with the existing operator secret and select a request. The tabs operate on the same request, options, selections, approval versions, receipts and fulfilment records. **Use this selection in quote** opens the quote editor with the exact composition. **Convert approved quote to B2C order** becomes available after the latest selection's quote is approved. **Refresh desk** refreshes both the request list and the selected request. Switching requests resets quote-editing state so one customer's items cannot carry into another request.
+
+Use **Payments** to inspect proof and explicitly confirm receipt in the receiving bank/provider. Use **Quote & design** to publish revised artwork; production requires the latest design approval plus verified 50% advance. **Fulfilment** holds shipping details, progress/tracking and optional Shopify actions. Dispatch requires the full verified balance, approved design, address and tracking reference. Server rules enforce these prerequisites even if a client submits a command directly.
+
+### Optional Shopify handoff
+
+GYVFT orders, UPI proof and verification work without Shopify. When configured, Shopify customer matching/creation and order creation continue through the existing server integration. Order creation records the verified advance. Once the full GYVFT total is verified, sync records Shopify's outstanding balance as a manual payment. The API's specified partial-payment amount is Shopify Plus-only, so the standard-plan flow omits that argument and never marks a partially verified total fully paid. Additional partial receipts after creation remain verified in GYVFT until the full balance is verified, or an operator reconciles them manually in Shopify. Sync does not initiate a new customer charge.
+
+### Local verification
+
+`tests/e2e/customer-gift-flow.spec.ts` creates fictional local accounts/requests, drives both customer and Operations UI, verifies payment/approval gates and cross-account privacy, and tests duplicate-safe Shopify order/payment handoff against a blocking mock. No real Shopify orders or emails are sent. It checks a local fixture-process marker before running writes and cleans up its records. Use a disposable database with customer migrations already applied:
+
+```sh
+DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55433/postgres \
+SETUP_SECRET=local-complete-flow-secret-123 \
+NEXT_PUBLIC_APP_URL=http://localhost:3102 \
+NODE_OPTIONS='--import ./tests/fixtures/gift-flow-preload.mjs' \
+npx next dev --port 3102
+```
+
+Then in another terminal:
+
+```sh
+PLAYWRIGHT_BASE_URL=http://localhost:3102 \
+PLAYWRIGHT_WORKFLOW_DB=postgresql://postgres:postgres@127.0.0.1:55433/postgres \
+PLAYWRIGHT_OPERATOR_SECRET=local-complete-flow-secret-123 \
+PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium \
+npx playwright test tests/e2e/customer-gift-flow.spec.ts --workers=1
+```
+
+The fixture refuses production/non-local database use, forces the Shopify fixture domain/token and disables email. Customer and operator state rules have unit coverage in `request-workflow.test.ts`; quote/selection boundaries retain the disposable database tests in `gift-workspace-db.test.ts`. The legacy Studio integration suites use their own separate PostgreSQL database; they cannot run against the customer-only fixture schema.

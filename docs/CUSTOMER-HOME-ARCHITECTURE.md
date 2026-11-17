@@ -2,7 +2,7 @@
 
 The approved Home design has three carousels: Gifts taking shape, Upcoming occasions, Coming up at Aarla. Desktop also includes the slogan, editorial inspiration, saved ideas and a payment summary. Mobile has a compact layout. These are two presentations of the same customer data; there is no device-specific database or API. The full gift list is a separate destination, rather than a repeated Home worklist.
 
-The approved Home is now connected to these services. Desktop retains the slogan and the lower inspiration/saved/payment area; mobile uses compact cards and ends with Aarla, followed by navigation. The full request list, occasion manager, saved ideas and verified-payment history remain reachable through navigation/profile. The individual gift detail redesign remains a mock for design review. See [application typography and spacing standards](APPLICATION-UI-STANDARDS.md).
+The approved Home is now connected to these services. Desktop retains the slogan and the lower inspiration/saved/payment area; mobile uses compact cards and ends with Aarla, followed by navigation. The full request list, occasion manager, saved ideas and verified-payment history remain reachable through navigation/profile. The individual gift workspace now provides focused Overview, Options, Quote & payment, Activity, Messages and detail views using the request domain model; see CUSTOMER-PORTAL.md. See [application typography and spacing standards](APPLICATION-UI-STANDARDS.md).
 
 ## Boundaries
 
