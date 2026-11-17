@@ -56,3 +56,11 @@ The individual gift page should be a task workspace: compact identifying header,
 ## Review checks
 
 Review populated, empty, sample and failure states at 320px, 390px, 1024px and 1366px. Check long gift titles, large currency values, keyboard operation, 200% text/zoom, increased text spacing and mobile touch targets. Essential actions should be visible before secondary detail. The goal is useful information density with readable type and understandable groups, not the fewest pixels possible.
+
+## Carousel alignment and personal invitations
+
+Desktop carousel sections share header, card and annotation tracks using CSS subgrid. Sample notices and request failures belong beneath the shared card track so they cannot shorten only one card. Cards grow with their content; no large fixed minimum height is used. Controls are omitted for collections with fewer than two items.
+
+An empty occasion calendar invites a personal choice: “Whose special day is coming up?” and “Save a birthday or anniversary for someone you care about.” Its single Add a special day action opens the occasion form directly. Avoid urgency, repeated prompts or promises of reminders that the application does not provide.
+
+`tests/e2e/customer-home-layout.spec.ts` checks fictional sample/empty/populated/long-title states at 1024/1366px, mobile reflow, the direct add flow and 200% text sizing. Opt in with `PLAYWRIGHT_HOME_FIXTURES` (JSON keys `sample-empty`, `empty`, `populated`, `long`, each holding a local test-session token), `PLAYWRIGHT_BASE_URL` pointing to a local running app, and optionally `PLAYWRIGHT_CHROMIUM_EXECUTABLE` / `PLAYWRIGHT_HOME_IMAGE`. These tests refuse hosted app URLs.
