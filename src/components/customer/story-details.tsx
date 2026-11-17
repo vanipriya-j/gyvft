@@ -1,5 +1,11 @@
 import { storyRequestSchema } from "@/lib/customer/story-request";
-export function CustomerStoryDetails({ value }: { value: unknown }) {
+export function CustomerStoryDetails({
+  value,
+  compact = false,
+}: {
+  value: unknown;
+  compact?: boolean;
+}) {
   const parsed = storyRequestSchema.safeParse(value);
   if (!parsed.success) return null;
   const s = parsed.data;
@@ -25,9 +31,23 @@ export function CustomerStoryDetails({ value }: { value: unknown }) {
     ["Marketing updates", s.marketing_consent ? "Yes" : "No"],
   ];
   return (
-    <section className="rounded-3xl border border-border bg-paper p-6 md:p-8">
-      <h2 className="font-serif text-2xl">Your request details</h2>
-      <dl className="mt-5 grid gap-5 sm:grid-cols-2">
+    <section
+      className={
+        compact
+          ? "rounded-xl border border-border bg-paper p-4"
+          : "rounded-3xl border border-border bg-paper p-6 md:p-8"
+      }
+    >
+      <h2 className={compact ? "font-serif text-xl" : "font-serif text-2xl"}>
+        Your request details
+      </h2>
+      <dl
+        className={
+          compact
+            ? "mt-3 grid gap-3 sm:grid-cols-2"
+            : "mt-5 grid gap-5 sm:grid-cols-2"
+        }
+      >
         {rows
           .filter(([, value]) => value)
           .map(([label, value]) => (
