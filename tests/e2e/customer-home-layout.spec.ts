@@ -204,3 +204,148 @@ test("larger text can expand the shared card row without clipping", async ({
     ),
   ).toBe(false);
 });
+
+test("placeholder and catalogue images fill their frames without stretching", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  const url = new URL(baseURL!);
+  expect(["localhost", "127.0.0.1"]).toContain(url.hostname);
+  const fixtures = JSON.parse(readFileSync(path!, "utf8")) as Record<
+    string,
+    Fixture
+  >;
+  await context.addCookies([
+    {
+      name: "gyvft_customer_session",
+      value: fixtures["sample-empty"].token,
+      domain: url.hostname,
+      path: "/",
+    },
+  ]);
+  if (process.env.PLAYWRIGHT_HOME_IMAGE)
+    await page.route(
+      (url) =>
+        url.pathname === "/_next/image" &&
+        String(url.searchParams.get("url")).startsWith(
+          "https://cdn.shopify.com/",
+        ),
+      (route) =>
+        route.fulfill({
+          path: process.env.PLAYWRIGHT_HOME_IMAGE!,
+          contentType: "image/jpeg",
+        }),
+    );
+  for (const width of [1366, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/account");
+    const frames = page.locator(
+      'section[aria-label="Gifts taking shape"] article [data-placeholder-kind],section[aria-label="Upcoming occasions"] article [data-placeholder-kind]',
+    );
+    await expect(frames).toHaveCount(2);
+    const images = frames.locator("img");
+    await expect
+      .poll(() =>
+        images.evaluateAll((nodes) =>
+          nodes.every(
+            (n) =>
+              n instanceof HTMLImageElement && n.complete && n.naturalWidth > 0,
+          ),
+        ),
+      )
+      .toBe(true);
+    for (const image of await images.all()) {
+      expect(await image.evaluate((e) => getComputedStyle(e).objectFit)).toBe(
+        "cover",
+      );
+      expect(
+        await image.evaluate((e) => {
+          const a = e.getBoundingClientRect(),
+            b = e.parentElement!.getBoundingClientRect();
+          return (
+            Math.abs(a.width - b.width) < 1 && Math.abs(a.height - b.height) < 1
+          );
+        }),
+      ).toBe(true);
+    }
+    const product = page
+      .locator('section[aria-label="Coming up at Aarla"] article img')
+      .first();
+    await expect
+      .poll(() =>
+        product.evaluate(
+          (e) =>
+            e instanceof HTMLImageElement && e.complete && e.naturalWidth > 0,
+        ),
+      )
+      .toBe(true);
+    expect(await product.evaluate((e) => getComputedStyle(e).objectFit)).toBe(
+      "cover",
+    );
+    expect(
+      await product.evaluate((e) => {
+        const a = e.getBoundingClientRect(),
+          b = e.parentElement!.getBoundingClientRect();
+        return (
+          Math.abs(a.width - b.width) < 1 && Math.abs(a.height - b.height) < 1
+        );
+      }),
+    ).toBe(true);
+  }
+});
+
+test("customer preview wins over inspiration and a failed preview receives an image fallback", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  const url = new URL(baseURL!);
+  expect(["localhost", "127.0.0.1"]).toContain(url.hostname);
+  const fixtures = JSON.parse(readFileSync(path!, "utf8")) as Record<
+    string,
+    Fixture
+  >;
+  await context.addCookies([
+    {
+      name: "gyvft_customer_session",
+      value: fixtures.populated.token,
+      domain: url.hostname,
+      path: "/",
+    },
+  ]);
+  if (process.env.PLAYWRIGHT_HOME_IMAGE)
+    await page.route(
+      (url) =>
+        url.pathname === "/_next/image" &&
+        String(url.searchParams.get("url")).startsWith(
+          "https://cdn.shopify.com/",
+        ),
+      (route) =>
+        route.fulfill({
+          path: process.env.PLAYWRIGHT_HOME_IMAGE!,
+          contentType: "image/jpeg",
+        }),
+    );
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await page.goto("/account");
+  const gift = page.getByRole("region", {
+    name: "Gifts taking shape",
+    exact: true,
+  });
+  await expect(gift.locator("article img")).toHaveAttribute(
+    "src",
+    /^\/api\/customer-assets\//,
+  );
+  await page.route("**/api/customer-assets/gift-option/**", (route) =>
+    route.abort(),
+  );
+  await page.reload();
+  await expect(gift.locator('[data-placeholder-kind="gift"]')).toBeVisible();
+  await expect(
+    gift.getByText("Image unavailable", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    gift.getByRole("link", { name: "Review options →", exact: true }),
+  ).toBeVisible();
+});

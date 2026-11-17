@@ -64,3 +64,9 @@ Desktop carousel sections share header, card and annotation tracks using CSS sub
 An empty occasion calendar invites a personal choice: “Whose special day is coming up?” and “Save a birthday or anniversary for someone you care about.” Its single Add a special day action opens the occasion form directly. Avoid urgency, repeated prompts or promises of reminders that the application does not provide.
 
 `tests/e2e/customer-home-layout.spec.ts` checks fictional sample/empty/populated/long-title states at 1024/1366px, mobile reflow, the direct add flow and 200% text sizing. Opt in with `PLAYWRIGHT_HOME_FIXTURES` (JSON keys `sample-empty`, `empty`, `populated`, `long`, each holding a local test-session token), `PLAYWRIGHT_BASE_URL` pointing to a local running app, and optionally `PLAYWRIGHT_CHROMIUM_EXECUTABLE` / `PLAYWRIGHT_HOME_IMAGE`. These tests refuse hosted app URLs.
+
+## Home imagery
+
+Use existing GYVFT library photographs for missing gift previews, occasion photos and empty carousel visuals. Real customer/curation images take priority. Generic gift imagery is labelled as inspiration; a failed actual image is labelled unavailable so it is not represented as a prepared option. The original source PNGs remain unchanged.
+
+Carousel image containers use full-frame, aspect-preserving cover crops with focal positions chosen for each library photo and a separate portrait crop on mobile. Catalogue imagery fills the same frame rather than appearing as a small contained square. Public assets use the existing image optimizer/CSP; private preview URLs remain native cookie-authenticated images. Image rendering and fallback priority are covered by the Home browser regression suite.

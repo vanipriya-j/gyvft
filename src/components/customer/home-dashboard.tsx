@@ -6,11 +6,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bookmark,
-  CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Gift,
-  Heart,
   LoaderCircle,
   X,
 } from "lucide-react";
@@ -136,31 +133,74 @@ function Pager({
     </div>
   );
 }
+type PlaceholderKind = "gift" | "occasion" | "aarla";
+const placeholderPhotos = {
+  gift: {
+    src: "/images/gyvft/homepage/02-gifts-keepsakes.png",
+    alt: "Gifting inspiration: a thoughtful gift shared with a loved one",
+    className: styles.giftPhoto,
+  },
+  occasion: {
+    src: "/images/gyvft/homepage/05-celebrate.png",
+    alt: "Celebration inspiration: family sharing a special moment",
+    className: styles.occasionPhoto,
+  },
+  aarla: {
+    src: "/images/gyvft/homepage/04-merchandise-kits.png",
+    alt: "Aarla gifting inspiration with a printed tote and bottle",
+    className: styles.cataloguePhoto,
+  },
+};
+function PlaceholderPhoto({
+  kind,
+  label,
+  wide = false,
+}: {
+  kind: PlaceholderKind;
+  label?: string;
+  wide?: boolean;
+}) {
+  const photo = placeholderPhotos[kind];
+  return (
+    <span
+      className={`${styles.placeholderPhoto} ${photo.className}`}
+      data-placeholder-kind={kind}
+    >
+      <Image
+        src={photo.src}
+        alt={photo.alt}
+        fill
+        sizes={
+          wide
+            ? "(max-width:1023px) 100vw, 40vw"
+            : "(max-width:1023px) 105px, 40vw"
+        }
+      />
+      {label && <span className={styles.placeholderLabel}>{label}</span>}
+    </span>
+  );
+}
 function SafeImage({
   src,
   alt,
   lazy = false,
+  fallback = "gift",
 }: {
+  fallback?: PlaceholderKind;
   src: string;
   alt: string;
   lazy?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
   if (failed)
-    return (
-      <div className={styles.fallback}>
-        <Gift aria-hidden="true" />
-        <span className="sr-only">{alt}</span>
-      </div>
-    );
+    return <PlaceholderPhoto kind={fallback} label="Image unavailable" />;
   // Public catalogue images use the existing same-origin optimizer and CSP.
   // Private asset routes require the browser cookie, so those stay native.
   return src.startsWith("https://") ? (
     <Image
       src={src}
       alt={alt}
-      width={640}
-      height={480}
+      fill
       sizes="(max-width:1023px) 105px, 30vw"
       onError={() => setFailed(true)}
     />
@@ -169,6 +209,10 @@ function SafeImage({
       src={src}
       alt={alt}
       loading={lazy ? "lazy" : undefined}
+      ref={(image) => {
+        // A private image may fail before React attaches its error listener.
+        if (image?.complete && image.naturalWidth === 0) setFailed(true);
+      }}
       onError={() => setFailed(true)}
     />
   );
@@ -178,7 +222,9 @@ function Missing({
   empty,
   href,
   label,
+  media,
 }: {
+  media?: PlaceholderKind;
   section?: { status: string };
   empty: string;
   href: string;
@@ -187,25 +233,32 @@ function Missing({
   const router = useRouter();
   const ready = section?.status === "ready";
   return (
-    <div className={styles.empty}>
-      <h3>{ready ? empty : "Temporarily unavailable"}</h3>
-      {!ready ? (
-        <>
-          <p>
-            {section?.status === "setup_required"
-              ? "GYVFT is finishing an update to this feature."
-              : "Your information couldn’t load. Please try again."}
-          </p>
-          <button className={styles.retry} onClick={() => router.refresh()}>
-            Try again
-          </button>
-        </>
-      ) : (
-        <Link href={href} className={styles.link}>
-          {label} →
-        </Link>
+    <>
+      {media && (
+        <div className={styles.missingMedia}>
+          <PlaceholderPhoto kind={media} label="Inspiration" wide />
+        </div>
       )}
-    </div>
+      <div className={styles.empty}>
+        <h3>{ready ? empty : "Temporarily unavailable"}</h3>
+        {!ready ? (
+          <>
+            <p>
+              {section?.status === "setup_required"
+                ? "GYVFT is finishing an update to this feature."
+                : "Your information couldn’t load. Please try again."}
+            </p>
+            <button className={styles.retry} onClick={() => router.refresh()}>
+              Try again
+            </button>
+          </>
+        ) : (
+          <Link href={href} className={styles.link}>
+            {label} →
+          </Link>
+        )}
+      </div>
+    </>
   );
 }
 async function writeSaved(
@@ -403,9 +456,10 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
                         alt={`Preview of ${gift.title}`}
                       />
                     ) : (
-                      <div className={styles.fallback}>
-                        <Gift aria-hidden="true" />
-                      </div>
+                      <PlaceholderPhoto
+                        kind="gift"
+                        label="Gifting inspiration"
+                      />
                     )}
                   </div>
                   <div className={styles.giftCopy}>
@@ -443,6 +497,7 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
             ) : (
               <Missing
                 section={sections.gifts}
+                media="gift"
                 empty="Your next story starts here."
                 href="/tell-your-story"
                 label="Start a new gift"
@@ -477,11 +532,17 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
               <>
                 <div className={styles.occasionMedia}>
                   {occasion.image ? (
-                    <img src={occasion.image} alt="" />
+                    <SafeImage
+                      key={occasion.image}
+                      src={occasion.image}
+                      alt="Saved occasion photo"
+                      fallback="occasion"
+                    />
                   ) : (
-                    <div className={styles.fallback}>
-                      <CalendarDays aria-hidden="true" />
-                    </div>
+                    <PlaceholderPhoto
+                      kind="occasion"
+                      label="Occasion inspiration"
+                    />
                   )}
                 </div>
                 <div className={styles.occasionBody}>
@@ -514,11 +575,8 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
               </>
             ) : sections.occasions?.status === "ready" ? (
               <div className={styles.occasionPrompt}>
-                <div className={styles.promptVisual} aria-hidden="true">
-                  <span>
-                    <CalendarDays size={38} />
-                    <Heart size={20} />
-                  </span>
+                <div className={styles.promptVisual}>
+                  <PlaceholderPhoto kind="occasion" />
                 </div>
                 <div className={styles.promptCopy}>
                   <h3>Whose special day is coming up?</h3>
@@ -536,6 +594,7 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
             ) : (
               <Missing
                 section={sections.occasions}
+                media="occasion"
                 empty=""
                 href="/account?view=occasions&add=1"
                 label="Add a special day"
@@ -561,6 +620,7 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
                 <div className={styles.productMedia}>
                   <SafeImage
                     key={product.image}
+                    fallback="aarla"
                     src={product.image}
                     alt={product.title}
                   />
@@ -608,6 +668,7 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
             ) : (
               <Missing
                 section={sections.aarla}
+                media="aarla"
                 empty="A little more inspiration awaits."
                 href="https://aarla.in"
                 label="Explore Aarla"
