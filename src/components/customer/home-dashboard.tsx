@@ -1,6 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Private previews require session cookies; feed images are already validated. */
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -144,11 +145,24 @@ function SafeImage({
   lazy?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
-  return failed ? (
-    <div className={styles.fallback}>
-      <Gift aria-hidden="true" />
-      <span className="sr-only">{alt}</span>
-    </div>
+  if (failed)
+    return (
+      <div className={styles.fallback}>
+        <Gift aria-hidden="true" />
+        <span className="sr-only">{alt}</span>
+      </div>
+    );
+  // Public catalogue images use the existing same-origin optimizer and CSP.
+  // Private asset routes require the browser cookie, so those stay native.
+  return src.startsWith("https://") ? (
+    <Image
+      src={src}
+      alt={alt}
+      width={640}
+      height={480}
+      sizes="(max-width:1023px) 105px, 30vw"
+      onError={() => setFailed(true)}
+    />
   ) : (
     <img
       src={src}
@@ -293,7 +307,7 @@ function SavedList({
       <div className={styles.savedList}>
         {items.map((item) => (
           <div className={styles.savedItem} key={item.kind + item.id}>
-            <img src={item.image} alt="" loading="lazy" />
+            <Image src={item.image} alt="" width={52} height={58} />
             <a
               href={item.href}
               target={item.kind === "product" ? "_blank" : undefined}
