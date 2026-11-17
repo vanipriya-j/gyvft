@@ -384,119 +384,121 @@ export default async function ProjectPage({
       )}
       {view === "details" && (
         <div className={styles.detailGrid}>
-          <section className={card}>
-            <h2 className="font-serif text-2xl">Your brief</h2>
-            <p className="mt-4 whitespace-pre-wrap leading-relaxed text-muted-text">
-              {project.brief || "We’ll work with you to shape the details."}
-            </p>
-            {project.shopify_order_reference && (
-              <p className="mt-5 text-sm">
-                Order reference: {project.shopify_order_reference}
+          <div className={styles.detailColumn}>
+            <section className={card}>
+              <h2 className="font-serif text-2xl">Your brief</h2>
+              <p className="mt-4 whitespace-pre-wrap leading-relaxed text-muted-text">
+                {project.brief || "We’ll work with you to shape the details."}
               </p>
+              {project.shopify_order_reference && (
+                <p className="mt-5 text-sm">
+                  Order reference: {project.shopify_order_reference}
+                </p>
+              )}
+            </section>
+            <CustomerStoryDetails value={project.gift_brief} compact />
+            <CustomerGiftBrief value={project.gift_brief} compact />
+          </div>
+          <div className={styles.detailColumn}>
+            {project.tracking_reference && (
+              <section className={card}>
+                <h2 className="font-serif text-2xl">Delivery tracking</h2>
+                <p className="mt-3 text-sm">{project.tracking_reference}</p>
+                {project.tracking_url && (
+                  <a
+                    href={project.tracking_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-block text-sm underline"
+                  >
+                    Track delivery ↗
+                  </a>
+                )}
+              </section>
             )}
-          </section>
-          {project.tracking_reference && (
             <section className={card}>
-              <h2 className="font-serif text-2xl">Delivery tracking</h2>
-              <p className="mt-3 text-sm">{project.tracking_reference}</p>
-              {project.tracking_url && (
-                <a
-                  href={project.tracking_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-block text-sm underline"
-                >
-                  Track delivery ↗
-                </a>
-              )}
-            </section>
-          )}
-          <section className={card}>
-            <h2 className="font-serif text-2xl">Occasion & delivery</h2>
-            <p className="mt-3 text-sm leading-6 text-muted-text">
-              The day you are celebrating and the day you need the gifts can be
-              different. Add your preferences here after submitting the brief.
-              GYVFT will confirm delivery feasibility.
-            </p>
-            <ActionForm
-              action={saveRequestDates.bind(null, id)}
-              label="Save dates"
-            >
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm">
-                  Occasion date
-                  <input
-                    type="date"
-                    name="occasion_date"
-                    defaultValue={dateKey(project.occasion_date) || ""}
-                    className={input}
-                  />
-                </label>
-                <label className="block text-sm">
-                  Requested delivery date
-                  <input
-                    type="date"
-                    name="delivery_date"
-                    defaultValue={dateKey(project.delivery_date) || ""}
-                    className={input}
-                  />
-                </label>
-              </div>
-              <p className="mt-3 text-xs text-muted-text">
-                Leave a date blank to clear it. Your original brief target is
-                preserved separately.
+              <h2 className="font-serif text-2xl">Occasion & delivery</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-text">
+                Save occasion and delivery dates separately. We’ll confirm
+                delivery feasibility.
               </p>
-            </ActionForm>
-          </section>
-          {project.kind === "project" && (
-            <section className={card}>
-              <h2 className="font-serif text-2xl">
-                Where should we send your gifts?
-              </h2>
-              {project.stage >= 9 ? (
-                <div className="mt-4 text-sm leading-6">
-                  <p>{address?.recipient_name}</p>
-                  <p>{address?.address}</p>
-                  <p>
-                    {address?.city}, {address?.state} {address?.postal_code}
-                  </p>
-                  <p className="mt-3 text-muted-text">
-                    Your gifts have been dispatched. Message the team if you
-                    need help with delivery.
-                  </p>
+              <ActionForm
+                action={saveRequestDates.bind(null, id)}
+                label="Save dates"
+              >
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <label className="block text-sm">
+                    Occasion date
+                    <input
+                      type="date"
+                      name="occasion_date"
+                      defaultValue={dateKey(project.occasion_date) || ""}
+                      className={input}
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    Requested delivery date
+                    <input
+                      type="date"
+                      name="delivery_date"
+                      defaultValue={dateKey(project.delivery_date) || ""}
+                      className={input}
+                    />
+                  </label>
                 </div>
-              ) : (
-                <ActionForm
-                  action={saveDeliveryAddress.bind(null, id)}
-                  label="Save delivery details"
-                >
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                    {[
-                      ["recipient_name", "Recipient name"],
-                      ["phone", "Phone"],
-                      ["address", "Full delivery address"],
-                      ["city", "City"],
-                      ["state", "State"],
-                      ["postal_code", "PIN code"],
-                    ].map(([name, label]) => (
-                      <label key={name} className="block text-sm">
-                        {label}
-                        <input
-                          name={name}
-                          defaultValue={address?.[name] || ""}
-                          required
-                          maxLength={name === "address" ? 1500 : 120}
-                          className={input}
-                        />
-                      </label>
-                    ))}
-                  </div>
-                </ActionForm>
-              )}
+                <p className="mt-3 text-xs text-muted-text">
+                  Leave a date blank to clear it.
+                </p>
+              </ActionForm>
             </section>
-          )}
-          <CustomerStoryDetails value={project.gift_brief} />
-          <CustomerGiftBrief value={project.gift_brief} />
+            {project.kind === "project" && (
+              <section className={card}>
+                <h2 className="font-serif text-2xl">
+                  Where should we send your gifts?
+                </h2>
+                {project.stage >= 9 ? (
+                  <div className="mt-4 text-sm leading-6">
+                    <p>{address?.recipient_name}</p>
+                    <p>{address?.address}</p>
+                    <p>
+                      {address?.city}, {address?.state} {address?.postal_code}
+                    </p>
+                    <p className="mt-3 text-muted-text">
+                      Your gifts have been dispatched. Message the team if you
+                      need help with delivery.
+                    </p>
+                  </div>
+                ) : (
+                  <ActionForm
+                    action={saveDeliveryAddress.bind(null, id)}
+                    label="Save delivery details"
+                  >
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      {[
+                        ["recipient_name", "Recipient name"],
+                        ["phone", "Phone"],
+                        ["address", "Full delivery address"],
+                        ["city", "City"],
+                        ["state", "State"],
+                        ["postal_code", "PIN code"],
+                      ].map(([name, label]) => (
+                        <label key={name} className="block text-sm">
+                          {label}
+                          <input
+                            name={name}
+                            defaultValue={address?.[name] || ""}
+                            required
+                            maxLength={name === "address" ? 1500 : 120}
+                            className={input}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </ActionForm>
+                )}
+              </section>
+            )}
+          </div>
         </div>
       )}
       {view === "quote" && (

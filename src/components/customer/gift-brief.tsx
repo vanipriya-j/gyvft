@@ -1,5 +1,11 @@
 import { giftBriefSchema, recipientCount } from "@/lib/validation/gift-brief";
-export function CustomerGiftBrief({ value }: { value: unknown }) {
+export function CustomerGiftBrief({
+  value,
+  compact = false,
+}: {
+  value: unknown;
+  compact?: boolean;
+}) {
   const parsed = giftBriefSchema.safeParse(value);
   if (!parsed.success) return null;
   const brief = parsed.data;
@@ -8,8 +14,16 @@ export function CustomerGiftBrief({ value }: { value: unknown }) {
     currency: "INR",
   }).format(brief.budget_amount);
   return (
-    <section className="rounded-3xl border border-border bg-paper p-6 md:p-8">
-      <h2 className="font-serif text-2xl">Your gifting details</h2>
+    <section
+      className={
+        compact
+          ? "rounded-xl border border-border bg-paper p-4"
+          : "rounded-3xl border border-border bg-paper p-6 md:p-8"
+      }
+    >
+      <h2 className={compact ? "font-serif text-xl" : "font-serif text-2xl"}>
+        Your gifting details
+      </h2>
       <p className="mt-3 text-sm text-muted-text">
         {brief.recipient_type === "person"
           ? "One person"
@@ -17,9 +31,16 @@ export function CustomerGiftBrief({ value }: { value: unknown }) {
             ? `One group · ${recipientCount(brief)} recipients`
             : `${recipientCount(brief)} separate individuals`}
       </p>
-      <div className="mt-5 space-y-5">
+      <div className={compact ? "mt-3 space-y-3" : "mt-5 space-y-5"}>
         {brief.recipients.map((person, i) => (
-          <article key={i} className="rounded-2xl border border-border p-5">
+          <article
+            key={i}
+            className={
+              compact
+                ? "rounded-lg border border-border p-3"
+                : "rounded-2xl border border-border p-5"
+            }
+          >
             <h3 className="font-medium">{person.name}</h3>
             <p className="mt-2 whitespace-pre-wrap text-sm text-muted-text">
               {person.description}
