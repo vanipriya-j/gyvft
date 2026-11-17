@@ -1,38 +1,33 @@
 import Link from "next/link";
-import { BrandLogo } from "@/components/public/BrandLogo";
+import { Suspense } from "react";
+import { AccountNavigation } from "@/components/customer/account-navigation";
+import { getCustomerAccount } from "@/lib/customer/session";
 export const metadata = {
   title: "My GYVFT",
   robots: { index: false, follow: false },
 };
-export default function AccountLayout({
+export default async function AccountLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const account = await getCustomerAccount();
   return (
     <>
-      <header className="border-b border-border bg-paper">
-        <nav
-          className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4"
-          aria-label="Customer navigation"
-        >
-          <Link href="/" aria-label="GYVFT home">
-            <BrandLogo height={30} className="h-[30px] w-[123px]" />
-          </Link>
-          <div className="flex gap-6 text-sm">
-            <Link href="/account">My GYVFT</Link>
-            <Link href="/tell-your-story">Start a new story</Link>
-          </div>
-        </nav>
-      </header>
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-7 sm:px-5 lg:py-10">
+      <Suspense>
+        <AccountNavigation email={account?.email || null} />
+      </Suspense>
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-4 md:px-6 md:py-6">
         {children}
       </main>
-      <footer className="border-t border-border px-5 py-6 text-center text-sm text-muted-text">
-        Your story. Our telling.{" "}
-        <Link href="/privacy" className="ml-4 underline">
-          Privacy
-        </Link>
+      <footer className="hidden border-t border-border px-6 py-4 text-xs text-muted-text md:block">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <span>Your story. Our telling.</span>
+          <div className="flex gap-5">
+            <Link href="/book-a-discovery">Help & contact</Link>
+            <Link href="/privacy">Privacy</Link>
+          </div>
+        </div>
       </footer>
     </>
   );

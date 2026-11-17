@@ -16,6 +16,8 @@ Customer signup/sign-in uses GYVFT-owned database accounts and secure session co
 
 ## Customer portal guides
 
+- [Approved Home architecture and API contracts](docs/CUSTOMER-HOME-ARCHITECTURE.md)
+
 - [Product backlog: Now, Next, Later](docs/PRODUCT-BACKLOG.md)
 
 - [Customer and owner user manual](docs/USER-MANUAL.md)
