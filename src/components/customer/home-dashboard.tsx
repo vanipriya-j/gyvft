@@ -720,29 +720,50 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
             )}
           </article>
           <aside className={styles.savedPanel}>
-            <h3>
-              Your saved ideas{" "}
-              {saved?.status === "ready" && (
-                <span className={styles.count}>({saved.data.total})</span>
+            {saved?.status === "ready" && saved.data.total === 0 && (
+              <div className={styles.savedPlaceholder}>
+                <Image
+                  src="/images/gyvft/homepage/06-remember.png"
+                  alt="Three generations sharing favourite family photographs"
+                  fill
+                  sizes="(min-width: 1024px) 35vw, 100vw"
+                />
+              </div>
+            )}
+            <div className={styles.savedBody}>
+              <h3>
+                Your saved ideas{" "}
+                {saved?.status === "ready" && (
+                  <span className={styles.count}>({saved.data.total})</span>
+                )}
+              </h3>
+              {saved?.status === "ready" && saved.data.items.length ? (
+                <SavedList items={saved.data.items.slice(0, 2)} />
+              ) : (
+                <p className={styles.meta}>
+                  {saved?.status === "ready"
+                    ? "Find something they’d love. Save it for their next special day."
+                    : "Your saved ideas couldn’t load right now."}
+                </p>
               )}
-            </h3>
-            {saved?.status === "ready" && saved.data.items.length ? (
-              <SavedList items={saved.data.items.slice(0, 2)} />
-            ) : (
-              <p className={styles.meta}>
-                {saved?.status === "ready"
-                  ? "Save a story or an Aarla find to come back to it."
-                  : "Your saved ideas couldn’t load right now."}
-              </p>
-            )}
-            <Link className={styles.link} href="/account?view=saved">
-              See all saved ideas →
-            </Link>
-            {savedError && (
-              <p role="status" className={styles.feedback}>
-                {savedError}
-              </p>
-            )}
+              <Link
+                className={styles.link}
+                href={
+                  saved?.status === "ready" && saved.data.total === 0
+                    ? "/account?view=ideas"
+                    : "/account?view=saved"
+                }
+              >
+                {saved?.status === "ready" && saved.data.total === 0
+                  ? "Explore ideas →"
+                  : "See all saved ideas →"}
+              </Link>
+              {savedError && (
+                <p role="status" className={styles.feedback}>
+                  {savedError}
+                </p>
+              )}
+            </div>
           </aside>
         </div>
         <div className={styles.paymentSummary}>

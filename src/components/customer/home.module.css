@@ -350,7 +350,7 @@
       serif;
     margin-bottom: 12px;
   }
-  .savedPanel > .link {
+  .savedBody > .link {
     font-size: 0.8125rem;
     margin-top: 10px;
   }
@@ -456,7 +456,20 @@
     line-height: 2rem;
   }
   .savedPanel {
+    padding: 0;
+    overflow: hidden;
+  }
+  .savedBody {
     padding: 16px;
+  }
+  .savedPlaceholder {
+    position: relative;
+    height: 144px;
+    background: var(--surface);
+  }
+  .savedPlaceholder img {
+    object-fit: cover;
+    object-position: 50% 12%;
   }
   .savedPanel h3 {
     font-size: 1.25rem;
