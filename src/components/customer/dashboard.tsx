@@ -57,6 +57,7 @@ const fullDate = (value: string) =>
 type View = "overview" | "requests" | "occasions" | "ideas";
 type Props = {
   initialView?: View;
+  initialAddOpen?: boolean;
   showNavigation?: boolean;
   products: AarlaProduct[];
   offers: AarlaProduct[];
@@ -561,6 +562,7 @@ function MoreToDiscover() {
 
 export function GiftingDashboard({
   initialView = "overview",
+  initialAddOpen = false,
   showNavigation = true,
   requests,
   occasions,
@@ -574,7 +576,7 @@ export function GiftingDashboard({
   mockups,
 }: Props) {
   const [view, setView] = useState<View>(initialView);
-  const [addOpen, setAddOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(initialAddOpen);
   const [ideaFilter, setIdeaFilter] = useState("all");
   const stats = dashboardStats(requests),
     upcoming = upcomingDates(requests, occasions, today, stats.sampleMode);

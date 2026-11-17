@@ -17,10 +17,10 @@ export const dynamic = "force-dynamic";
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; add?: string }>;
 }) {
   const account = await requireCustomerAccount();
-  const { view = "home" } = await searchParams;
+  const { view = "home", add } = await searchParams;
   if (
     ["home", "saved", "payments"].includes(view) ||
     !["requests", "occasions", "ideas"].includes(view)
@@ -74,7 +74,8 @@ export default async function AccountPage({
     }));
   return (
     <GiftingDashboard
-      key={view}
+      key={`${view}-${add || ""}`}
+      initialAddOpen={add === "1"}
       initialView={
         view === "requests"
           ? "requests"

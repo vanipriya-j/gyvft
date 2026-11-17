@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Gift,
+  Heart,
   LoaderCircle,
   X,
 } from "lucide-react";
@@ -109,7 +110,7 @@ function Pager({
     move: (direction: number) => void;
   };
 }) {
-  if (carousel.total < 2) return <div className={styles.pager} />;
+  if (carousel.total < 2) return null;
   return (
     <div className={styles.pager}>
       <button
@@ -449,16 +450,18 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
             )}
             <Pager name="gift" carousel={gifts} />
           </article>
-          {gifts.error && (
-            <p role="status" className={styles.feedback}>
-              {gifts.error}
-            </p>
-          )}
-          {gift?.demo && (
-            <p className={styles.sample}>
-              Sample request · no payment or order will be created.
-            </p>
-          )}
+          <div className={styles.railNotes}>
+            {gifts.error && (
+              <p role="status" className={styles.feedback}>
+                {gifts.error}
+              </p>
+            )}
+            {gift?.demo && (
+              <p className={styles.sample}>
+                Sample request · no payment or order will be created.
+              </p>
+            )}
+          </div>
         </section>
         <section aria-label="Upcoming occasions">
           <div className={styles.heading}>
@@ -509,21 +512,44 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
                   </Link>
                 </div>
               </>
+            ) : sections.occasions?.status === "ready" ? (
+              <div className={styles.occasionPrompt}>
+                <div className={styles.promptVisual} aria-hidden="true">
+                  <span>
+                    <CalendarDays size={38} />
+                    <Heart size={20} />
+                  </span>
+                </div>
+                <div className={styles.promptCopy}>
+                  <h3>Whose special day is coming up?</h3>
+                  <p>
+                    Save a birthday or anniversary for someone you care about.
+                  </p>
+                  <Link
+                    href="/account?view=occasions&add=1"
+                    className={styles.link}
+                  >
+                    Add a special day →
+                  </Link>
+                </div>
+              </div>
             ) : (
               <Missing
                 section={sections.occasions}
-                empty="Make room for a meaningful moment."
-                href="/account?view=occasions"
-                label="Add an occasion"
+                empty=""
+                href="/account?view=occasions&add=1"
+                label="Add a special day"
               />
             )}
             <Pager name="occasion" carousel={occasions} />
           </article>
-          {occasions.error && (
-            <p role="status" className={styles.feedback}>
-              {occasions.error}
-            </p>
-          )}
+          <div className={styles.railNotes}>
+            {occasions.error && (
+              <p role="status" className={styles.feedback}>
+                {occasions.error}
+              </p>
+            )}
+          </div>
         </section>
         <section aria-label="Coming up at Aarla">
           <div className={styles.heading}>
@@ -589,11 +615,13 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
             )}
             <Pager name="Aarla find" carousel={products} />
           </article>
-          {products.error && (
-            <p role="status" className={styles.feedback}>
-              {products.error}
-            </p>
-          )}
+          <div className={styles.railNotes}>
+            {products.error && (
+              <p role="status" className={styles.feedback}>
+                {products.error}
+              </p>
+            )}
+          </div>
         </section>
       </div>
       <div className={styles.extra}>
