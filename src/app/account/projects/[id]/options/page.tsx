@@ -3,6 +3,7 @@ import Link from "next/link";
 import { RequestNavigation } from "@/components/customer/request-navigation";
 import styles from "@/components/customer/request.module.css";
 import { requireCustomerAccount } from "@/lib/customer/session";
+import { briefFromProject } from "@/lib/customer/journeys";
 import { ownedProject } from "@/lib/customer/data";
 import { giftWorkspace } from "@/lib/customer/gift-workspace";
 import { GiftWorkspace } from "@/components/customer/gift-workspace";
@@ -12,11 +13,13 @@ export default async function GiftOptionsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const account = await requireCustomerAccount();
   const { id } = await params;
+  const account = await requireCustomerAccount(
+    `/account/projects/${id}/options`,
+  );
   const project = await ownedProject(id, account.id);
   if (!project) notFound();
-  const data = await giftWorkspace(id);
+  const data = await giftWorkspace(id, account.id);
   return (
     <div className={styles.workspace}>
       <Link
@@ -44,8 +47,14 @@ export default async function GiftOptionsPage({
         key={id}
         projectId={id}
         initial={data}
+        initialRecipients={briefFromProject(project).recipients}
         readOnly={
-          project.kind === "project" ||
+          project.stage >= 7 ||
+          !!project.production_started_at ||
+          !!project.shopify_order_id ||
+          !!project.shopify_order_reference ||
+          (project.shopify_order_state !== undefined &&
+            project.shopify_order_state !== "pending") ||
           String(project.submission_key || "").startsWith("gyvft-demo-")
         }
       />

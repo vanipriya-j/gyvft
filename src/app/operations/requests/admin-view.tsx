@@ -1,58 +1,177 @@
 "use client";
+import { useHydrated } from "@/hooks/use-hydrated";
+/* eslint-disable @next/next/no-img-element -- Operator previews use authenticated blob URLs. */
 import Link from "next/link";
-import { CustomerStoryDetails } from "@/components/customer/story-details";
-import { CustomerGiftBrief } from "@/components/customer/gift-brief";
-import {
-  requestWorkflow,
-  requestStateLabels,
-} from "@/lib/customer/request-workflow";
+import { useState, useRef, useEffect, type FormEvent } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
 import { GiftOptionsAdmin } from "@/components/customer/gift-options-admin";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { GiftSnapshot } from "@/components/customer/gift-workspace";
+import { PaymentCommitment } from "@/components/customer/payment-commitment";
+import { CustomerStoryDetails } from "@/components/customer/story-details";
 import { stages, money } from "@/lib/customer/model";
+import { nextOperatorTask } from "@/lib/customer/next-task";
+import { giftLocked } from "@/lib/customer/journey-model";
 import type { pilotDetail } from "@/lib/customer/pilot-admin";
 import type { OrderItem } from "@/lib/customer/pilot-model";
 type Detail = Awaited<ReturnType<typeof pilotDetail>>;
-const input =
-  "mt-1 w-full rounded-xl border border-border bg-paper px-3 py-2 text-sm";
-const button =
-  "rounded-full border border-border px-4 py-2 text-sm disabled:opacity-50";
-const card = "rounded-xl border border-border bg-paper p-4";
-async function imageData(value: FormDataEntryValue | null) {
-  if (!(value instanceof File) || !value.size) return undefined;
-  if (value.size > 2 * 1024 * 1024) throw Error("Use an image under 2 MB.");
-  const bytes = new Uint8Array(await value.arrayBuffer());
+type Row = {
+  id: string;
+  title: string;
+  customer_email: string;
+  stage: number;
+  kind: string;
+  task_owner: string;
+  task_due_at: string | null;
+  delivery_date: string | null;
+  pending_payment: boolean;
+  has_selection?: boolean;
+  visible_options?: boolean;
+  quote_status: string | null;
+  design_status: string | null;
+  total_paise: string;
+  paid_paise: string;
+};
+type Directory = {
+  customers: {
+    id: string;
+    email: string;
+    name: string;
+    gifts: number;
+    paid: string;
+  }[];
+  occasions: {
+    id: string;
+    title: string;
+    occasion_date: string;
+    customer_email: string;
+  }[];
+  submissions: {
+    id: string;
+    title: string;
+    customer_email: string;
+    rating: number;
+    public_permission: boolean;
+    photos: number;
+  }[];
+};
+type Report = {
+  metrics: { key: string; label: string; value: number }[];
+  byStatus: { label: string; count: number }[];
+  events: { type: string; count: number }[];
+  recentErrors: { code?: string; operation?: string; createdAt: string }[];
+};
+const tabs = [
+  ["overview", "Overview"],
+  ["brief", "Brief"],
+  ["options", "Options"],
+  ["quote", "Quote"],
+  ["design", "Artwork"],
+  ["payments", "Payments"],
+  ["fulfilment", "Order & delivery"],
+  ["messages", "Messages & notes"],
+  ["moments", "Feedback & photos"],
+  ["activity", "Activity"],
+];
+const blankLine = (): OrderItem => ({
+  name: "",
+  quantity: 1,
+  unit_paise: 0,
+  item_type: "gift",
+  personalisation: "",
+});
+function Field({
+  name,
+  label,
+  type = "text",
+  value,
+  required = false,
+}: {
+  name: string;
+  label: string;
+  type?: string;
+  value?: string | number;
+  required?: boolean;
+}) {
+  return (
+    <label className="app-label">
+      {label}
+      <input
+        name={name}
+        className="app-input"
+        type={type}
+        defaultValue={value}
+        required={required}
+      />
+    </label>
+  );
+}
+async function picture(file: FormDataEntryValue | null) {
+  if (!(file instanceof File) || !file.size) return undefined;
+  if (file.size > 2 * 1024 * 1024) throw Error("Use an image under 2 MB.");
+  const bytes = new Uint8Array(await file.arrayBuffer());
   let binary = "";
   for (const b of bytes) binary += String.fromCharCode(b);
-  return { mime: value.type, data: btoa(binary) };
+  return { mime: file.type, data: btoa(binary) };
 }
 export function B2CAdmin({ initialId }: { initialId: string }) {
+  const hydrated = useHydrated();
+  const imageOpener = useRef<HTMLElement | null>(null),
+    confirmOpener = useRef<HTMLElement | null>(null);
   const secret = useRef(""),
-    running = useRef(false),
+    lock = useRef(false),
     retry = useRef<{ key: string; id: string } | null>(null);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 60000);
-    return () => clearInterval(timer);
-  }, []);
-  const [unlocked, setUnlocked] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [rows, setRows] = useState<Detail["project"][]>([]);
-  const [detail, setDetail] = useState<Detail | null>(null);
-  const [query, setQuery] = useState("");
-  const [selectionId, setSelectionId] = useState("");
-  const [shopify, setShopify] = useState(false);
-  const [tab, setTab] = useState("overview");
-  const [approvalKind, setApprovalKind] = useState("proposal");
-  const [items, setItems] = useState<OrderItem[]>([
-    {
-      name: "",
-      quantity: 1,
-      unit_paise: 0,
-      item_type: "gift",
-      personalisation: "",
+  const [unlocked, setUnlocked] = useState(false),
+    [busy, setBusy] = useState(false),
+    [message, setMessage] = useState(""),
+    [rows, setRows] = useState<Row[]>([]),
+    [detail, setDetail] = useState<Detail | null>(null),
+    [area, setArea] = useState("worklist"),
+    [tab, setTab] = useState("overview"),
+    [query, setQuery] = useState(""),
+    [filter, setFilter] = useState("all"),
+    [directory, setDirectory] = useState<Directory | null>(null),
+    [report, setReport] = useState<Report | null>(null),
+    [shopify, setShopify] = useState(false),
+    [image, setImage] = useState<{ url: string; title: string } | null>(null),
+    [composer, setComposer] = useState<"reply" | "internal">("reply"),
+    [reply, setReply] = useState(""),
+    [note, setNote] = useState(""),
+    [items, setItems] = useState<OrderItem[]>([blankLine()]),
+    [selection, setSelection] = useState(""),
+    [confirm, setConfirmValue] = useState<{
+      title: string;
+      body: string;
+      payload: Record<string, unknown>;
+    } | null>(null);
+  function setConfirm(
+    next: {
+      title: string;
+      body: string;
+      payload: Record<string, unknown>;
+    } | null,
+  ) {
+    if (next)
+      confirmOpener.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+    setConfirmValue(next);
+  }
+  function restoreFocus(opener: HTMLElement | null) {
+    if (opener?.isConnected) opener.focus();
+    else
+      document
+        .querySelector<HTMLButtonElement>(
+          '[aria-label="Manage request"] [aria-current="page"]',
+        )
+        ?.focus();
+  }
+  useEffect(
+    () => () => {
+      if (image) URL.revokeObjectURL(image.url);
     },
-  ]);
+    [image],
+  );
   async function post(
     payload: Record<string, unknown>,
     candidate = secret.current,
@@ -60,7 +179,7 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
     const response = await fetch("/api/operations/requests", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "content-type": "application/json",
         "x-setup-secret": candidate,
       },
       body: JSON.stringify(payload),
@@ -70,1161 +189,1859 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
     if (!response.ok || !data.ok)
       throw Error(
         data.message ||
-          "This operation could not be confirmed. Refresh before retrying.",
+          "The operation could not be confirmed. Refresh before retrying.",
       );
     return data;
   }
-  async function list() {
-    const data = await post({ op: "list", query });
+  async function loadList(search = query) {
+    const data = await post({ op: "list", query: search });
     setRows(data.requests);
     setShopify(data.shopifyConfigured);
   }
-  async function refresh() {
-    if (running.current) return;
-    running.current = true;
+  async function open(id: string, nextTab = "overview") {
+    if (lock.current) return;
+    lock.current = true;
     setBusy(true);
     try {
-      await list();
-      if (detail)
-        setDetail(await post({ op: "detail", id: detail.project.id }));
+      const d = await post({ op: "detail", id });
+      setDetail(d);
+      window.history.replaceState(
+        null,
+        "",
+        `/operations/requests?request=${id}`,
+      );
+      setTab(nextTab);
+      setArea("worklist");
+      setItems([blankLine()]);
+      setSelection(d.workspace.selections[0]?.id || "");
+      setReply("");
+      setNote("");
+      setMessage("");
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
-      running.current = false;
-      setBusy(false);
-    }
-  }
-  async function select(id: string) {
-    if (running.current) return;
-    running.current = true;
-    setBusy(true);
-    setMessage("");
-    try {
-      setSelectionId("");
-      setTab("overview");
-      setApprovalKind("proposal");
-      setItems([
-        {
-          name: "",
-          quantity: 1,
-          unit_paise: 0,
-          item_type: "gift",
-          personalisation: "",
-        },
-      ]);
-      setDetail(await post({ op: "detail", id }));
-    } catch (e) {
-      setMessage((e as Error).message);
-    } finally {
-      running.current = false;
+      lock.current = false;
       setBusy(false);
     }
   }
   async function perform(payload: Record<string, unknown>) {
-    if (running.current) return;
-    running.current = true;
+    if (lock.current) return false;
+    lock.current = true;
     setBusy(true);
-    setMessage("");
-    const key = JSON.stringify(payload);
-    if (retry.current?.key !== key)
-      retry.current = { key, id: crypto.randomUUID() };
     try {
-      const data = await post({ ...payload, request_id: retry.current.id });
+      const key = JSON.stringify(payload);
+      if (retry.current?.key !== key)
+        retry.current = { key, id: crypto.randomUUID() };
+      const result = await post({
+        id: detail?.project.id,
+        ...payload,
+        request_id: retry.current.id,
+      });
       retry.current = null;
-      setMessage(data.message || "Saved.");
+      setMessage(result.message || "Saved.");
+      await loadList();
       if (detail)
         setDetail(await post({ op: "detail", id: detail.project.id }));
-      await list();
       return true;
     } catch (e) {
       setMessage((e as Error).message);
       return false;
     } finally {
-      running.current = false;
+      lock.current = false;
       setBusy(false);
     }
   }
-  function form(action: (data: FormData) => Promise<void>) {
-    return async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      const data = new FormData(event.currentTarget);
-      try {
-        await action(data);
-      } catch (e) {
-        setMessage((e as Error).message);
-      }
-    };
-  }
-  async function unlock(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const value = String(new FormData(event.currentTarget).get("secret") || "");
+  async function navigate(next: string) {
+    if (busy) return;
+    setArea(next);
+    setDetail(null);
+    setMessage("");
     setBusy(true);
     try {
-      const data = await post({ op: "list" }, value);
-      secret.current = value;
-      setRows(data.requests);
-      setShopify(data.shopifyConfigured);
-      setUnlocked(true);
-      if (initialId) setDetail(await post({ op: "detail", id: initialId }));
+      if (next === "worklist") await loadList();
+      else if (["customers", "occasions", "stories"].includes(next))
+        setDirectory(await post({ op: "directory" }));
+      else if (next === "reports") {
+        const r = await fetch("/api/operations", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-setup-secret": secret.current,
+          },
+          body: JSON.stringify({}),
+        });
+        const data = await r.json();
+        if (!r.ok) throw Error(data.message || "Reports unavailable.");
+        setReport(data);
+      }
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
       setBusy(false);
     }
   }
-  function lock() {
-    secret.current = "";
-    retry.current = null;
-    setUnlocked(false);
-    setRows([]);
-    setDetail(null);
-    setMessage("");
-  }
   async function preview(kind: string, id: string) {
-    const response = await fetch(`/api/customer-assets/${kind}/${id}`, {
-      headers: { "x-setup-secret": secret.current },
-      cache: "no-store",
-    });
-    if (!response.ok) {
-      setMessage("Image unavailable.");
-      return;
+    imageOpener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    try {
+      const response = await fetch(`/api/customer-assets/${kind}/${id}`, {
+        headers: { "x-setup-secret": secret.current },
+        cache: "no-store",
+      });
+      if (!response.ok) throw Error("Image unavailable.");
+      setImage({
+        url: URL.createObjectURL(await response.blob()),
+        title:
+          kind === "approval-draft"
+            ? "Private draft preview"
+            : "Gift image preview",
+      });
+    } catch (e) {
+      setMessage((e as Error).message);
     }
-    const url = URL.createObjectURL(await response.blob());
-    window.open(url, "_blank", "noopener,noreferrer");
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
-  const p = detail?.project;
-  const state =
-    p && detail
-      ? requestWorkflow({
-          kind: p.kind,
-          stage: Number(p.stage),
-          total: Number(p.total_paise) || 0,
-          paid: Number(p.paid_paise) || 0,
-          approvals: detail.approvals.map((a) => ({
-            id: a.id,
-            kind: a.kind,
-            version: Number(a.version),
-            status: a.status,
-            gift_selection_id: a.gift_selection_id,
-          })),
-          selectionId: detail.workspace.selections[0]?.id || null,
-          visibleOptions: detail.workspace.options.filter(
-            (o) => o.published && !o.hidden,
+  function form(fn: (d: FormData) => Promise<unknown>) {
+    return (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const data = new FormData(e.currentTarget);
+      void fn(data).catch((e) => setMessage((e as Error).message));
+    };
+  }
+  const p = detail?.project,
+    locked = p ? giftLocked(p as { stage: number }) : false;
+  const q = detail?.approvals
+      .filter((a) => a.kind === "proposal")
+      .sort((a, b) => Number(b.version) - Number(a.version))[0],
+    art = detail?.approvals
+      .filter((a) => a.kind === "design")
+      .sort((a, b) => Number(b.version) - Number(a.version))[0];
+  const task = nextOperatorTask(
+    p
+      ? {
+          ...p,
+          has_selection: !!detail?.workspace.selections.length,
+          visible_options: !!detail?.workspace.options.filter(
+            (o) => !o.operator_hidden,
           ).length,
-          pendingPayment: detail.payments.some((v) => v.status === "pending"),
-        })
-      : null;
-  const tabs = [
-    ["overview", "Brief & next steps"],
-    ["options", "Gift options"],
-    ["quote", "Quote & design"],
-    ["payments", "Payments"],
-    ["fulfilment", "Fulfilment"],
-    ["messages", "Messages"],
-    ["activity", "Activity"],
+          pending_payment: detail?.payments.some((x) => x.status === "pending"),
+          quote_status: q?.status,
+          design_status: art?.status,
+        }
+      : {},
+  );
+  const menu = [
+    ["worklist", "Requests & orders"],
+    ["customers", "Customers"],
+    ["occasions", "Occasions"],
+    ["stories", "Feedback & photos"],
+    ["reports", "Reports & health"],
+    ["settings", "Settings & connections"],
   ];
+  const draft = detail?.journey.drafts.find(
+    (d) => d.kind === (tab === "design" ? "design" : "proposal"),
+  );
+  const displayed = rows
+    .filter(
+      (r) =>
+        !query ||
+        `${r.title} ${r.customer_email}`
+          .toLowerCase()
+          .includes(query.toLowerCase()),
+    )
+    .filter(
+      (r) =>
+        filter === "all" ||
+        (filter === "payments" && r.pending_payment) ||
+        (filter === "action" && nextOperatorTask(r).waiting === "Aarla") ||
+        (filter === "delivered" && r.stage >= 10),
+    );
+  const publishDraft = (kind: string) => {
+    if (!draft) return;
+    setConfirm({
+      title: `Publish ${kind === "design" ? "artwork" : "quote"}?`,
+      body: "This publishes the saved draft as a new customer-visible version and requires fresh approval.",
+      payload: {
+        op: "publish_saved_approval",
+        kind,
+        version: Number(draft.version),
+      },
+    });
+  };
   return (
-    <main className="mx-auto max-w-7xl px-4 py-5">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <main className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6">
+      <header className="app-title">
         <div>
-          <Link
-            href="/operations"
-            className="text-xs uppercase tracking-widest text-olive"
-          >
-            GYVFT Operations
+          <Link className="app-eyebrow" href="/">
+            GYVFT
           </Link>
-          <h1 className="mt-2 font-serif text-3xl">Customer desk</h1>
-          <p className="mt-2 text-sm text-muted-text">
-            Customer requests, approvals, payments and fulfilment
-          </p>
+          <h1>Operations</h1>
+          <p>A clear next step for every thoughtful gift.</p>
         </div>
         {unlocked && (
-          <div className="flex gap-2">
+          <div className="app-actions mt-0">
             <button
-              disabled={busy}
-              className={button}
+              disabled={busy || !hydrated}
+              className="app-button"
+              onClick={() => void navigate(area)}
+            >
+              Refresh
+            </button>
+            <button
+              className="app-button"
               onClick={() => {
-                void refresh();
+                secret.current = "";
+                setUnlocked(false);
+                setDetail(null);
+                setRows([]);
               }}
             >
-              Refresh desk
-            </button>
-            <button disabled={busy} className={button} onClick={lock}>
-              Lock
-            </button>
-            <button
-              disabled={busy || !shopify}
-              className={button}
-              onClick={() => void perform({ op: "sync_customers" })}
-            >
-              Sync pending customers
+              Lock desk
             </button>
           </div>
         )}
       </header>
       {!unlocked ? (
-        <form onSubmit={unlock} className={`${card} mx-auto mt-12 max-w-md`}>
-          <h2 className="font-serif text-2xl">Operator access</h2>
-          <label className="mt-4 block text-sm">
-            Operator secret
-            <input
-              name="secret"
-              type="password"
-              required
-              autoComplete="off"
-              className={input}
-            />
-          </label>
-          <button disabled={busy} className={`${button} mt-4`}>
+        <form
+          className="app-panel mx-auto max-w-md"
+          onSubmit={(event) =>
+            form(async (d) => {
+              setBusy(true);
+              try {
+                const value = String(d.get("secret"));
+                const data = await post({ op: "list" }, value);
+                secret.current = value;
+                setRows(data.requests);
+                setShopify(data.shopifyConfigured);
+                setUnlocked(true);
+                if (initialId) await open(initialId);
+              } catch (e) {
+                setMessage((e as Error).message);
+              } finally {
+                setBusy(false);
+              }
+            })(event)
+          }
+        >
+          <h2>Operator access</h2>
+          <Field
+            name="secret"
+            label="Operator secret"
+            type="password"
+            required
+          />
+          <button
+            className="app-button primary mt-4"
+            disabled={busy || !hydrated}
+          >
             {busy ? "Opening…" : "Open customer desk"}
           </button>
-          <p className="mt-3 text-xs text-muted-text">
-            The secret stays in this tab’s memory. Customer logins cannot access
-            this desk.
+          <p className="app-note">
+            Team access is separate from customer accounts. The secret stays in
+            this tab’s memory.
           </p>
         </form>
       ) : (
-        <div className="grid items-start gap-5 lg:grid-cols-[300px_1fr]">
-          <aside className={`${card} lg:sticky lg:top-5`}>
-            <form
-              onSubmit={(event) =>
-                void form(async () => {
-                  await list();
-                })(event)
-              }
-            >
-              <label className="text-sm">
-                Find a request
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Name or email"
-                  className={input}
-                />
-              </label>
-              <button disabled={busy} className={`${button} mt-2`}>
-                Search
-              </button>
-            </form>
-            <div className="mt-4 max-h-[65vh] space-y-1 overflow-y-auto">
-              {rows.map((row) => (
-                <button
-                  key={row.id}
-                  disabled={busy}
-                  onClick={() => void select(row.id)}
-                  className={`block w-full rounded-xl p-3 text-left ${p?.id === row.id ? "bg-surface" : "hover:bg-surface/60"}`}
-                >
-                  <span className="block text-sm font-medium">{row.title}</span>
-                  <span className="mt-1 block break-all text-xs text-muted-text">
-                    {row.customer_email}
-                  </span>
-                  <span className="mt-1 block text-xs text-olive">
-                    {stages[row.stage as number]}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <details className="mt-5 border-t border-border pt-4">
-              <summary className="cursor-pointer text-sm">
-                Direct UPI receiving account
-              </summary>
-              <form
-                className="mt-3 space-y-3"
-                onSubmit={(event) =>
-                  void form(async (f) => {
-                    await perform({
-                      op: "upi_settings",
-                      upi_id: f.get("upi_id"),
-                      payee_name: f.get("payee_name"),
-                      image: await imageData(f.get("image")),
-                      confirmed_payee: f.get("confirmed_payee") === "on",
-                    });
-                  })(event)
-                }
+        <div className="app-nav-grid">
+          <aside className="app-side" aria-label="Operations areas">
+            {menu.map(([key, label]) => (
+              <button
+                key={key}
+                disabled={busy || !hydrated}
+                aria-current={area === key ? "page" : undefined}
+                onClick={() => void navigate(key)}
               >
-                <label className="block text-sm">
-                  UPI ID
-                  <input name="upi_id" required className={input} />
-                </label>
-                <label className="block text-sm">
-                  Payee name
-                  <input name="payee_name" required className={input} />
-                </label>
-                <label className="block text-sm">
-                  Merchant QR (PNG/JPEG/WebP, 2 MB)
-                  <input
-                    name="image"
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className={input}
-                  />
-                </label>
-                <label className="flex gap-2 text-xs">
-                  <input name="confirmed_payee" type="checkbox" />I checked that
-                  this QR pays the same receiving account.
-                </label>
-                <button disabled={busy} className={button}>
-                  Save UPI settings
-                </button>
-              </form>
-            </details>
+                {label}
+              </button>
+            ))}
           </aside>
-          <div className="min-w-0 space-y-5">
-            {p && detail ? (
-              <div key={p.id} className="space-y-4">
-                <section className={card}>
-                  <div className="flex flex-wrap justify-between gap-4">
-                    <div>
-                      <p className="text-xs text-olive">
-                        {p.customer_type || "Unclassified"} · {p.kind}
-                      </p>
-                      <h2 className="mt-2 font-serif text-2xl">{p.title}</h2>
-                      <p className="mt-2 break-all text-sm text-muted-text">
-                        {p.customer_email}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm">
-                        {state === "curation"
-                          ? stages[p.stage as number]
-                          : state
-                            ? requestStateLabels[state]
-                            : stages[p.stage as number]}
-                      </p>
-                      <p className="mt-2 text-sm">
-                        Quote:{" "}
-                        {p.total_paise
-                          ? money(Number(p.total_paise))
-                          : "Not converted"}
-                      </p>
-                      <p className="text-sm">
-                        Verified: {money(Number(p.paid_paise))}
-                      </p>
-                    </div>
+          <section className="min-w-0">
+            <label className="app-mobile-ops">
+              Operations area
+              <select
+                className="app-input"
+                value={area}
+                onChange={(e) => void navigate(e.target.value)}
+              >
+                {menu.map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {area === "worklist" && !detail && (
+              <>
+                <div className="app-title">
+                  <div>
+                    <h2>Requests & orders</h2>
+                    <p>See the next task, who owns it and what’s due.</p>
                   </div>
-                </section>
-                <nav
-                  aria-label="Manage request"
-                  className="flex flex-wrap gap-1 border-b border-border pb-2"
+                  <span className="app-badge">{rows.length} requests</span>
+                </div>
+                <div className="app-toolbar">
+                  <label>
+                    Find a request
+                    <input
+                      className="app-input"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          setBusy(true);
+                          void loadList()
+                            .catch((error) => setMessage(error.message))
+                            .finally(() => setBusy(false));
+                        }
+                      }}
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Gift name or customer email"
+                    />
+                  </label>
+                  <label>
+                    Show
+                    <select
+                      className="app-input"
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value)}
+                    >
+                      <option value="all">All requests</option>
+                      <option value="action">Needs Aarla</option>
+                      <option value="payments">Payment verification</option>
+                      <option value="delivered">Delivered</option>
+                    </select>
+                  </label>
+                </div>
+                <button
+                  className="app-button mb-4"
+                  disabled={busy}
+                  onClick={() => {
+                    setBusy(true);
+                    void loadList()
+                      .catch((error) => setMessage(error.message))
+                      .finally(() => setBusy(false));
+                  }}
                 >
-                  {tabs.map(([name, label]) => (
+                  Search all requests
+                </button>
+                <div className="app-panel">
+                  {displayed.map((row) => {
+                    const next = nextOperatorTask(row);
+                    return (
+                      <article key={row.id} className="app-row">
+                        <div>
+                          <h2>
+                            <button
+                              onClick={() => void open(row.id)}
+                              disabled={busy || !hydrated}
+                            >
+                              {row.title}
+                            </button>
+                          </h2>
+                          <p className="app-muted break-all">
+                            {row.customer_email} · {stages[row.stage]}
+                          </p>
+                          <p className="mt-2">
+                            <strong>{next.label}</strong> · Waiting on{" "}
+                            {next.waiting}
+                          </p>
+                          <p className="app-muted">
+                            Owner: {row.task_owner || "Aarla"} ·{" "}
+                            {row.task_due_at
+                              ? `Due ${new Date(row.task_due_at).toLocaleString("en-IN")}`
+                              : "Due date not set"}
+                          </p>
+                        </div>
+                        <button
+                          className="app-button primary"
+                          disabled={busy || !hydrated}
+                          onClick={() => void open(row.id, next.tab)}
+                        >
+                          {next.label} →
+                        </button>
+                      </article>
+                    );
+                  })}
+                  {!displayed.length && (
+                    <p className="app-muted">No requests match this view.</p>
+                  )}
+                </div>
+              </>
+            )}
+            {p && detail && (
+              <>
+                <button
+                  className="app-button quiet mb-3"
+                  onClick={() => setDetail(null)}
+                >
+                  ← Requests & orders
+                </button>
+                <div className="app-title">
+                  <div>
+                    <h1>{p.title}</h1>
+                    <p>{p.customer_email}</p>
+                  </div>
+                  <span className="app-badge">{stages[Number(p.stage)]}</span>
+                </div>
+                <nav className="app-tabs" aria-label="Manage request">
+                  {tabs.map(([key, label]) => (
                     <button
-                      key={name}
-                      type="button"
-                      aria-pressed={tab === name}
-                      aria-controls={`desk-${name}`}
-                      className={`min-h-10 rounded-lg px-3 py-2 text-sm ${tab === name ? "bg-olive-dark text-white" : "hover:bg-surface"}`}
-                      onClick={() => setTab(name)}
+                      key={key}
+                      aria-current={tab === key ? "page" : undefined}
+                      onClick={() => {
+                        setTab(key);
+                        setItems(
+                          (detail.journey.drafts.find(
+                            (d) =>
+                              d.kind ===
+                              (key === "design" ? "design" : "proposal"),
+                          )?.document.items as OrderItem[]) ||
+                            (detail.items.length
+                              ? (detail.items as unknown as OrderItem[])
+                              : [blankLine()]),
+                        );
+                      }}
                     >
                       {label}
-                      {name === "payments" &&
-                      detail.payments.some((v) => v.status === "pending")
-                        ? ` (${detail.payments.filter((v) => v.status === "pending").length} pending)`
-                        : ""}
                     </button>
                   ))}
                 </nav>
-                <section
-                  id="desk-overview"
-                  hidden={tab !== "overview"}
-                  className={card}
-                >
-                  <h3 className="font-serif text-xl">Brief & next steps</h3>
-                  <p className="mt-2 text-sm text-muted-text">
-                    {p.next_action}
-                  </p>
-                  <p className="mt-3 whitespace-pre-wrap text-sm">{p.brief}</p>
-                  <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                    <div>
-                      <dt className="text-muted-text">Occasion date</dt>
-                      <dd>
+                <label className="app-mobile-section">
+                  Request section
+                  <select
+                    className="app-input"
+                    value={tab}
+                    onChange={(e) => setTab(e.target.value)}
+                  >
+                    {tabs.map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {locked && (
+                  <div className="app-soft mb-4">
+                    <strong>Production has started.</strong>
+                    <p>
+                      Gift and artwork changes are locked. Customer messages
+                      remain available.
+                    </p>
+                  </div>
+                )}
+                {tab === "overview" && (
+                  <div className="app-grid">
+                    <section className="app-panel">
+                      <p className="app-eyebrow">
+                        Next task · waiting on {task.waiting}
+                      </p>
+                      <h2>{task.label}</h2>
+                      <button
+                        className="app-button primary mt-4"
+                        onClick={() => setTab(task.tab)}
+                      >
+                        {task.label} →
+                      </button>
+                      <form
+                        className="app-note"
+                        onSubmit={(event) =>
+                          form((d) =>
+                            perform({
+                              op: "task",
+                              owner: String(d.get("owner")),
+                              due: d.get("due")
+                                ? new Date(String(d.get("due"))).toISOString()
+                                : "",
+                            }),
+                          )(event)
+                        }
+                      >
+                        <Field
+                          name="owner"
+                          label="Task owner"
+                          value={p.task_owner || "Aarla"}
+                          required
+                        />
+                        <Field
+                          name="due"
+                          label="Due (optional)"
+                          type="datetime-local"
+                          value={
+                            p.task_due_at
+                              ? new Date(p.task_due_at)
+                                  .toISOString()
+                                  .slice(0, 16)
+                              : ""
+                          }
+                        />
+                        <button
+                          className="app-button mt-3"
+                          disabled={busy || !hydrated}
+                        >
+                          Save task ownership
+                        </button>
+                      </form>
+                    </section>
+                    <section className="app-panel">
+                      <h2>Production readiness</h2>
+                      <ul className="space-y-3">
+                        <li>
+                          {q?.status === "approved" ? "✓" : "○"} Latest quote
+                          approved
+                        </li>
+                        <li>
+                          {Number(p.paid_paise) >=
+                            Math.ceil(Number(p.total_paise) / 2) &&
+                          Number(p.total_paise) > 0
+                            ? "✓"
+                            : "○"}{" "}
+                          50% advance verified
+                        </li>
+                        <li>
+                          {art?.status === "approved" ? "✓" : "○"} Latest
+                          artwork approved
+                        </li>
+                        <li>
+                          {p.shopify_order_reference ? "✓" : "○"} Official
+                          Shopify order linked
+                        </li>
+                        <li>
+                          {!detail.journey.changes.some(
+                            (c) => c.status === "open",
+                          )
+                            ? "✓"
+                            : "○"}{" "}
+                          No unresolved change requests
+                        </li>
+                      </ul>
+                    </section>
+                  </div>
+                )}
+                {tab === "brief" && (
+                  <div className="app-grid">
+                    <section className="app-panel">
+                      <h2>The customer’s story</h2>
+                      <p className="whitespace-pre-wrap">{p.brief}</p>
+                      {p.draft_document && (
+                        <dl className="app-money">
+                          {Object.entries(
+                            p.draft_document as Record<string, unknown>,
+                          )
+                            .filter(
+                              ([key, v]) =>
+                                [
+                                  "recipient_notes",
+                                  "likes",
+                                  "avoid",
+                                  "message",
+                                  "budget",
+                                  "budget_basis",
+                                  "city",
+                                ].includes(key) && v,
+                            )
+                            .map(([key, v]) => (
+                              <div key={key}>
+                                <dt>{key.replaceAll("_", " ")}</dt>
+                                <dd>{String(v)}</dd>
+                              </div>
+                            ))}
+                        </dl>
+                      )}
+                      <CustomerStoryDetails value={p.gift_brief} />
+                    </section>
+                    <section className="app-panel">
+                      <h2>Occasion & delivery</h2>
+                      <p>
+                        Occasion:{" "}
                         {p.occasion_date
                           ? new Date(p.occasion_date).toLocaleDateString(
                               "en-IN",
-                              { timeZone: "Asia/Kolkata" },
                             )
                           : "Not set"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted-text">Requested delivery</dt>
-                      <dd>
+                      </p>
+                      <p className="mt-2">
+                        Requested delivery:{" "}
                         {p.delivery_date
                           ? new Date(p.delivery_date).toLocaleDateString(
                               "en-IN",
-                              { timeZone: "Asia/Kolkata" },
                             )
                           : "Not set"}
-                      </dd>
-                    </div>
-                  </dl>
-                  <p className="mt-3 text-xs text-muted-text">
-                    Customer account:{" "}
-                    {p.customer_account_id
-                      ? "Connected"
-                      : "Not connected yet; customer must sign up in the submission browser."}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button
-                      disabled={
-                        busy ||
-                        p.kind === "project" ||
-                        state !== "quote_approved" ||
-                        !p.customer_account_id
-                      }
-                      className={button}
-                      onClick={() => void perform({ op: "convert", id: p.id })}
-                    >
-                      Convert approved quote to B2C order
-                    </button>{" "}
-                    <button
-                      className={button}
-                      type="button"
-                      onClick={() =>
-                        setTab(
-                          state === "quote_requested" ||
-                            state === "quote_approved"
-                            ? "quote"
-                            : state === "payment_review"
-                              ? "payments"
-                              : p.kind === "project"
-                                ? "fulfilment"
-                                : "options",
+                      </p>
+                      <p className="app-note">
+                        Preferences until confirmed. Keep the requested delivery
+                        and occasion dates distinct.
+                      </p>
+                    </section>
+                  </div>
+                )}
+                {tab === "options" &&
+                  (locked ? (
+                    <section className="app-panel">
+                      <h2>Chosen gift · locked</h2>
+                      {detail.workspace.selections[0] && (
+                        <GiftSnapshot
+                          document={detail.workspace.selections[0].snapshot}
+                        />
+                      )}
+                    </section>
+                  ) : (
+                    <GiftOptionsAdmin
+                      projectId={p.id}
+                      data={detail.workspace}
+                      busy={busy}
+                      perform={perform}
+                      preview={preview}
+                      onUseSelection={(s) => {
+                        setSelection(s.id);
+                        setTab("quote");
+                        setItems([blankLine()]);
+                      }}
+                    />
+                  ))}
+                {["quote", "design"].includes(tab) && (
+                  <div className="app-stack">
+                    {detail.workspace.selections[0] && (
+                      <section className="app-panel">
+                        <h2>Customer’s chosen gift</h2>
+                        <GiftSnapshot
+                          document={detail.workspace.selections[0].snapshot}
+                        />
+                      </section>
+                    )}
+                    <section className="app-panel">
+                      <h2>
+                        {tab === "design"
+                          ? "Published artwork"
+                          : "Published quotes"}
+                      </h2>
+                      {detail.approvals
+                        .filter(
+                          (a) =>
+                            a.kind ===
+                            (tab === "design" ? "design" : "proposal"),
                         )
-                      }
-                    >
-                      Open next task →
-                    </button>
-                  </div>
-                  {state !== "quote_approved" && p.kind !== "project" && (
-                    <p className="mt-2 text-xs text-muted-text">
-                      Conversion is available after the customer approves the
-                      latest quote for their current selection.
-                    </p>
-                  )}
-                  <div className="mt-4 space-y-4">
-                    <CustomerStoryDetails value={p.gift_brief} />
-                    <CustomerGiftBrief value={p.gift_brief} />
-                  </div>
-                </section>
-                <div
-                  id="desk-messages"
-                  hidden={tab !== "messages"}
-                  className="space-y-4"
-                >
-                  <section className={card}>
-                    <h3 className="font-medium">Customer conversation</h3>
-                    <div className="my-4 max-h-72 space-y-3 overflow-y-auto">
-                      {[...detail.messages].reverse().map((m) => (
-                        <article
-                          key={m.id}
-                          className="rounded-xl bg-surface p-3"
-                        >
-                          <p className="text-xs text-muted-text">
-                            {m.sender === "customer"
-                              ? "Customer"
-                              : "GYVFT team"}{" "}
-                            · {new Date(m.created_at).toLocaleString("en-IN")}
-                          </p>
-                          <p className="mt-2 whitespace-pre-wrap text-sm">
-                            {m.body}
-                          </p>
-                        </article>
-                      ))}
-                    </div>
-                    <form
-                      onSubmit={(event) =>
-                        void form(async (f) => {
-                          await perform({
-                            op: "reply",
-                            id: p.id,
-                            body: f.get("body"),
-                          });
-                        })(event)
-                      }
-                    >
-                      <label className="block text-sm">
-                        Reply to customer
-                        <textarea
-                          name="body"
-                          required
-                          maxLength={4000}
-                          className={input}
-                        />
-                      </label>
-                      <button disabled={busy} className={`${button} mt-3`}>
-                        Send reply
-                      </button>
-                    </form>
-                  </section>
-                </div>
-                <div
-                  id="desk-options"
-                  hidden={tab !== "options"}
-                  className="space-y-4"
-                >
-                  <GiftOptionsAdmin
-                    key={p.id}
-                    projectId={p.id}
-                    data={detail.workspace}
-                    busy={busy}
-                    perform={perform}
-                    preview={preview}
-                    onUseSelection={(s) => {
-                      setSelectionId(s.id);
-                      setTab("quote");
-                      setApprovalKind("proposal");
-                      setItems(
-                        s.snapshot.lines.map((l) => ({
-                          name: l.name || "Gift item",
-                          quantity: l.quantity * s.snapshot.recipients,
-                          unit_paise: l.unit_paise || 0,
-                          item_type: "gift",
-                          personalisation: Object.values(l.variants).join(
-                            " · ",
-                          ),
-                        })),
-                      );
-                      setMessage(
-                        "Selection copied into the quote editor. Enter final prices, design/personalisation and packaging charges before publishing.",
-                      );
-                    }}
-                  />
-                </div>
-                <div
-                  id="desk-quote"
-                  hidden={tab !== "quote"}
-                  className="space-y-4"
-                >
-                  <section className={card}>
-                    <h3 className="font-medium">
-                      Publish a version for approval
-                    </h3>
-                    <form
-                      className="mt-4 space-y-4"
-                      onSubmit={(event) =>
-                        void form(async (f) => {
-                          await perform({
-                            op: "publish",
-                            id: p.id,
-                            kind: f.get("kind"),
-                            gift_selection_id: selectionId || null,
-                            title: f.get("title"),
-                            description: f.get("description"),
-                            items,
-                            image: await imageData(f.get("image")),
-                          });
-                        })(event)
-                      }
-                    >
-                      {approvalKind === "proposal" &&
-                        detail.workspace.selections.length > 0 && (
-                          <label className="block text-sm">
-                            Customer gift selection for this quote
-                            <select
-                              className={input}
-                              value={selectionId}
-                              onChange={(e) => setSelectionId(e.target.value)}
-                            >
-                              <option value="">
-                                Choose the latest selection
-                              </option>
-                              {detail.workspace.selections.map((s, i) => (
-                                <option
-                                  key={s.id}
-                                  value={s.id}
-                                  disabled={i !== 0}
-                                >
-                                  {s.snapshot.label} · saved v{s.draft_version}
-                                  {i === 0 ? " · latest" : ""}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        )}
-                      <label className="block text-sm">
-                        Version type
-                        <select
-                          name="kind"
-                          className={input}
-                          value={approvalKind}
-                          onChange={(e) => setApprovalKind(e.target.value)}
-                        >
-                          <option value="proposal">
-                            Priced proposal / quote
-                          </option>
-                          <option value="design">Design / mockup</option>
-                        </select>
-                      </label>
-                      <label className="block text-sm">
-                        Title
-                        <input
-                          name="title"
-                          required
-                          minLength={2}
-                          maxLength={180}
-                          className={input}
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        Customer-visible description
-                        <textarea
-                          name="description"
-                          required
-                          maxLength={5000}
-                          className={input}
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        Mockup image (optional, under 2 MB)
-                        <input
-                          name="image"
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          className={input}
-                        />
-                      </label>
-                      <fieldset hidden={approvalKind !== "proposal"}>
-                        <legend className="text-sm">
-                          Quote line items · prices include applicable taxes
-                          (used for proposals)
-                        </legend>
-                        <div className="mt-3 space-y-3">
-                          {items.map((item, i) => (
-                            <div
-                              key={i}
-                              className="grid gap-2 rounded-xl bg-surface p-3 sm:grid-cols-3"
-                            >
-                              <label className="text-xs">
-                                Item
-                                <input
-                                  value={item.name}
-                                  onChange={(e) =>
-                                    setItems(
-                                      items.map((v, n) =>
-                                        n === i
-                                          ? { ...v, name: e.target.value }
-                                          : v,
-                                      ),
-                                    )
-                                  }
-                                  className={input}
-                                />
-                              </label>
-                              <label className="text-xs">
-                                Quantity
-                                <input
-                                  type="number"
-                                  min={1}
-                                  value={item.quantity}
-                                  onChange={(e) =>
-                                    setItems(
-                                      items.map((v, n) =>
-                                        n === i
-                                          ? {
-                                              ...v,
-                                              quantity: Number(e.target.value),
-                                            }
-                                          : v,
-                                      ),
-                                    )
-                                  }
-                                  className={input}
-                                />
-                              </label>
-                              <label className="text-xs">
-                                Unit price (₹)
-                                <input
-                                  type="number"
-                                  min={0}
-                                  step="0.01"
-                                  value={item.unit_paise / 100}
-                                  onChange={(e) =>
-                                    setItems(
-                                      items.map((v, n) =>
-                                        n === i
-                                          ? {
-                                              ...v,
-                                              unit_paise: Math.round(
-                                                Number(e.target.value) * 100,
-                                              ),
-                                            }
-                                          : v,
-                                      ),
-                                    )
-                                  }
-                                  className={input}
-                                />
-                              </label>
-                              <label className="text-xs">
-                                Type
-                                <select
-                                  value={item.item_type}
-                                  onChange={(e) =>
-                                    setItems(
-                                      items.map((v, n) =>
-                                        n === i
-                                          ? {
-                                              ...v,
-                                              item_type: e.target.value as
-                                                "gift" | "fee",
-                                            }
-                                          : v,
-                                      ),
-                                    )
-                                  }
-                                  className={input}
-                                >
-                                  <option value="gift">Gift / product</option>
-                                  <option value="fee">
-                                    Delivery / other charge
-                                  </option>
-                                </select>
-                              </label>
-                              <label className="text-xs sm:col-span-2">
-                                Personalisation
-                                <input
-                                  value={item.personalisation}
-                                  onChange={(e) =>
-                                    setItems(
-                                      items.map((v, n) =>
-                                        n === i
-                                          ? {
-                                              ...v,
-                                              personalisation: e.target.value,
-                                            }
-                                          : v,
-                                      ),
-                                    )
-                                  }
-                                  className={input}
-                                />
-                              </label>
-                              {items.length > 1 && (
+                        .map((a) => (
+                          <article className="app-row" key={a.id}>
+                            <div>
+                              <h3>
+                                {a.title} · v{a.version}
+                              </h3>
+                              <p className="app-muted">
+                                {a.status.replaceAll("_", " ")}
+                                {a.amount_paise
+                                  ? ` · ${money(Number(a.amount_paise))}`
+                                  : ""}
+                              </p>
+                              <p className="whitespace-pre-wrap mt-2">
+                                {a.description}
+                              </p>
+                              {a.customer_response && (
+                                <p className="app-alert">
+                                  Customer: {a.customer_response}
+                                </p>
+                              )}
+                              {a.has_image && (
                                 <button
-                                  type="button"
-                                  className="text-left text-xs underline"
-                                  onClick={() =>
-                                    setItems(items.filter((_, n) => n !== i))
-                                  }
+                                  className="app-button quiet"
+                                  onClick={() => void preview("approval", a.id)}
                                 >
-                                  Remove item
+                                  View artwork
                                 </button>
                               )}
                             </div>
-                          ))}
-                        </div>
-                        <button
-                          type="button"
-                          disabled={items.length >= 50}
-                          className={`${button} mt-3`}
-                          onClick={() =>
-                            setItems([
-                              ...items,
-                              {
-                                name: "",
-                                quantity: 1,
-                                unit_paise: 0,
-                                item_type: "gift",
-                                personalisation: "",
-                              },
-                            ])
+                          </article>
+                        ))}
+                    </section>
+                    {!locked &&
+                      !(
+                        tab === "quote" &&
+                        (p.shopify_order_id ||
+                          p.shopify_order_reference ||
+                          p.shopify_order_state !== "pending")
+                      ) && (
+                        <section className="app-panel">
+                          <h2>
+                            {tab === "design"
+                              ? "Prepare artwork"
+                              : "Prepare quote"}{" "}
+                            · private draft
+                          </h2>
+                          <p className="app-muted">
+                            Save privately, preview, then publish a new version
+                            for the customer.
+                          </p>
+                          <form
+                            key={`${p.id}-${tab}-${draft?.version || 0}`}
+                            onSubmit={(event) =>
+                              form(async (d) => {
+                                await perform({
+                                  op: "save_approval_draft",
+                                  kind:
+                                    tab === "design" ? "design" : "proposal",
+                                  title: String(d.get("title")),
+                                  description: String(d.get("description")),
+                                  items: tab === "quote" ? items : undefined,
+                                  gift_selection_id: selection || null,
+                                  image: await picture(d.get("image")),
+                                });
+                              })(event)
+                            }
+                          >
+                            <Field
+                              name="title"
+                              label="Title"
+                              value={draft?.document.title || ""}
+                              required
+                            />
+                            <label className="app-label">
+                              Description
+                              <textarea
+                                className="app-input"
+                                name="description"
+                                required
+                                maxLength={5000}
+                                defaultValue={draft?.document.description || ""}
+                              />
+                            </label>
+                            {tab === "quote" && (
+                              <>
+                                <label className="app-label">
+                                  Quote this customer selection
+                                  <select
+                                    className="app-input"
+                                    value={selection}
+                                    onChange={(e) =>
+                                      setSelection(e.target.value)
+                                    }
+                                  >
+                                    <option value="">
+                                      No selected workspace
+                                    </option>
+                                    {detail.workspace.selections.map((s) => (
+                                      <option key={s.id} value={s.id}>
+                                        {s.snapshot.label} ·{" "}
+                                        {s.snapshot.recipients} recipients
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                                {items.map((item, i) => (
+                                  <fieldset className="app-soft mt-4" key={i}>
+                                    <legend>
+                                      Line {i + 1} · taxes included
+                                    </legend>
+                                    <div className="app-fields">
+                                      <label className="app-label">
+                                        Product or charge
+                                        <input
+                                          className="app-input"
+                                          value={item.name}
+                                          required
+                                          onChange={(e) =>
+                                            setItems((v) =>
+                                              v.map((x, n) =>
+                                                n === i
+                                                  ? {
+                                                      ...x,
+                                                      name: e.target.value,
+                                                    }
+                                                  : x,
+                                              ),
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                      <label className="app-label">
+                                        Quantity
+                                        <input
+                                          className="app-input"
+                                          type="number"
+                                          min={1}
+                                          max={100000}
+                                          value={item.quantity}
+                                          required
+                                          onChange={(e) =>
+                                            setItems((v) =>
+                                              v.map((x, n) =>
+                                                n === i
+                                                  ? {
+                                                      ...x,
+                                                      quantity: Number(
+                                                        e.target.value,
+                                                      ),
+                                                    }
+                                                  : x,
+                                              ),
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                      <label className="app-label">
+                                        Unit price (₹)
+                                        <input
+                                          className="app-input"
+                                          type="number"
+                                          min={0}
+                                          step="0.01"
+                                          value={item.unit_paise / 100}
+                                          required
+                                          onChange={(e) =>
+                                            setItems((v) =>
+                                              v.map((x, n) =>
+                                                n === i
+                                                  ? {
+                                                      ...x,
+                                                      unit_paise: Math.round(
+                                                        Number(e.target.value) *
+                                                          100,
+                                                      ),
+                                                    }
+                                                  : x,
+                                              ),
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                      <label className="app-label">
+                                        Product or additional charge?
+                                        <select
+                                          className="app-input"
+                                          value={item.item_type}
+                                          onChange={(e) =>
+                                            setItems((v) =>
+                                              v.map((x, n) =>
+                                                n === i
+                                                  ? {
+                                                      ...x,
+                                                      item_type: e.target
+                                                        .value as
+                                                        "gift" | "fee",
+                                                    }
+                                                  : x,
+                                              ),
+                                            )
+                                          }
+                                        >
+                                          <option value="gift">Product</option>
+                                          <option value="fee">
+                                            Packaging, personalisation or
+                                            delivery
+                                          </option>
+                                        </select>
+                                      </label>
+                                    </div>
+                                    <label className="app-label">
+                                      Personalisation / included details
+                                      <input
+                                        className="app-input"
+                                        value={item.personalisation}
+                                        onChange={(e) =>
+                                          setItems((v) =>
+                                            v.map((x, n) =>
+                                              n === i
+                                                ? {
+                                                    ...x,
+                                                    personalisation:
+                                                      e.target.value,
+                                                  }
+                                                : x,
+                                            ),
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                    <button
+                                      type="button"
+                                      className="app-button quiet"
+                                      disabled={items.length === 1}
+                                      onClick={() =>
+                                        setItems((v) =>
+                                          v.filter((_, n) => n !== i),
+                                        )
+                                      }
+                                    >
+                                      Remove line {i + 1}
+                                    </button>
+                                  </fieldset>
+                                ))}
+                                <button
+                                  className="app-button mt-3"
+                                  type="button"
+                                  onClick={() =>
+                                    setItems((v) => [...v, blankLine()])
+                                  }
+                                >
+                                  Add item / charge
+                                </button>
+                                <p className="app-note">
+                                  Total{" "}
+                                  {money(
+                                    items.reduce(
+                                      (n, x) => n + x.quantity * x.unit_paise,
+                                      0,
+                                    ),
+                                  )}
+                                  . Include taxes in unit prices; list
+                                  packaging, individual personalisation and
+                                  delivery separately. Standard product printing
+                                  is included.
+                                </p>
+                              </>
+                            )}
+                            <label className="app-label">
+                              {tab === "design"
+                                ? "Artwork image"
+                                : "Optional visual"}{" "}
+                              (up to 2 MB)
+                              <input
+                                className="app-input"
+                                type="file"
+                                name="image"
+                                accept="image/png,image/jpeg,image/webp"
+                              />
+                            </label>
+                            <button
+                              className="app-button olive mt-4"
+                              disabled={busy || !hydrated}
+                            >
+                              Save private draft
+                            </button>
+                          </form>
+                          {draft && (
+                            <div className="app-soft mt-4">
+                              <h3>Saved draft · v{draft.version}</h3>
+                              <p>{draft.document.title}</p>
+                              <p className="mt-2 whitespace-pre-wrap">
+                                {draft.document.description}
+                              </p>
+                              {draft.document.items && (
+                                <table className="app-table">
+                                  <tbody>
+                                    {(draft.document.items as OrderItem[]).map(
+                                      (x, i) => (
+                                        <tr key={i}>
+                                          <td>
+                                            {x.quantity} × {x.name}
+                                          </td>
+                                          <td>
+                                            {money(x.quantity * x.unit_paise)}
+                                          </td>
+                                        </tr>
+                                      ),
+                                    )}
+                                  </tbody>
+                                </table>
+                              )}
+                              {draft.has_image && (
+                                <button
+                                  className="app-button"
+                                  onClick={() =>
+                                    void preview(
+                                      `approval-draft`,
+                                      `${p.id}?type=${tab === "design" ? "design" : "proposal"}`,
+                                    )
+                                  }
+                                >
+                                  Preview private image
+                                </button>
+                              )}
+                              <button
+                                className="app-button primary mt-3"
+                                disabled={busy || !hydrated}
+                                onClick={() =>
+                                  publishDraft(
+                                    tab === "design" ? "design" : "proposal",
+                                  )
+                                }
+                              >
+                                Publish for customer approval
+                              </button>
+                            </div>
+                          )}
+                        </section>
+                      )}
+                  </div>
+                )}
+                {tab === "payments" && (
+                  <div className="app-grid">
+                    <PaymentCommitment
+                      total={Number(p.total_paise || q?.amount_paise || 0)}
+                      paid={Number(p.paid_paise)}
+                      pending={detail.payments
+                        .filter((x) => x.status === "pending")
+                        .reduce((n, x) => n + Number(x.amount_paise), 0)}
+                      approved={q?.status === "approved"}
+                    />
+                    <section className="app-panel">
+                      <h2>Bank verification</h2>
+                      {detail.payments.length ? (
+                        detail.payments.map((pay) => (
+                          <article className="app-note" key={pay.id}>
+                            <h3>
+                              {money(Number(pay.amount_paise))} · {pay.status}
+                            </h3>
+                            <p className="break-all">{pay.reference}</p>
+                            {pay.has_evidence && (
+                              <button
+                                className="app-button quiet"
+                                onClick={() => void preview("payment", pay.id)}
+                              >
+                                View screenshot
+                              </button>
+                            )}
+                            {pay.status === "pending" && (
+                              <form
+                                onSubmit={(event) =>
+                                  form((d) =>
+                                    perform({
+                                      op: "payment",
+                                      reference: pay.reference,
+                                      expected_amount_paise: Number(
+                                        pay.amount_paise,
+                                      ),
+                                      confirmed_receipt: d.has("bank"),
+                                    }),
+                                  )(event)
+                                }
+                              >
+                                <label className="app-check">
+                                  <input type="checkbox" name="bank" required />
+                                  I checked the receiving bank/provider and this
+                                  amount has arrived.
+                                </label>
+                                <div className="app-actions">
+                                  <button
+                                    className="app-button primary"
+                                    disabled={busy || !hydrated}
+                                  >
+                                    Verify receipt
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="app-button"
+                                    disabled={busy || !hydrated}
+                                    onClick={() =>
+                                      setConfirm({
+                                        title: "Request clearer payment proof?",
+                                        body: "The customer will see that this reference needs attention. Message them with the specific clarification needed.",
+                                        payload: {
+                                          op: "reject_payment",
+                                          reference: pay.reference,
+                                        },
+                                      })
+                                    }
+                                  >
+                                    Needs clarification
+                                  </button>
+                                </div>
+                              </form>
+                            )}
+                          </article>
+                        ))
+                      ) : (
+                        <p className="app-muted">No payment submitted.</p>
+                      )}
+                      <details className="app-note">
+                        <summary>
+                          Record an independently verified receipt
+                        </summary>
+                        <form
+                          onSubmit={(event) =>
+                            form((d) =>
+                              perform({
+                                op: "payment",
+                                reference: String(d.get("reference")),
+                                amount_paise: Math.round(
+                                  Number(d.get("amount")) * 100,
+                                ),
+                                confirmed_receipt: d.has("bank"),
+                              }),
+                            )(event)
                           }
                         >
-                          Add item
-                        </button>
-                      </fieldset>
-                      <p className="text-sm">
-                        Quote total:{" "}
-                        {money(
-                          items.reduce(
-                            (n, i) => n + i.quantity * i.unit_paise,
-                            0,
-                          ),
-                        )}
-                      </p>
-                      <button disabled={busy} className={button}>
-                        Publish for approval
-                      </button>
-                    </form>
-                    <div className="mt-5 space-y-3">
-                      {detail.approvals.map((a) => (
-                        <div
-                          key={a.id}
-                          className="rounded-xl border border-border p-3 text-sm"
+                          <Field
+                            name="reference"
+                            label="Bank / provider reference"
+                            required
+                          />
+                          <Field
+                            name="amount"
+                            label="Amount (₹)"
+                            type="number"
+                            required
+                          />
+                          <label className="app-check">
+                            <input type="checkbox" name="bank" required />I
+                            verified the actual receipt in our bank/provider.
+                          </label>
+                          <button
+                            className="app-button olive mt-3"
+                            disabled={busy || !hydrated}
+                          >
+                            Record verified payment
+                          </button>
+                        </form>
+                      </details>
+                      <details className="app-note">
+                        <summary>Payment instructions for this gift</summary>
+                        <form
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            const data = new FormData(event.currentTarget);
+                            void perform({
+                              op: "instructions",
+                              upi_id: String(data.get("upi_id")),
+                              razorpay_url: String(data.get("razorpay_url")),
+                              shopify_order_reference:
+                                p.shopify_order_reference || "",
+                            });
+                          }}
                         >
-                          <strong>{a.title}</strong> · {a.kind} v{a.version} ·{" "}
-                          {a.status}
-                          {a.amount_paise && (
-                            <p>{money(Number(a.amount_paise))}</p>
-                          )}
-                          {a.customer_response && (
-                            <p className="mt-2 whitespace-pre-wrap">
-                              Customer: {a.customer_response}
-                            </p>
-                          )}
-                          {a.has_image && (
-                            <button
-                              type="button"
-                              className="mt-2 underline"
-                              onClick={() => void preview("approval", a.id)}
-                            >
-                              Preview mockup
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                </div>
-                <div
-                  id="desk-payments"
-                  hidden={tab !== "payments"}
-                  className="space-y-4"
-                >
-                  <section className={card}>
-                    <h3 className="font-medium">
-                      Payment verification · review within 24 hours
-                    </h3>
-                    <p className="mt-2 text-xs text-muted-text">
-                      Check the receiving bank/provider, not just the
-                      screenshot. Receipts stay pending until verified. An
-                      overdue review is never auto-approved.
-                    </p>
-                    <div className="my-4 space-y-3">
-                      {detail.payments.map((pay) => (
-                        <div
-                          key={pay.id}
-                          className="rounded-xl border border-border p-3 text-sm"
-                        >
-                          <p>
-                            {money(Number(pay.amount_paise))} · {pay.reference}{" "}
-                            · <strong>{pay.status}</strong>
+                          <Field
+                            name="upi_id"
+                            label="UPI override (leave blank for the saved receiving account)"
+                            value={p.upi_id || ""}
+                          />
+                          <Field
+                            name="razorpay_url"
+                            label="Razorpay payment link (optional)"
+                            value={p.razorpay_url || ""}
+                          />
+                          <button className="app-button mt-3" disabled={busy}>
+                            Save payment instructions
+                          </button>
+                        </form>
+                      </details>
+                    </section>
+                  </div>
+                )}
+                {tab === "fulfilment" && (
+                  <div className="app-grid">
+                    <section className="app-panel">
+                      <h2>Official Shopify order</h2>
+                      {p.shopify_order_reference ? (
+                        <>
+                          <span className="app-badge">Linked · read-only</span>
+                          <p className="mt-3">{p.shopify_order_reference}</p>
+                          <p className="app-note">
+                            Shopify is the official order record. GYVFT creates
+                            one custom line for the entire gifting batch,
+                            attached to this customer. Edit the official order
+                            in Shopify.
                           </p>
-                          <p className="mt-1 text-xs text-muted-text">
-                            Submitted{" "}
-                            {new Date(pay.created_at).toLocaleString("en-IN")} ·{" "}
-                            {pay.status === "pending" &&
-                            now - new Date(pay.created_at).getTime() > 86400000
-                              ? "Review overdue"
-                              : "Allow up to 24 hours for review"}
-                          </p>
-                          {pay.has_evidence && (
+                          <button
+                            className="app-button mt-3"
+                            disabled={busy || !shopify}
+                            onClick={() =>
+                              void perform({ op: "shopify_order" })
+                            }
+                          >
+                            Refresh official record
+                          </button>
+                          {Number(p.paid_paise) >= Number(p.total_paise) && (
                             <button
-                              className="mt-2 underline"
-                              onClick={() => void preview("payment", pay.id)}
-                            >
-                              View transaction screenshot
-                            </button>
-                          )}
-                          {pay.status === "pending" && (
-                            <button
-                              disabled={busy}
-                              className={`${button} ml-3`}
+                              className="app-button olive mt-3"
+                              disabled={busy || !shopify}
                               onClick={() =>
-                                void perform({
-                                  op: "reject_payment",
-                                  id: p.id,
-                                  reference: pay.reference,
+                                setConfirm({
+                                  title:
+                                    "Sync the verified balance to Shopify?",
+                                  body: "The full order total is verified. Record only the outstanding balance; matching receipts are not recorded twice.",
+                                  payload: {
+                                    op: "shopify_order",
+                                    confirm_order: true,
+                                  },
                                 })
                               }
                             >
-                              Reject reference
+                              Record verified balance in Shopify
                             </button>
                           )}
-                        </div>
-                      ))}
-                    </div>
-                    <form
-                      className="space-y-3"
-                      onSubmit={(event) =>
-                        void form(async (f) => {
-                          await perform({
-                            op: "payment",
-                            id: p.id,
-                            reference: f.get("reference"),
-                            amount_paise: Math.round(
-                              Number(f.get("amount")) * 100,
-                            ),
-                            confirmed_receipt:
-                              f.get("confirmed_receipt") === "on",
-                          });
-                        })(event)
-                      }
-                    >
-                      <label className="block text-sm">
-                        Reference to verify
-                        <input
-                          name="reference"
-                          required
-                          minLength={6}
-                          className={input}
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        Amount (₹, for manually entered receipts)
-                        <input
-                          type="number"
-                          name="amount"
-                          min="0.01"
-                          step="0.01"
-                          className={input}
-                        />
-                      </label>
-                      <label className="flex gap-2 text-sm">
-                        <input
-                          name="confirmed_receipt"
-                          type="checkbox"
-                          required
-                        />
-                        I verified receipt and amount in the receiving
-                        bank/provider.
-                      </label>
-                      <button disabled={busy} className={button}>
-                        Verify and credit receipt
-                      </button>
-                    </form>
-                  </section>
-                  <section className={card}>
-                    <h3 className="font-medium">
-                      Payment / Shopify instructions
-                    </h3>
-                    <form
-                      className="mt-4 space-y-3"
-                      onSubmit={(event) =>
-                        void form(async (f) => {
-                          await perform({
-                            op: "instructions",
-                            id: p.id,
-                            upi_id: f.get("upi_id"),
-                            razorpay_url: f.get("razorpay_url"),
-                            shopify_order_reference: f.get(
-                              "shopify_order_reference",
-                            ),
-                          });
-                        })(event)
-                      }
-                    >
-                      <label className="block text-sm">
-                        Order-specific UPI ID (blank uses receiving-account
-                        default)
-                        <input
-                          name="upi_id"
-                          defaultValue={p.upi_id || ""}
-                          className={input}
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        Optional Razorpay link
-                        <input
-                          name="razorpay_url"
-                          defaultValue={p.razorpay_url || ""}
-                          className={input}
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        Manually created Shopify order reference
-                        <input
-                          name="shopify_order_reference"
-                          defaultValue={p.shopify_order_reference || ""}
-                          className={input}
-                        />
-                      </label>
-                      <button disabled={busy} className={button}>
-                        Save instructions
-                      </button>
-                    </form>
-                  </section>
-                </div>
-                <div
-                  id="desk-fulfilment"
-                  hidden={tab !== "fulfilment"}
-                  className="space-y-4"
-                >
-                  <section className={card}>
-                    <h3 className="font-medium">Delivery & Shopify order</h3>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                        disabled={busy || !shopify || p.kind !== "project"}
-                        className={button}
-                        onClick={() =>
-                          window.confirm(
-                            "Confirm the approved quote, delivery address and verified receipts are correct. This creates or updates the live Shopify order and records verified payments; it does not charge the customer.",
-                          ) &&
-                          void perform({
-                            op: "shopify_order",
-                            id: p.id,
-                            confirm_order: true,
-                          })
-                        }
-                      >
-                        {p.shopify_order_reference
-                          ? "Sync Shopify order / verified payments"
-                          : "Create Shopify order"}
-                      </button>
-                      <button
-                        disabled={busy || !shopify || !p.customer_account_id}
-                        className={button}
-                        onClick={() =>
-                          void perform({ op: "shopify_customer", id: p.id })
-                        }
-                      >
-                        Sync Shopify customer
-                      </button>
-                    </div>
-                    <p className="mt-2 text-xs text-muted-text">
-                      {p.shopify_order_reference
-                        ? `Shopify order: ${p.shopify_order_reference}`
-                        : shopify
-                          ? "Save a complete delivery address and confirm the approved quote before creating the order."
-                          : "Shopify is not connected. Use a manually created order reference in Payments for this pilot."}
-                    </p>
-                    {detail.address ? (
-                      <p className="mt-3 whitespace-pre-wrap text-sm">
-                        {detail.address.recipient_name} · {detail.address.phone}
-                        {"\n"}
-                        {detail.address.address}
-                        {"\n"}
-                        {detail.address.city}, {detail.address.state}{" "}
-                        {detail.address.postal_code}
-                      </p>
-                    ) : (
-                      <p className="mt-3 text-sm text-muted-text">
-                        Customer has not saved a delivery address yet.
-                      </p>
-                    )}
-                    <form
-                      className="mt-4 space-y-3"
-                      onSubmit={(event) =>
-                        void form(async (f) => {
-                          await perform({
-                            op: "progress",
-                            id: p.id,
-                            stage: Number(f.get("stage")),
-                            next_action: f.get("next_action"),
-                            tracking_reference: f.get("tracking_reference"),
-                            tracking_url: f.get("tracking_url"),
-                          });
-                        })(event)
-                      }
-                    >
-                      <label className="block text-sm">
-                        Progress
-                        <select
-                          name="stage"
-                          defaultValue={p.stage}
-                          className={input}
-                        >
-                          {[1, 2, 7, 8, 9, 10, 11].map((n) => (
-                            <option key={n} value={n}>
-                              {stages[n]}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="block text-sm">
-                        Customer-visible next step
-                        <textarea
-                          name="next_action"
-                          defaultValue={p.next_action}
-                          required
-                          className={input}
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        Tracking reference
-                        <input
-                          name="tracking_reference"
-                          defaultValue={p.tracking_reference || ""}
-                          className={input}
-                        />
-                      </label>
-                      <label className="block text-sm">
-                        Tracking link
-                        <input
-                          name="tracking_url"
-                          defaultValue={p.tracking_url || ""}
-                          className={input}
-                        />
-                      </label>
-                      <button disabled={busy} className={button}>
-                        Publish progress
-                      </button>
-                    </form>
-                  </section>
-                </div>
-                <div
-                  id="desk-activity"
-                  hidden={tab !== "activity"}
-                  className="space-y-4"
-                >
-                  <section className={card}>
-                    <h3 className="font-medium">Customer activity</h3>
-                    <ol className="my-4 space-y-3">
-                      {detail.events.map((e) => (
-                        <li
-                          key={e.id}
-                          className="border-b border-border pb-3 text-sm"
-                        >
-                          <strong>{e.title}</strong>
-                          <p className="mt-1 whitespace-pre-wrap text-muted-text">
-                            {e.body}
+                        </>
+                      ) : (
+                        <>
+                          <p className="app-muted">
+                            Create once, after quote approval, verified advance
+                            and complete delivery details. The order contains
+                            one custom gifting-batch line.
                           </p>
-                          <time className="text-xs text-muted-text">
-                            {new Date(e.created_at).toLocaleString("en-IN", {
-                              timeZone: "Asia/Kolkata",
-                            })}
-                          </time>
-                        </li>
+                          <dl className="app-money">
+                            <div>
+                              <dt>Customer</dt>
+                              <dd>{p.customer_email}</dd>
+                            </div>
+                            <div>
+                              <dt>Order total</dt>
+                              <dd>{money(Number(p.total_paise || 0))}</dd>
+                            </div>
+                            <div>
+                              <dt>Address</dt>
+                              <dd>
+                                {detail.address
+                                  ? `${detail.address.recipient_name}, ${detail.address.city}, ${detail.address.postal_code}`
+                                  : "Customer needs to save an address"}
+                              </dd>
+                            </div>
+                          </dl>
+                          <button
+                            className="app-button primary mt-3"
+                            disabled={busy || !shopify}
+                            onClick={() =>
+                              setConfirm({
+                                title: "Create official Shopify order?",
+                                body: "This creates one customer-linked custom batch line for the approved total. The linked order is read-only here. Do not create it again manually.",
+                                payload: {
+                                  op: "shopify_order",
+                                  confirm_order: true,
+                                },
+                              })
+                            }
+                          >
+                            Create Shopify order
+                          </button>
+                          {!shopify && (
+                            <p className="app-alert mt-2">
+                              The server-side Shopify credential is not
+                              configured.
+                            </p>
+                          )}
+                        </>
+                      )}
+                      {detail.address && (
+                        <p className="app-note whitespace-pre-wrap">
+                          {[
+                            detail.address.recipient_name,
+                            detail.address.address,
+                            detail.address.city,
+                            detail.address.state,
+                            detail.address.postal_code,
+                            detail.address.phone,
+                          ].join("\n")}
+                        </p>
+                      )}
+                      {!p.shopify_order_reference && (
+                        <details className="app-note">
+                          <summary>
+                            Already created this order in Shopify?
+                          </summary>
+                          <form
+                            onSubmit={(event) => {
+                              event.preventDefault();
+                              const data = new FormData(event.currentTarget);
+                              void perform({
+                                op: "instructions",
+                                upi_id: p.upi_id || "",
+                                razorpay_url: p.razorpay_url || "",
+                                shopify_order_reference: String(
+                                  data.get("reference"),
+                                ),
+                              });
+                            }}
+                          >
+                            <Field
+                              name="reference"
+                              label="Official Shopify order reference"
+                              required
+                            />
+                            <label className="app-check">
+                              <input type="checkbox" required />I checked that
+                              the order belongs to this customer and matches the
+                              approved total.
+                            </label>
+                            <button
+                              className="app-button olive mt-3"
+                              disabled={busy}
+                            >
+                              Link official order reference
+                            </button>
+                          </form>
+                          <p className="app-note">
+                            The reference is read-only after linking. Use the
+                            same customer email in Shopify.
+                          </p>
+                        </details>
+                      )}
+                    </section>
+                    <section className="app-panel">
+                      <h2>Production & delivery</h2>
+                      <form
+                        onSubmit={(event) =>
+                          form((d) => {
+                            const payload = {
+                              op: "progress",
+                              stage: Number(d.get("stage")),
+                              next_action: String(d.get("next_action")),
+                              tracking_reference: String(
+                                d.get("tracking_reference"),
+                              ),
+                              tracking_url: String(d.get("tracking_url")),
+                            };
+                            if (payload.stage === 7) {
+                              setConfirm({
+                                title: "Start production and lock this gift?",
+                                body: "The final approved gift and artwork become read-only. No changes are accepted after production starts.",
+                                payload,
+                              });
+                              return Promise.resolve();
+                            }
+                            return perform(payload);
+                          })(event)
+                        }
+                      >
+                        <label className="app-label">
+                          Next stage
+                          <select
+                            className="app-input"
+                            name="stage"
+                            defaultValue={
+                              Number(p.stage) < 7
+                                ? 7
+                                : Math.min(11, Number(p.stage) + 1)
+                            }
+                          >
+                            {[1, 2, 7, 8, 9, 10, 11]
+                              .filter((n) =>
+                                Number(p.stage) < 7
+                                  ? n === 7 || (p.kind === "enquiry" && n < 3)
+                                  : n === Number(p.stage) + 1,
+                              )
+                              .map((n) => (
+                                <option key={n} value={n}>
+                                  {stages[n]}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+                        <label className="app-label">
+                          Customer-visible next step
+                          <textarea
+                            className="app-input"
+                            name="next_action"
+                            required
+                            defaultValue={p.next_action}
+                          />
+                        </label>
+                        <Field
+                          name="tracking_reference"
+                          label="Tracking / delivery reference"
+                          value={p.tracking_reference || ""}
+                        />
+                        <Field
+                          name="tracking_url"
+                          label="HTTPS tracking link (optional)"
+                          value={p.tracking_url || ""}
+                        />
+                        <button
+                          className="app-button primary mt-4"
+                          disabled={busy || Number(p.stage) >= 11}
+                        >
+                          Update production / delivery
+                        </button>
+                      </form>
+                      <p className="app-note">
+                        Production: verified 50% advance + latest artwork
+                        approval + official order + no open changes. Dispatch:
+                        full verified payment + address + tracking.
+                      </p>
+                    </section>
+                  </div>
+                )}
+                {tab === "messages" && (
+                  <div className="app-grid">
+                    <section className="app-panel">
+                      <h2>Customer conversation</h2>
+                      {detail.messages.toReversed().map((m) => (
+                        <article className="app-row" key={m.id}>
+                          <div>
+                            <strong>
+                              {m.sender === "team" ? "Aarla" : "Customer"}
+                            </strong>
+                            <p className="whitespace-pre-wrap">{m.body}</p>
+                          </div>
+                        </article>
                       ))}
-                    </ol>
-                    <h3 className="font-medium">Notification delivery</h3>
-                    <p className="mt-3 text-sm">
-                      {
-                        detail.notifications.filter((n) => n.state !== "sent")
-                          .length
-                      }{" "}
-                      recent notifications pending / failed
-                    </p>
-                    <button
-                      disabled={busy}
-                      className={`${button} mt-3`}
-                      onClick={() =>
-                        void perform({ op: "retry_notifications", id: p.id })
-                      }
-                    >
-                      Retry pending notifications
-                    </button>
-                    <details className="mt-4">
-                      <summary className="cursor-pointer text-sm">
-                        Operator audit
-                      </summary>
-                      {detail.audit.map((a, i) => (
-                        <p key={i} className="mt-2 text-xs text-muted-text">
-                          {a.operation} ·{" "}
-                          {new Date(a.created_at).toLocaleString("en-IN")}
+                      {detail.journey.changes
+                        .filter((c) => c.status === "open")
+                        .map((c) => (
+                          <div className="app-soft mt-3" key={c.id}>
+                            <strong>
+                              Changes to {c.kind} v{c.version}
+                            </strong>
+                            <p>{c.body}</p>
+                          </div>
+                        ))}
+                    </section>
+                    <section className="app-panel">
+                      <h2>
+                        {composer === "reply"
+                          ? "Reply to customer"
+                          : "Private internal note"}
+                      </h2>
+                      <div className="app-actions mt-0">
+                        <button
+                          className="app-button"
+                          aria-pressed={composer === "reply"}
+                          onClick={() => setComposer("reply")}
+                        >
+                          Customer reply
+                        </button>
+                        <button
+                          className="app-button"
+                          aria-pressed={composer === "internal"}
+                          onClick={() => setComposer("internal")}
+                        >
+                          Internal note
+                        </button>
+                      </div>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          void perform({
+                            op:
+                              composer === "reply" ? "reply" : "internal_note",
+                            body: composer === "reply" ? reply : note,
+                          }).then((ok) => {
+                            if (ok) {
+                              if (composer === "reply") setReply("");
+                              else setNote("");
+                            }
+                          });
+                        }}
+                      >
+                        <label className="app-label">
+                          {composer === "reply"
+                            ? "Visible to the customer"
+                            : "Only the GYVFT team can read this"}
+                          <textarea
+                            className="app-input"
+                            required
+                            maxLength={4000}
+                            value={composer === "reply" ? reply : note}
+                            onChange={(e) =>
+                              composer === "reply"
+                                ? setReply(e.target.value)
+                                : setNote(e.target.value)
+                            }
+                          />
+                        </label>
+                        <button
+                          className="app-button primary mt-4"
+                          disabled={busy || !hydrated}
+                        >
+                          {composer === "reply"
+                            ? "Send customer reply"
+                            : "Save internal note"}
+                        </button>
+                      </form>
+                      <div className="app-note">
+                        <h3>Private team notes</h3>
+                        {detail.journey.notes.map((n) => (
+                          <p key={n.id} className="mt-3 whitespace-pre-wrap">
+                            {n.body}
+                          </p>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
+                )}
+                {tab === "moments" && (
+                  <div className="app-stack">
+                    <section className="app-panel">
+                      <h2>Customer experience</h2>
+                      {detail.journey.testimonial ? (
+                        <>
+                          <p>
+                            {"★".repeat(detail.journey.testimonial.rating)} ·{" "}
+                            {detail.journey.testimonial.body}
+                          </p>
+                          <p className="app-muted mt-2">
+                            {detail.journey.testimonial.public_permission
+                              ? "Public permission given"
+                              : "Private · do not publish"}
+                          </p>
+                          <button
+                            className="app-button olive mt-3"
+                            disabled={
+                              busy ||
+                              !detail.journey.testimonial.public_permission
+                            }
+                            onClick={() =>
+                              void perform({
+                                op: "feature_testimonial",
+                                featured: !detail.journey.testimonial!.featured,
+                              })
+                            }
+                          >
+                            {detail.journey.testimonial.featured
+                              ? "Remove from public use"
+                              : "Feature testimonial"}
+                          </button>
+                        </>
+                      ) : (
+                        <p className="app-muted">No customer feedback yet.</p>
+                      )}
+                    </section>
+                    <section className="app-panel">
+                      <h2>Photos & individual permissions</h2>
+                      <div className="app-gallery">
+                        {detail.journey.photos.map((photo) => (
+                          <figure key={photo.id}>
+                            <button
+                              className="app-button"
+                              onClick={() => void preview("moment", photo.id)}
+                            >
+                              View photo
+                            </button>
+                            <figcaption className="mt-2">
+                              {photo.caption || photo.kind}
+                              <p className="app-muted">
+                                {photo.public_permission
+                                  ? photo.featured
+                                    ? "Featured publicly"
+                                    : "Permission given · not featured"
+                                  : "Private · do not publish"}
+                              </p>
+                            </figcaption>
+                            <button
+                              className="app-button olive mt-3"
+                              disabled={busy || !photo.public_permission}
+                              onClick={() =>
+                                void perform({
+                                  op: "feature_photo",
+                                  photo_id: photo.id,
+                                  featured: !photo.featured,
+                                })
+                              }
+                            >
+                              {photo.featured
+                                ? "Remove from public use"
+                                : "Feature this photo"}
+                            </button>
+                          </figure>
+                        ))}
+                      </div>
+                      <p className="app-note">
+                        A withdrawn photo disappears from anonymous media reads
+                        immediately. Other photos retain their own permissions.
+                      </p>
+                      <Link
+                        className="app-button quiet"
+                        href="/gift-moments"
+                        target="_blank"
+                      >
+                        View public gallery →
+                      </Link>
+                    </section>
+                  </div>
+                )}
+                {tab === "activity" && (
+                  <div className="app-grid">
+                    <section className="app-panel">
+                      <h2>Customer-visible activity</h2>
+                      {detail.events.map((e) => (
+                        <article className="app-row" key={e.id}>
+                          <div>
+                            <h3>{e.title}</h3>
+                            <p>{e.body}</p>
+                            <p className="app-muted">
+                              {new Date(e.created_at).toLocaleString("en-IN")}
+                            </p>
+                          </div>
+                        </article>
+                      ))}
+                    </section>
+                    <section className="app-panel">
+                      <h2>Operations audit & notifications</h2>
+                      {detail.audit.map((e, i) => (
+                        <p className="mt-3" key={i}>
+                          {e.operation} ·{" "}
+                          {new Date(e.created_at).toLocaleString("en-IN")}
                         </p>
                       ))}
-                    </details>
-                  </section>
-                </div>
-              </div>
-            ) : (
-              <section className={`${card} py-16 text-center text-muted-text`}>
-                Select a request to manage its customer-visible journey.
+                      {detail.notifications.map((n) => (
+                        <p className="app-muted mt-3" key={n.id}>
+                          {n.destination} notification · {n.state} ·{" "}
+                          {n.attempts} attempts
+                        </p>
+                      ))}
+                      <button
+                        className="app-button mt-4"
+                        disabled={busy || !hydrated}
+                        onClick={() =>
+                          void perform({ op: "retry_notifications" })
+                        }
+                      >
+                        Retry pending notifications
+                      </button>
+                    </section>
+                  </div>
+                )}
+              </>
+            )}
+            {area === "customers" && (
+              <section className="app-panel">
+                <h2>Customers</h2>
+                {directory?.customers.map((c) => (
+                  <article className="app-row" key={c.id}>
+                    <div>
+                      <h3>{c.name || c.email}</h3>
+                      <p className="app-muted">
+                        {c.email} · {c.gifts} gifts · {money(Number(c.paid))}{" "}
+                        verified
+                      </p>
+                    </div>
+                    <button
+                      className="app-button"
+                      onClick={() => {
+                        setQuery(c.email);
+                        setArea("worklist");
+                      }}
+                    >
+                      View their gifts
+                    </button>
+                  </article>
+                ))}
               </section>
             )}
-          </div>
+            {area === "occasions" && (
+              <section className="app-panel">
+                <h2>Occasions linked to requests</h2>
+                <p className="app-muted">
+                  Only context the customer attached to a gift is shown.
+                </p>
+                {directory?.occasions.map((o) => (
+                  <article className="app-row" key={o.id}>
+                    <div>
+                      <h3>{o.title}</h3>
+                      <p className="app-muted">
+                        {o.occasion_date} · {o.customer_email}
+                      </p>
+                    </div>
+                    <button
+                      className="app-button"
+                      onClick={() => {
+                        setQuery(o.customer_email);
+                        setArea("worklist");
+                      }}
+                    >
+                      View customer gifts
+                    </button>
+                  </article>
+                ))}
+              </section>
+            )}
+            {area === "stories" && (
+              <section className="app-panel">
+                <h2>Feedback & photos</h2>
+                {directory?.submissions.map((s) => (
+                  <article className="app-row" key={s.id}>
+                    <div>
+                      <h3>{s.title}</h3>
+                      <p className="app-muted">
+                        {s.customer_email} · {s.photos} photos
+                        {s.rating ? ` · ${s.rating} stars` : ""}
+                      </p>
+                    </div>
+                    <button
+                      className="app-button primary"
+                      disabled={busy || !hydrated}
+                      onClick={() => void open(s.id, "moments")}
+                    >
+                      Review permissions
+                    </button>
+                  </article>
+                ))}
+              </section>
+            )}
+            {area === "reports" && (
+              <div className="app-stack">
+                <section className="app-panel">
+                  <h2>Application reports</h2>
+                  <div className="app-fields">
+                    {report?.metrics.map((m) => (
+                      <div className="app-soft" key={m.key}>
+                        <p className="app-muted">{m.label}</p>
+                        <p className="app-step-title">{m.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+                <section className="app-panel">
+                  <h2>Gifts by stage</h2>
+                  {report?.byStatus.map((s) => (
+                    <div className="app-row" key={s.label}>
+                      <span>{s.label}</span>
+                      <strong>{s.count}</strong>
+                    </div>
+                  ))}
+                </section>
+                <section className="app-panel">
+                  <h2>Activity & safe diagnostics</h2>
+                  {report?.events.map((e) => (
+                    <p key={e.type} className="mt-2">
+                      {e.type} · {e.count}
+                    </p>
+                  ))}
+                  {report?.recentErrors.map((e, i) => (
+                    <p className="app-alert mt-2" key={i}>
+                      {e.code || "App error"} · {e.operation} ·{" "}
+                      {new Date(e.createdAt).toLocaleString("en-IN")}
+                    </p>
+                  ))}
+                  <p className="app-note">
+                    Application activity stays here. Infrastructure logs and
+                    deployment monitoring remain in Vercel.
+                  </p>
+                </section>
+              </div>
+            )}
+            {area === "settings" && (
+              <div className="app-grid">
+                <section className="app-panel">
+                  <h2>Direct UPI receiving account</h2>
+                  <form
+                    onSubmit={(event) =>
+                      form(async (d) =>
+                        perform({
+                          op: "upi_settings",
+                          upi_id: String(d.get("upi_id")),
+                          payee_name: String(d.get("payee_name")),
+                          confirmed_payee: d.has("confirmed"),
+                          image: await picture(d.get("image")),
+                        }),
+                      )(event)
+                    }
+                  >
+                    <Field name="upi_id" label="Receiving UPI ID" required />
+                    <Field
+                      name="payee_name"
+                      label="Payee name customers should verify"
+                      required
+                    />
+                    <label className="app-label">
+                      Receiving QR (optional, up to 2 MB)
+                      <input
+                        className="app-input"
+                        type="file"
+                        name="image"
+                        accept="image/png,image/jpeg,image/webp"
+                      />
+                    </label>
+                    <label className="app-check">
+                      <input type="checkbox" name="confirmed" />I verified that
+                      the QR pays the same receiving account.
+                    </label>
+                    <button
+                      className="app-button primary mt-4"
+                      disabled={busy || !hydrated}
+                    >
+                      Save receiving details
+                    </button>
+                  </form>
+                </section>
+                <section className="app-panel">
+                  <h2>Connections & access</h2>
+                  <p>
+                    Shopify server credential:{" "}
+                    {shopify ? "Configured" : "Not configured"}
+                  </p>
+                  <p className="app-note">
+                    Every account links to a matching Shopify customer. Official
+                    gifting orders use a single custom batch line. An app
+                    credential is required on the deployment; a connector in
+                    chat does not supply it.
+                  </p>
+                  <button
+                    className="app-button mt-3"
+                    disabled={busy || !shopify}
+                    onClick={() => void perform({ op: "sync_customers" })}
+                  >
+                    Sync pending customers
+                  </button>
+                  <Link className="app-button quiet mt-3" href="/setup">
+                    Database setup →
+                  </Link>
+                  <p className="app-note">
+                    Operator access is separate from customer accounts. Use Lock
+                    desk when finished.
+                  </p>
+                </section>
+              </div>
+            )}
+          </section>
         </div>
       )}
-      <div className="sticky bottom-3 z-10 mt-5" role="status">
-        {(message || busy) && (
-          <p className="rounded-xl border border-border bg-paper p-4 text-sm shadow-lg">
-            {busy ? "Saving / loading…" : message}
-          </p>
-        )}
-      </div>
+      {message && (
+        <p className="app-soft mt-4" role="status">
+          {message}
+        </p>
+      )}
+      {busy && (
+        <p role="status" className="app-muted mt-3">
+          Working… please wait.
+        </p>
+      )}
+      <Dialog.Root
+        open={!!image}
+        onOpenChange={(on) => {
+          if (!on) setImage(null);
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="app-dialog-overlay" />
+          <Dialog.Content
+            className="app-dialog"
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              restoreFocus(imageOpener.current);
+            }}
+          >
+            <Dialog.Title>{image?.title || "Gift image"}</Dialog.Title>
+            <Dialog.Description>
+              Private image for this request.
+            </Dialog.Description>
+            {image && <img src={image.url} alt={image.title} />}
+            <Dialog.Close className="app-button mt-4">
+              Close preview
+            </Dialog.Close>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+      <Dialog.Root
+        open={!!confirm}
+        onOpenChange={(on) => {
+          if (!on) setConfirm(null);
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="app-dialog-overlay" />
+          <Dialog.Content
+            className="app-dialog"
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              restoreFocus(confirmOpener.current);
+            }}
+          >
+            <Dialog.Title>{confirm?.title || "Confirm action"}</Dialog.Title>
+            <Dialog.Description>{confirm?.body}</Dialog.Description>
+            <div className="app-actions">
+              <button
+                className="app-button primary"
+                disabled={busy || !hydrated}
+                onClick={() => {
+                  if (confirm)
+                    void perform(confirm.payload).then((ok) => {
+                      if (ok) setConfirm(null);
+                    });
+                }}
+              >
+                Confirm
+              </button>
+              <Dialog.Close className="app-button">Cancel</Dialog.Close>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </main>
   );
 }

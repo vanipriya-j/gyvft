@@ -42,12 +42,30 @@ export function AccountNavigation({ email }: { email: string | null }) {
                   <Link
                     key={l.id}
                     href={
-                      l.id === "home" ? "/account" : `/account?view=${l.id}`
+                      l.id === "home"
+                        ? "/account"
+                        : l.id === "requests"
+                          ? "/account/gifts"
+                          : l.id === "occasions"
+                            ? "/account/occasions"
+                            : `/account?view=${l.id}`
                     }
                     aria-current={
-                      path === "/account" && view === l.id ? "page" : undefined
+                      (
+                        l.id === "profile"
+                          ? path.startsWith("/account/profile") ||
+                            path.startsWith("/account/people")
+                          : l.id === "requests"
+                            ? path.startsWith("/account/gifts") ||
+                              path.startsWith("/account/projects")
+                            : l.id === "occasions"
+                              ? path.startsWith("/account/occasions")
+                              : path === "/account" && view === l.id
+                      )
+                        ? "page"
+                        : undefined
                     }
-                    className={`py-2 text-sm ${path === "/account" && view === l.id ? "border-b-2 border-olive-dark text-olive-dark" : "text-muted-text"}`}
+                    className={`py-2 text-sm ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : path === "/account" && view === l.id) ? "border-b-2 border-olive-dark text-olive-dark" : "text-muted-text"}`}
                   >
                     {l.label}
                   </Link>
@@ -72,7 +90,7 @@ export function AccountNavigation({ email }: { email: string | null }) {
               >
                 <summary
                   aria-label="Your account"
-                  className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full border border-border bg-surface text-olive-dark [&::-webkit-details-marker]:hidden"
+                  className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-border bg-surface text-olive-dark [&::-webkit-details-marker]:hidden"
                 >
                   <UserRound size={18} />
                 </summary>
@@ -80,6 +98,18 @@ export function AccountNavigation({ email }: { email: string | null }) {
                   <p className="mb-2 break-all border-b border-border px-2 pb-3 text-xs text-muted-text">
                     {email}
                   </p>
+                  <Link
+                    className="block rounded-lg px-2 py-2.5 text-sm hover:bg-surface"
+                    href="/account/profile"
+                  >
+                    About me
+                  </Link>
+                  <Link
+                    className="block rounded-lg px-2 py-2.5 text-sm hover:bg-surface"
+                    href="/account/people"
+                  >
+                    Your people
+                  </Link>
                   <Link
                     className="block rounded-lg px-2 py-2.5 text-sm hover:bg-surface"
                     href="/account?view=saved"
@@ -112,7 +142,7 @@ export function AccountNavigation({ email }: { email: string | null }) {
               aria-label="Customer navigation"
             >
               <Link href="/account">My GYVFT</Link>
-              <Link href="/tell-your-story">Start a new story</Link>
+              <Link href="/account/gifts/new">Start a new story</Link>
             </nav>
           )}
         </div>
@@ -120,16 +150,41 @@ export function AccountNavigation({ email }: { email: string | null }) {
       {signedIn && (
         <nav
           aria-label="Mobile navigation"
-          className="order-last flex items-center justify-around border-t border-border bg-paper px-2 py-1 md:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 order-last flex items-center justify-around border-t border-border bg-paper px-2 py-1 md:hidden"
         >
-          {links.map((l) => (
+          {[
+            ...links.slice(0, 3),
+            { id: "profile", label: "Me", icon: UserRound },
+          ].map((l) => (
             <Link
               key={l.id}
-              href={l.id === "home" ? "/account" : `/account?view=${l.id}`}
-              aria-current={
-                path === "/account" && view === l.id ? "page" : undefined
+              href={
+                l.id === "profile"
+                  ? "/account/profile"
+                  : l.id === "home"
+                    ? "/account"
+                    : l.id === "requests"
+                      ? "/account/gifts"
+                      : l.id === "occasions"
+                        ? "/account/occasions"
+                        : `/account?view=${l.id}`
               }
-              className={`flex min-h-14 flex-col items-center justify-center gap-1 px-3 text-xs ${path === "/account" && view === l.id ? "text-olive-dark" : "text-muted-text"}`}
+              aria-current={
+                (
+                  l.id === "profile"
+                    ? path.startsWith("/account/profile") ||
+                      path.startsWith("/account/people")
+                    : l.id === "requests"
+                      ? path.startsWith("/account/gifts") ||
+                        path.startsWith("/account/projects")
+                      : l.id === "occasions"
+                        ? path.startsWith("/account/occasions")
+                        : path === "/account" && view === l.id
+                )
+                  ? "page"
+                  : undefined
+              }
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 px-3 text-xs ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : path === "/account" && view === l.id) ? "text-olive-dark" : "text-muted-text"}`}
             >
               <l.icon size={18} />
               {l.label}

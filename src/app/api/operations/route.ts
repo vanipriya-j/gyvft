@@ -73,13 +73,13 @@ export async function POST(request: Request) {
       >`SELECT count(*)::text AS active, count(DISTINCT account_id)::text AS active_accounts FROM gyvft_customer_sessions s JOIN gyvft_customer_accounts a ON a.id = s.account_id WHERE s.expires_at > now() AND a.is_active = true`,
       sql<
         { total: string; recent: string; converted: string }[]
-      >`SELECT count(*)::text AS total, count(*) FILTER (WHERE created_at >= now() - interval '30 days')::text AS recent, count(*) FILTER (WHERE kind = 'project')::text AS converted FROM customer_projects WHERE COALESCE(submission_key, '') NOT LIKE 'gyvft-demo-%'`,
+      >`SELECT count(*)::text AS total, count(*) FILTER (WHERE created_at >= now() - interval '30 days')::text AS recent, count(*) FILTER (WHERE kind = 'project')::text AS converted FROM customer_projects WHERE is_draft=false AND COALESCE(submission_key, '') NOT LIKE 'gyvft-demo-%'`,
       sql<
         { accounts_with_requests: string }[]
-      >`SELECT count(DISTINCT customer_account_id)::text AS accounts_with_requests FROM customer_projects WHERE customer_account_id IS NOT NULL AND COALESCE(submission_key, '') NOT LIKE 'gyvft-demo-%'`,
+      >`SELECT count(DISTINCT customer_account_id)::text AS accounts_with_requests FROM customer_projects WHERE is_draft=false AND customer_account_id IS NOT NULL AND COALESCE(submission_key, '') NOT LIKE 'gyvft-demo-%'`,
       sql<
         { stage: number; count: string }[]
-      >`SELECT stage, count(*)::text AS count FROM customer_projects WHERE COALESCE(submission_key, '') NOT LIKE 'gyvft-demo-%' GROUP BY stage ORDER BY stage`,
+      >`SELECT stage, count(*)::text AS count FROM customer_projects WHERE is_draft=false AND COALESCE(submission_key, '') NOT LIKE 'gyvft-demo-%' GROUP BY stage ORDER BY stage`,
       sql<
         { event_type: string; count: string }[]
       >`SELECT event_type, count(*)::text AS count FROM gyvft_customer_events WHERE created_at >= now() - interval '30 days' GROUP BY event_type ORDER BY event_type`,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import "@/components/customer/application.css";
 import { Suspense } from "react";
 import { AccountNavigation } from "@/components/customer/account-navigation";
 import { getCustomerAccount } from "@/lib/customer/session";
@@ -13,7 +14,7 @@ export default async function AccountLayout({
 }) {
   const account = await getCustomerAccount();
   return (
-    <>
+    <div className="gyvft-app customer-application">
       <Suspense>
         <AccountNavigation email={account?.email || null} />
       </Suspense>
@@ -29,6 +30,6 @@ export default async function AccountLayout({
           </div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }

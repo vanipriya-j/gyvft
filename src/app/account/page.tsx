@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import {
   HomeDashboard,
   SavedIdeasPage,
@@ -21,6 +22,9 @@ export default async function AccountPage({
 }) {
   const account = await requireCustomerAccount();
   const { view = "home", add } = await searchParams;
+  if (view === "requests") redirect("/account/gifts");
+  if (view === "occasions")
+    redirect("/account/occasions" + (add === "1" ? "?add=1" : ""));
   if (
     ["home", "saved", "payments"].includes(view) ||
     !["requests", "occasions", "ideas"].includes(view)

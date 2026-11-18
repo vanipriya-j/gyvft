@@ -142,6 +142,11 @@ describe("customer portal trust boundaries", () => {
   it("records UPI references as pending without increasing verified receipts", async () => {
     query
       .mockResolvedValueOnce([{ id: projectId }])
+      .mockResolvedValueOnce([
+        { id: projectId, total_paise: 500100, paid_paise: 0 },
+      ])
+      .mockResolvedValueOnce([{ status: "approved", gift_selection_id: null }])
+      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: "receipt-id" }]);
     const data = new FormData();
     data.set("amount", "2500.50");
@@ -155,7 +160,7 @@ describe("customer portal trust boundaries", () => {
       ),
     );
     expect((await submitPayment(projectId, data)).ok).toBe(true);
-    const mutation = query.mock.calls[1];
+    const mutation = query.mock.calls[4];
     expect(mutation[0].join("?")).toContain(
       "INSERT INTO customer_payment_submissions",
     );

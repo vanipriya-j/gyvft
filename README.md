@@ -2,7 +2,7 @@
 
 **GYVFT - Your story. Our telling.**
 
-GYVFT is a Next.js application for public story-led lead capture and an authenticated internal Studio for managing opportunities, contacts, organisations, campaigns, landing pages, tasks, integrations, tracking, consent, and security settings.
+GYVFT is a Next.js application for story-led gifting: customers create briefs, choose gifts, approve quotes/artwork, pay and follow delivery in `/account`. The team manages the same records in `/operations`. The public storytelling site and legacy Studio remain separate surfaces.
 
 > **Agents (Codex / Cursor):** start with [`docs/CODEX.md`](docs/CODEX.md) for current product state and next work, then use this README for setup and ops. This app uses a custom Next.js build — read `node_modules/next/dist/docs/` and `AGENTS.md` before changing framework APIs.
 
@@ -10,11 +10,15 @@ GYVFT is a Next.js application for public story-led lead capture and an authenti
 
 Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 11 characters) in Vercel and redeploy. Open `/setup`, enter the secret and click **Start setup**. No Studio login is required. Setup creates the customer tables and requested DEMO enquiries. Customer accounts use app-owned password hashes and database sessions. Keep the secret for the operator reports at `/operations`; removing it disables both operator entrypoints.
 
+Production builds also apply pending customer-only migrations after successful compilation. Preview builds do not migrate the shared database. See the [release guide](docs/APPROVED-GIFTING-RELEASE.md) for workflow, merchant configuration and verification.
+
 ## Customer access and app reporting
 
 Customer signup/sign-in uses GYVFT-owned database accounts and secure session cookies; it does not use Supabase Auth or public browser API keys. Supabase remains the database host. Existing email configuration is used for enquiry delivery and password reset links. Application reports and safe errors are at `/operations` (operator secret required); hosting/infrastructure monitoring remains on Vercel.
 
 ## Customer portal guides
+
+- [Approved individual gifting release and Operations workflow](docs/APPROVED-GIFTING-RELEASE.md)
 
 - [Approved Home architecture and API contracts](docs/CUSTOMER-HOME-ARCHITECTURE.md)
 
@@ -182,10 +186,10 @@ GYVFT uses Supabase for Auth and Storage. The app also connects directly to Post
 
 Supabase deprecated the legacy JWT `anon` and `service_role` keys. This app prefers:
 
-| Role | Env var | Dashboard value |
-| --- | --- | --- |
-| Public / Auth client | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` |
-| Server admin / Storage | `SUPABASE_SECRET_KEY` | `sb_secret_...` |
+| Role                   | Env var                                | Dashboard value      |
+| ---------------------- | -------------------------------------- | -------------------- |
+| Public / Auth client   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` |
+| Server admin / Storage | `SUPABASE_SECRET_KEY`                  | `sb_secret_...`      |
 
 Find them under **Project Settings → API Keys → Publishable and secret API keys**. Newer projects may only expose these keys.
 
@@ -589,35 +593,35 @@ Do not expose server-only variables with a `NEXT_PUBLIC_` prefix.
 
 From `.env.example`:
 
-| Variable | Required | Scope | Description |
-| --- | --- | --- | --- |
-| `NEXT_PUBLIC_APP_URL` | Yes | Public | Canonical app URL used by metadata and redirects. |
-| `NODE_ENV` | Yes | Server | `development`, `test`, or `production`. |
-| `IS_PRODUCTION` | Recommended | Server | Extra production guard. `true`/`1` enables production checks. |
-| `DATABASE_URL` | Yes | Server | Postgres connection string for migrations and runtime database access. |
-| `NEXT_PUBLIC_SUPABASE_URL` | Production yes | Public | Supabase project URL. Required for Auth and browser Supabase client. |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production yes | Public | Supabase publishable key (`sb_publishable_...`). Required for Auth/browser client. |
-| `SUPABASE_SECRET_KEY` | Production yes | Server | Supabase secret key (`sb_secret_...`) for owner creation, storage, and admin operations. |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Legacy fallback | Public | Deprecated JWT anon key. Used only if publishable key is unset. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Legacy fallback | Server | Deprecated JWT service_role key. Used only if secret key is unset. |
-| `INTEGRATION_ENCRYPTION_KEY` | Required for Studio secrets | Server | At least 32 characters. Encrypts Studio-managed integration secrets. |
-| `RESEND_API_KEY` | Public site yes / Studio fallback | Server | Resend API key (required for public form email). |
-| `RESEND_FROM_EMAIL` | Recommended | Server | Default sending address (public default `aarla@aarla.in` if omitted). |
-| `RESEND_FROM_NAME` | Recommended | Server | Default sending name. |
-| `GYVFT_LEADS_EMAIL` | Recommended | Server | Public lead notification inbox (defaults to `aarla@aarla.in`). |
-| `STORY_LEADS_API_KEY` | Recommended for CRM forward | Server | Shared secret for Aarla OS story leads intake (min 16). |
-| `GYVFT_LEADS_API_KEY` | Alias | Server | Accepted alias for `STORY_LEADS_API_KEY`. |
-| `AARLA_STORY_LEADS_API_KEY` | Deprecated alias | Server | Prefer `STORY_LEADS_API_KEY`. |
-| `OPENAI_API_KEY` | Optional fallback | Server | OpenAI API key when no Studio encrypted secret exists. |
-| `META_ACCESS_TOKEN` | Optional fallback | Server | Meta CAPI access token when no Studio encrypted secret exists. |
-| `META_DATASET_ID` | Optional fallback | Server | Meta dataset/pixel ID for CAPI. |
-| `NEXT_PUBLIC_META_PIXEL_ID` | Optional | Public | Browser Meta Pixel ID. |
-| `NEXT_PUBLIC_GTM_ID` | Optional | Public | Google Tag Manager container ID. |
-| `NEXT_PUBLIC_GA4_MEASUREMENT_ID` | Optional | Public | GA4 measurement ID. |
-| `NEXT_PUBLIC_CLARITY_PROJECT_ID` | Optional | Public | Microsoft Clarity project ID. |
-| `MAX_UPLOAD_BYTES` | Optional | Server | Max brief upload size. Defaults to `10485760`. |
-| `DEFAULT_CURRENCY` | Optional | Server | ISO currency code. Defaults to `INR`. |
-| `CRON_SECRET` | Optional | Server | Reserved for cron endpoints. Must be at least 16 characters if set. |
+| Variable                               | Required                          | Scope  | Description                                                                              |
+| -------------------------------------- | --------------------------------- | ------ | ---------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`                  | Yes                               | Public | Canonical app URL used by metadata and redirects.                                        |
+| `NODE_ENV`                             | Yes                               | Server | `development`, `test`, or `production`.                                                  |
+| `IS_PRODUCTION`                        | Recommended                       | Server | Extra production guard. `true`/`1` enables production checks.                            |
+| `DATABASE_URL`                         | Yes                               | Server | Postgres connection string for migrations and runtime database access.                   |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Production yes                    | Public | Supabase project URL. Required for Auth and browser Supabase client.                     |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Production yes                    | Public | Supabase publishable key (`sb_publishable_...`). Required for Auth/browser client.       |
+| `SUPABASE_SECRET_KEY`                  | Production yes                    | Server | Supabase secret key (`sb_secret_...`) for owner creation, storage, and admin operations. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`        | Legacy fallback                   | Public | Deprecated JWT anon key. Used only if publishable key is unset.                          |
+| `SUPABASE_SERVICE_ROLE_KEY`            | Legacy fallback                   | Server | Deprecated JWT service_role key. Used only if secret key is unset.                       |
+| `INTEGRATION_ENCRYPTION_KEY`           | Required for Studio secrets       | Server | At least 32 characters. Encrypts Studio-managed integration secrets.                     |
+| `RESEND_API_KEY`                       | Public site yes / Studio fallback | Server | Resend API key (required for public form email).                                         |
+| `RESEND_FROM_EMAIL`                    | Recommended                       | Server | Default sending address (public default `aarla@aarla.in` if omitted).                    |
+| `RESEND_FROM_NAME`                     | Recommended                       | Server | Default sending name.                                                                    |
+| `GYVFT_LEADS_EMAIL`                    | Recommended                       | Server | Public lead notification inbox (defaults to `aarla@aarla.in`).                           |
+| `STORY_LEADS_API_KEY`                  | Recommended for CRM forward       | Server | Shared secret for Aarla OS story leads intake (min 16).                                  |
+| `GYVFT_LEADS_API_KEY`                  | Alias                             | Server | Accepted alias for `STORY_LEADS_API_KEY`.                                                |
+| `AARLA_STORY_LEADS_API_KEY`            | Deprecated alias                  | Server | Prefer `STORY_LEADS_API_KEY`.                                                            |
+| `OPENAI_API_KEY`                       | Optional fallback                 | Server | OpenAI API key when no Studio encrypted secret exists.                                   |
+| `META_ACCESS_TOKEN`                    | Optional fallback                 | Server | Meta CAPI access token when no Studio encrypted secret exists.                           |
+| `META_DATASET_ID`                      | Optional fallback                 | Server | Meta dataset/pixel ID for CAPI.                                                          |
+| `NEXT_PUBLIC_META_PIXEL_ID`            | Optional                          | Public | Browser Meta Pixel ID.                                                                   |
+| `NEXT_PUBLIC_GTM_ID`                   | Optional                          | Public | Google Tag Manager container ID.                                                         |
+| `NEXT_PUBLIC_GA4_MEASUREMENT_ID`       | Optional                          | Public | GA4 measurement ID.                                                                      |
+| `NEXT_PUBLIC_CLARITY_PROJECT_ID`       | Optional                          | Public | Microsoft Clarity project ID.                                                            |
+| `MAX_UPLOAD_BYTES`                     | Optional                          | Server | Max brief upload size. Defaults to `10485760`.                                           |
+| `DEFAULT_CURRENCY`                     | Optional                          | Server | ISO currency code. Defaults to `INR`.                                                    |
+| `CRON_SECRET`                          | Optional                          | Server | Reserved for cron endpoints. Must be at least 16 characters if set.                      |
 
 ## 22. Troubleshooting
 

@@ -9,6 +9,15 @@ export type CustomerProject = {
   id: string;
   title: string;
   brief: string;
+  is_draft: boolean;
+  draft_document?: unknown;
+  production_started_at?: string | null;
+  occasion_id?: string | null;
+  person_id?: string | null;
+  task_owner?: string;
+  task_due_at?: string | null;
+  shopify_order_id?: string | null;
+  shopify_order_state?: string;
   gift_brief?: unknown;
   kind: string;
   customer_type: string | null;
@@ -24,8 +33,8 @@ export type CustomerProject = {
   razorpay_url: string | null;
   upi_id: string | null;
   shopify_order_reference: string | null;
-  tracking_reference?:string|null;
-  tracking_url?:string|null;
+  tracking_reference?: string | null;
+  tracking_url?: string | null;
   created_at: string;
 };
 export async function projectsFor(accountId: string) {

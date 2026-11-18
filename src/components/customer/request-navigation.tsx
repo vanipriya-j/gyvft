@@ -1,5 +1,5 @@
 import Link from "next/link";
-import styles from "./request.module.css";
+import { GiftSectionSelect } from "./journey-controls";
 export function RequestNavigation({
   id,
   view,
@@ -9,23 +9,35 @@ export function RequestNavigation({
   view: string;
   optionCount: number;
 }) {
+  const sections = [
+    ["overview", "Overview"],
+    ["brief", "Brief"],
+    ["options", `Options (${optionCount})`],
+    ["quote", "Quote & pay"],
+    ["design", "Design"],
+    ["delivery", "Delivery"],
+    ["moments", "Moments"],
+    ["messages", "Messages"],
+    ["activity", "Activity"],
+  ].map(([key, label]) => ({
+    id: key,
+    label,
+    href: `/account/projects/${id}${key === "options" ? "/options" : key === "overview" ? "" : `?view=${key}`}`,
+  }));
   return (
-    <nav className={styles.nav} aria-label="Gift workspace">
-      {[
-        ["overview", "Overview"],
-        ["options", `Options (${optionCount})`],
-        ["quote", "Quote & payment"],
-        ["activity", "Activity"],
-        ["messages", "Messages"],
-      ].map(([name, label]) => (
-        <Link
-          key={name}
-          href={`/account/projects/${id}${name === "options" ? "/options" : name === "overview" ? "" : `?view=${name}`}`}
-          aria-current={view === name ? "page" : undefined}
-        >
-          {label}
-        </Link>
-      ))}
-    </nav>
+    <>
+      <nav className="app-tabs" aria-label="Gift sections">
+        {sections.map((s) => (
+          <Link
+            key={s.id}
+            href={s.href}
+            aria-current={view === s.id ? "page" : undefined}
+          >
+            {s.label}
+          </Link>
+        ))}
+      </nav>
+      <GiftSectionSelect value={view} sections={sections} />
+    </>
   );
 }

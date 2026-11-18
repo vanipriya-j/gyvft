@@ -1,5 +1,7 @@
 # GYVFT user manual
 
+The current individual gifting and Operations release is documented in [Approved gifting release](APPROVED-GIFTING-RELEASE.md). Use `/account` for customers and `/operations` for the team. That guide covers the complete quote, advance, artwork, official order, balance, delivery, feedback/photo-permission and optional people/occasion flows. Customer passwords and the operator secret are separate.
+
 ## Customers
 
 ### Create your account

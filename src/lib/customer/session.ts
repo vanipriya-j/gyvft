@@ -23,9 +23,14 @@ export async function getCustomerAccount(): Promise<CustomerAccount | null> {
   >`SELECT a.id, a.email FROM gyvft_customer_sessions s JOIN gyvft_customer_accounts a ON a.id = s.account_id WHERE s.token_hash = ${hashOpaqueToken(token)} AND s.expires_at > now() AND a.is_active = true LIMIT 1`;
   return rows[0] ?? null;
 }
-export async function requireCustomerAccount() {
+export async function requireCustomerAccount(returnTo?: string) {
   const account = await getCustomerAccount();
-  if (!account) redirect("/account/login");
+  if (!account)
+    redirect(
+      returnTo && returnTo.startsWith("/account/")
+        ? `/account/login?next=${encodeURIComponent(returnTo)}`
+        : "/account/login",
+    );
   return account;
 }
 export async function createCustomerSession(accountId: string) {

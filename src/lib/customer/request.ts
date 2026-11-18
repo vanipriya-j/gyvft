@@ -1,4 +1,5 @@
 import "server-only";
+import { momentsFor } from "./moments";
 import { ownedProject } from "./data";
 import { getSql } from "@/lib/database/client";
 import type { GiftSelection } from "./gift-workspace-model";
@@ -52,7 +53,7 @@ export async function requestForAccount(id: string, accountId: string) {
   >`
     SELECT o.id,o.title,o.image_data IS NOT NULL AS has_image FROM gyvft_gift_options o
     LEFT JOIN gyvft_gift_visibility v ON v.project_id=o.project_id AND v.option_id=o.id AND v.kind='curated'
-    WHERE o.project_id=${id}::uuid AND o.published=true AND COALESCE(v.hidden,false)=false ORDER BY o.created_at,o.id`;
+    WHERE o.project_id=${id}::uuid AND o.published=true AND o.operator_hidden=false AND COALESCE(v.hidden,false)=false ORDER BY o.created_at,o.id`;
   const [address] =
     await sql`SELECT * FROM customer_delivery_addresses WHERE project_id=${id}::uuid`;
   const [upi] =
@@ -67,5 +68,22 @@ export async function requestForAccount(id: string, accountId: string) {
     options,
     address,
     upi,
+    moments: await momentsFor(id, accountId),
+    briefRevisions: await sql<
+      {
+        version: number;
+        document: { title?: string; story?: string };
+        created_at: string;
+      }[]
+    >`SELECT version,document,created_at FROM gyvft_gift_brief_revisions WHERE project_id=${id}::uuid ORDER BY version DESC`,
+    changes: await sql<
+      {
+        id: string;
+        body: string;
+        status: string;
+        kind: string;
+        version: number;
+      }[]
+    >`SELECT c.id,c.body,c.status,a.kind,a.version FROM gyvft_gift_changes c JOIN customer_project_approvals a ON a.id=c.approval_id WHERE c.project_id=${id}::uuid ORDER BY c.created_at DESC`,
   };
 }

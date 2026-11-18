@@ -1,4 +1,5 @@
 "use client";
+import { useHydrated } from "@/hooks/use-hydrated";
 /* eslint-disable @next/next/no-img-element -- Private hamper photos are served through an ownership-checked endpoint. */
 import {
   useEffect,
@@ -41,10 +42,10 @@ import {
   toggleGiftOption,
 } from "@/app/account/projects/[id]/options/actions";
 const button =
-  "rounded-lg border border-border px-4 py-2.5 text-sm disabled:opacity-50";
-const primary = button + " bg-olive-dark text-white";
+  "app-button rounded-lg border border-border px-4 py-2.5 text-sm disabled:opacity-50";
+const primary = button + " app-button primary";
 const field =
-  "mt-1 w-full rounded-lg border border-border bg-paper px-3 py-2.5";
+  "app-input mt-1 w-full rounded-lg border border-border bg-paper px-3 py-2.5";
 const icons = {
   bottle: Milk,
   dabara: Coffee,
@@ -128,16 +129,21 @@ export function GiftWorkspace({
   projectId,
   initial,
   readOnly,
+  initialRecipients,
 }: {
   projectId: string;
   initial: Data;
   readOnly: boolean;
+  initialRecipients?: number;
 }) {
   const router = useRouter();
+  const hydrated = useHydrated();
   const [options, setOptions] = useState(initial.options),
     [drafts, setDrafts] = useState(initial.drafts),
     [selections, setSelections] = useState(initial.selections);
-  const [screen, setScreen] = useState<"options" | "workspace">("options"),
+  const [screen, setScreen] = useState<"options" | "workspace" | "chosen">(
+      "options",
+    ),
     [showHidden, setShowHidden] = useState(false),
     [active, setActive] = useState<SavedGiftDraft | null>(null),
     [doc, setDoc] = useState<GiftDraft>(emptyGiftDraft()),
@@ -146,11 +152,13 @@ export function GiftWorkspace({
     [saving, setSaving] = useState(false),
     [busy, setBusy] = useState(false),
     [saveError, setSaveError] = useState(false);
+  const [curated, setCurated] = useState<GiftOption | null>(null);
   const [product, setProduct] = useState<string | null>(null),
     [editKey, setEditKey] = useState<string | null>(null),
     [variants, setVariants] = useState<Record<string, string>>({}),
     [undo, setUndo] = useState<GiftDraft[]>([]);
   const draftRows = useRef(initial.drafts);
+  const productOpener = useRef<HTMLElement | null>(null);
   const track = useRef<HTMLDivElement>(null),
     opLock = useRef(false),
     saveTask = useRef<Promise<SavedGiftDraft | null> | null>(null),
@@ -316,13 +324,15 @@ export function GiftWorkspace({
         count < 26
           ? `Option ${String.fromCharCode(65 + count)}`
           : `Your option ${draftRows.current.length + 1}`;
-      let next = copy ? structuredClone(copy) : emptyGiftDraft(label);
+      let next = copy
+        ? structuredClone(copy)
+        : { ...emptyGiftDraft(label), recipients: initialRecipients || 1 };
       next.label = label;
       if (from) {
         next = {
           ...next,
           based_on: from.id,
-          recipients: from.pricing.quantity,
+          recipients: initialRecipients || from.pricing.quantity,
           lines: from.contents.map((item) => ({
             key: crypto.randomUUID(),
             source: {
@@ -400,6 +410,10 @@ export function GiftWorkspace({
       });
       return;
     }
+    productOpener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     setProduct(id);
     setEditKey(key || null);
     setVariants(
@@ -428,6 +442,48 @@ export function GiftWorkspace({
         : [...doc.lines, line],
     });
     setProduct(null);
+  }
+  function curatedDocument(o: GiftOption): GiftDraft {
+    return {
+      ...emptyGiftDraft(o.title),
+      based_on: o.id,
+      recipients: initialRecipients || o.pricing.quantity,
+      lines: o.contents.map((item) => ({
+        key: crypto.randomUUID(),
+        source: { kind: "curated" as const, optionId: o.id, key: item.key },
+        name: item.name,
+        unit_paise: item.unit_paise,
+        quantity: item.quantity,
+        variants: {},
+      })),
+    };
+  }
+  async function chooseCurated() {
+    if (!curated) return;
+    await act(async () => {
+      const row = await saveWorkspaceDraft(
+        projectId,
+        crypto.randomUUID(),
+        0,
+        curatedDocument(curated),
+      );
+      if (!row.ok) {
+        setMessage(row.message);
+        return;
+      }
+      const result = await submitWorkspaceQuote(
+        projectId,
+        row.draft.id,
+        row.draft.version,
+        crypto.randomUUID(),
+      );
+      if (!result.ok) {
+        setMessage(result.message);
+        return;
+      }
+      router.push(`/account/projects/${projectId}`);
+      router.refresh();
+    });
   }
   async function requestQuote() {
     await act(async () => {
@@ -459,7 +515,7 @@ export function GiftWorkspace({
   const activeQuoted = selections.some(
     (s) => s.draft_id === active?.id && s.quoted,
   );
-  const disabled = readOnly || busy;
+  const disabled = readOnly || busy || !hydrated;
   const hiddenCount =
     options.filter((o) => o.hidden).length +
     drafts.filter((d) => d.hidden).length;
@@ -486,11 +542,11 @@ export function GiftWorkspace({
               </p>
             </div>
             <button
-              className={primary}
+              className={button + " app-button quiet"}
               disabled={disabled}
               onClick={() => void create()}
             >
-              Build my option
+              Start from scratch
             </button>
           </div>
           <label className="flex items-center gap-2 text-sm">
@@ -504,7 +560,7 @@ export function GiftWorkspace({
           <div className="grid gap-7 md:grid-cols-2">
             {options
               .filter((o) => showHidden || !o.hidden)
-              .map((o, index) => (
+              .map((o) => (
                 <article
                   key={o.id}
                   className="min-w-0 border-b border-border pb-6"
@@ -539,13 +595,25 @@ export function GiftWorkspace({
                     ))}
                   </ul>
                   <IndicativePrice pricing={o.pricing} />
-                  <button
-                    className={button + " mt-5"}
-                    disabled={disabled}
-                    onClick={() => void create(o)}
-                  >
-                    Make my own from {String.fromCharCode(65 + index)}
-                  </button>
+                  <div className="app-actions">
+                    <button
+                      className={primary}
+                      disabled={disabled}
+                      onClick={() => {
+                        setCurated(o);
+                        setScreen("chosen");
+                      }}
+                    >
+                      Choose this option
+                    </button>
+                    <button
+                      className={button + " mt-5"}
+                      disabled={disabled}
+                      onClick={() => void create(o)}
+                    >
+                      Customise a copy
+                    </button>
+                  </div>
                 </article>
               ))}
             {drafts
@@ -611,6 +679,58 @@ export function GiftWorkspace({
             </p>
           )}
         </>
+      ) : screen === "chosen" && curated ? (
+        <div className="app-stack">
+          <button
+            className="app-button quiet"
+            onClick={() => setScreen("options")}
+          >
+            ← Back to options
+          </button>
+          <div className="app-title">
+            <h2>Review your chosen gift</h2>
+            <span className="app-badge">{curated.title}</span>
+          </div>
+          <div className="app-grid">
+            <figure>
+              {curated.has_image && (
+                <img
+                  className="app-image"
+                  src={`/api/customer-assets/gift-option/${curated.id}`}
+                  alt={curated.title}
+                />
+              )}
+              <figcaption className="app-note">
+                Visual direction · production artwork follows
+              </figcaption>
+            </figure>
+            <section className="app-panel">
+              <h2>Composition</h2>
+              <GiftSnapshot document={curatedDocument(curated)} />
+              <IndicativePrice pricing={curated.pricing} />
+              <div className="app-actions">
+                <button
+                  className={primary}
+                  disabled={disabled}
+                  onClick={() => void chooseCurated()}
+                >
+                  Request quote
+                </button>
+                <button
+                  className={button}
+                  disabled={disabled}
+                  onClick={() => void create(curated)}
+                >
+                  Customise a copy
+                </button>
+              </div>
+              <p className="app-note">
+                Sending your composition does not approve a price or place an
+                order.
+              </p>
+            </section>
+          </div>
+        </div>
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -792,7 +912,7 @@ export function GiftWorkspace({
                               : Gift;
                           return (
                             <article key={l.key} className="min-w-0">
-                              <div className="grid h-28 place-items-center rounded-lg bg-surface">
+                              <div className="grid h-12 place-items-center rounded-lg bg-surface">
                                 <Icon size={40} strokeWidth={1.3} />
                               </div>
                               <h4 className="mt-2 text-sm">{l.name}</h4>
@@ -892,7 +1012,7 @@ export function GiftWorkspace({
                       </div>
                       <div
                         ref={track}
-                        className="flex max-w-full gap-3 overflow-x-auto pb-3"
+                        className="flex max-w-full gap-3 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                       >
                         {catalogue.map((p) => {
                           const Icon = icons[p.id];
@@ -915,6 +1035,7 @@ export function GiftWorkspace({
                               </p>
                               <button
                                 type="button"
+                                aria-label={`Choose & add ${p.name}`}
                                 className={button + " mt-auto px-2 text-xs"}
                                 onClick={() => addProduct(p.id)}
                               >
@@ -1085,7 +1206,7 @@ export function GiftWorkspace({
                       disabled={!doc.lines.length || saving}
                       onClick={() => void requestQuote()}
                     >
-                      Select this option & request quote
+                      Request quote
                     </button>
                   </div>
                 )}
@@ -1114,7 +1235,7 @@ export function GiftWorkspace({
           </div>
         </>
       )}
-      {latest && (
+      {latest && screen !== "workspace" && screen !== "chosen" && (
         <section className="rounded-xl border-2 border-olive p-5">
           <div className="mb-4 flex flex-wrap justify-between gap-3">
             <div>
@@ -1152,12 +1273,21 @@ export function GiftWorkspace({
       >
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl border border-border bg-paper p-6">
+          <Dialog.Content
+            className="app-dialog"
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              productOpener.current?.focus();
+            }}
+          >
             <div className="flex items-center justify-between">
               <Dialog.Title className="font-serif text-2xl">
                 {itemProduct?.name}
               </Dialog.Title>
-              <Dialog.Close aria-label="Close product options">
+              <Dialog.Close
+                className="app-button"
+                aria-label="Close product options"
+              >
                 <X size={20} />
               </Dialog.Close>
             </div>

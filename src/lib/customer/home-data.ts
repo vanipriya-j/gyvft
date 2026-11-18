@@ -45,19 +45,19 @@ export async function homeGifts(
         approval.kind AS pending_kind,
         EXISTS(SELECT 1 FROM customer_payment_submissions ps WHERE ps.project_id=p.id AND ps.status='pending') AS pending_payment,
         (SELECT count(*)::int FROM gyvft_gift_options o LEFT JOIN gyvft_gift_visibility v ON v.project_id=o.project_id AND v.option_id=o.id AND v.kind='curated'
-          WHERE o.project_id=p.id AND o.published AND NOT COALESCE(v.hidden,false)) AS option_count,
+          WHERE o.project_id=p.id AND o.published AND NOT o.operator_hidden AND NOT COALESCE(v.hidden,false)) AS option_count,
         EXISTS(SELECT 1 FROM gyvft_gift_selections s WHERE s.project_id=p.id) AS quote_requested,
         COALESCE((SELECT '/api/customer-assets/approval/' || a.id FROM customer_project_approvals a
           WHERE a.project_id=p.id AND a.image_data IS NOT NULL AND NOT EXISTS(SELECT 1 FROM customer_project_approvals n WHERE n.project_id=a.project_id AND n.kind=a.kind AND n.version>a.version)
           ORDER BY CASE WHEN a.kind='design' THEN 0 ELSE 1 END,a.created_at DESC,a.id LIMIT 1),
           (SELECT '/api/customer-assets/gift-option/' || o.id FROM gyvft_gift_options o LEFT JOIN gyvft_gift_visibility v ON v.project_id=o.project_id AND v.option_id=o.id AND v.kind='curated'
-            WHERE o.project_id=p.id AND o.published AND NOT COALESCE(v.hidden,false) ORDER BY o.created_at,o.id LIMIT 1)) AS image,
+            WHERE o.project_id=p.id AND o.published AND NOT o.operator_hidden AND NOT COALESCE(v.hidden,false) ORDER BY o.created_at,o.id LIMIT 1)) AS image,
         p.created_at
       FROM customer_projects p
       LEFT JOIN LATERAL (SELECT a.kind FROM customer_project_approvals a WHERE a.project_id=p.id AND a.status='pending'
         AND NOT EXISTS(SELECT 1 FROM customer_project_approvals n WHERE n.project_id=a.project_id AND n.kind=a.kind AND n.version>a.version)
         ORDER BY CASE WHEN a.kind='design' THEN 0 ELSE 1 END,a.created_at DESC LIMIT 1) approval ON true
-      WHERE p.customer_account_id=${accountId}::uuid AND p.stage<10
+      WHERE p.customer_account_id=${accountId}::uuid AND NOT p.is_draft AND p.stage<10
     ), ranked AS (
       SELECT * FROM cards ORDER BY demo,
         CASE WHEN pending_kind IS NOT NULL THEN 0

@@ -239,7 +239,7 @@ export function CustomerVisuals({
         </Rail>
       ) : (
         <Rail kicker="Your stories, coming to life" title="Gifts taking shape">
-          <Link href="/tell-your-story" className={tile + " block p-6"}>
+          <Link href="/account/gifts/new" className={tile + " block p-6"}>
             <Gift size={36} strokeWidth={1} />
             <h3 className="mt-5 font-serif text-2xl">
               Who are you gifting next?
@@ -296,7 +296,7 @@ export function CustomerVisuals({
                   A little thought goes a long way.
                 </p>
                 <Link
-                  href={o.href || "/tell-your-story"}
+                  href={o.href || "/account/gifts/new"}
                   className="mt-3 inline-flex items-center gap-1 rounded-lg bg-olive-dark px-4 py-2 text-xs text-white"
                 >
                   {o.href ? "Plan this gift" : "Find a gift"}{" "}

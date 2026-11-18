@@ -1,4 +1,5 @@
 "use client";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 import { startTransition, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -12,9 +13,20 @@ import {
 
 type AuthMode = "login" | "signup" | "recover" | "reset";
 
-export function CustomerAuth({ resetToken }: { resetToken?: string }) {
+export function CustomerAuth({
+  resetToken,
+  next,
+  initialMode,
+}: {
+  resetToken?: string;
+  next?: string;
+  initialMode?: AuthMode;
+}) {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>(resetToken ? "reset" : "login");
+  const hydrated = useHydrated();
+  const [mode, setMode] = useState<AuthMode>(
+    resetToken ? "reset" : initialMode || "login",
+  );
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [successful, setSuccessful] = useState(false);
@@ -55,7 +67,9 @@ export function CustomerAuth({ resetToken }: { resetToken?: string }) {
           result.redirectTo === "/account" ||
           result.redirectTo === "/account/login"
         ) {
-          router.replace(result.redirectTo);
+          router.replace(
+            result.redirectTo === "/account" && next ? next : result.redirectTo,
+          );
         } else if (submittedMode === "reset") {
           setMode("login");
           setShowPassword(false);
@@ -86,7 +100,7 @@ export function CustomerAuth({ resetToken }: { resetToken?: string }) {
             <button
               key={value}
               type="button"
-              disabled={busy}
+              disabled={busy || !hydrated}
               aria-pressed={mode === value}
               className={
                 mode === value
@@ -108,7 +122,10 @@ export function CustomerAuth({ resetToken }: { resetToken?: string }) {
       )}
 
       <form onSubmit={submit} className="space-y-5" aria-busy={busy}>
-        <fieldset disabled={busy} className="space-y-5 disabled:opacity-60">
+        <fieldset
+          disabled={busy || !hydrated}
+          className="space-y-5 disabled:opacity-60"
+        >
           {mode !== "reset" && (
             <label
               className="block text-sm font-medium"
@@ -206,7 +223,7 @@ export function CustomerAuth({ resetToken }: { resetToken?: string }) {
         {mode === "login" ? (
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || !hydrated}
             className="text-sm underline underline-offset-4 disabled:opacity-50"
             onClick={() => changeMode("recover")}
           >
@@ -215,7 +232,7 @@ export function CustomerAuth({ resetToken }: { resetToken?: string }) {
         ) : mode === "recover" || mode === "reset" ? (
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || !hydrated}
             className="text-sm underline underline-offset-4 disabled:opacity-50"
             onClick={() => changeMode("login")}
           >

@@ -128,6 +128,7 @@ export const draftSchema = z.object({
 });
 export type GiftDraft = z.infer<typeof draftSchema>;
 export type GiftOption = {
+  operator_hidden?: boolean;
   id: string;
   title: string;
   description: string;

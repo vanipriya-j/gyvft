@@ -135,7 +135,7 @@ export async function saveRequestDates(id: string, data: FormData) {
   try {
     limit(account.id);
     const rows =
-      await getSql()`UPDATE customer_projects SET occasion_date=${parsed.data.occasion_date || null}::date,delivery_date=${parsed.data.delivery_date || null}::date WHERE id=${id}::uuid AND customer_account_id=${account.id}::uuid RETURNING id`;
+      await getSql()`UPDATE customer_projects SET occasion_date=${parsed.data.occasion_date || null}::date,delivery_date=${parsed.data.delivery_date || null}::date WHERE id=${id}::uuid AND customer_account_id=${account.id}::uuid AND stage<7 AND production_started_at IS NULL RETURNING id`;
     revalidatePath("/account");
     revalidatePath(`/account/projects/${id}`);
     return {
