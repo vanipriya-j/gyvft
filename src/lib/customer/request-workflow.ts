@@ -33,6 +33,12 @@ export function requestWorkflow(input: {
     (!input.selectionId || proposal.gift_selection_id === input.selectionId)
       ? proposal
       : null;
+  if (input.stage < 7 && input.selectionId && !currentQuote)
+    return "quote_requested";
+  if (input.stage < 7 && currentQuote?.status === "pending")
+    return "quote_review";
+  if (input.stage < 7 && currentQuote?.status === "changes_requested")
+    return "quote_changes";
   if (input.kind === "enquiry") {
     if (currentQuote?.status === "pending") return "quote_review";
     if (currentQuote?.status === "changes_requested") return "quote_changes";
@@ -52,6 +58,8 @@ export function requestWorkflow(input: {
   if (design?.status === "pending") return "design_review";
   if (design?.status === "changes_requested") return "design_changes";
   if (balanceDue) return "balance_due";
+  if (design?.status === "approved" && input.stage < 7)
+    return "production_ready";
   if (input.stage >= 8) return "packing";
   if (input.stage >= 7) return "production";
   return "design_in_progress";
@@ -70,6 +78,7 @@ export const requestStateLabels: Record<RequestWorkflow, string> = {
   design_changes: "Design changes requested",
   design_in_progress: "Design in progress",
   production: "In production",
+  production_ready: "Ready for production",
   balance_due: "Balance due",
   packing: "Quality check & packing",
   dispatched: "Dispatched",

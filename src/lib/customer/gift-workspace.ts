@@ -12,12 +12,17 @@ import {
 import { validImage } from "./images";
 import { queueNotification } from "./notifications";
 export class GiftWorkspaceError extends Error {}
-export async function giftWorkspace(projectId: string) {
+export async function giftWorkspace(projectId: string, accountId?: string) {
   const sql = getSql();
+  if (accountId) {
+    const [owned] =
+      await sql`SELECT id FROM customer_projects WHERE id=${projectId}::uuid AND customer_account_id=${accountId}::uuid`;
+    if (!owned) throw new GiftWorkspaceError("Request unavailable.");
+  }
   const [options, drafts, selections] = await Promise.all([
     sql<
       GiftOption[]
-    >`SELECT o.id,title,description,contents,pricing,published,image_data IS NOT NULL AS has_image,created_at,COALESCE(v.hidden,false) AS hidden FROM gyvft_gift_options o LEFT JOIN gyvft_gift_visibility v ON v.option_id=o.id AND v.project_id=o.project_id AND v.kind='curated' WHERE o.project_id=${projectId}::uuid ORDER BY created_at,o.id`,
+    >`SELECT o.id,title,description,contents,pricing,published,image_data IS NOT NULL AS has_image,created_at,COALESCE(v.hidden,false) AS hidden,o.operator_hidden FROM gyvft_gift_options o LEFT JOIN gyvft_gift_visibility v ON v.option_id=o.id AND v.project_id=o.project_id AND v.kind='curated' WHERE o.project_id=${projectId}::uuid ORDER BY created_at,o.id`,
     sql<
       SavedGiftDraft[]
     >`SELECT d.id,version,document,updated_at,COALESCE(v.hidden,false) AS hidden FROM gyvft_gift_drafts d LEFT JOIN gyvft_gift_visibility v ON v.option_id=d.id AND v.project_id=d.project_id AND v.kind='draft' WHERE d.project_id=${projectId}::uuid ORDER BY updated_at DESC LIMIT 12`,
@@ -25,7 +30,13 @@ export async function giftWorkspace(projectId: string) {
       GiftSelection[]
     >`SELECT s.id,s.draft_id,s.draft_version,s.snapshot,s.created_at,EXISTS(SELECT 1 FROM customer_project_approvals a WHERE a.gift_selection_id=s.id) AS quoted FROM gyvft_gift_selections s WHERE s.project_id=${projectId}::uuid ORDER BY s.created_at DESC LIMIT 30`,
   ]);
-  return { options, drafts, selections };
+  return {
+    options: accountId
+      ? options.filter((o) => !o.operator_hidden)
+      : options.map((o) => ({ ...o, hidden: !!o.operator_hidden })),
+    drafts,
+    selections,
+  };
 }
 async function editable(tx: Sql, projectId: string, accountId?: string) {
   if (
@@ -34,12 +45,18 @@ async function editable(tx: Sql, projectId: string, accountId?: string) {
   )
     throw new GiftWorkspaceError("Request unavailable.");
   const [project] = accountId
-    ? await tx`SELECT id,kind,customer_email,submission_key FROM customer_projects WHERE id=${projectId}::uuid AND customer_account_id=${accountId}::uuid FOR UPDATE`
-    : await tx`SELECT id,kind,customer_email,submission_key FROM customer_projects WHERE id=${projectId}::uuid FOR UPDATE`;
+    ? await tx`SELECT id,kind,stage,production_started_at,shopify_order_id,shopify_order_reference,shopify_order_state,customer_email,submission_key FROM customer_projects WHERE id=${projectId}::uuid AND customer_account_id=${accountId}::uuid FOR UPDATE`
+    : await tx`SELECT id,kind,stage,production_started_at,shopify_order_id,shopify_order_reference,shopify_order_state,customer_email,submission_key FROM customer_projects WHERE id=${projectId}::uuid FOR UPDATE`;
   if (!project) throw new GiftWorkspaceError("Request unavailable.");
-  if (project.kind === "project")
+  if (
+    project.stage >= 7 ||
+    project.production_started_at ||
+    project.shopify_order_id ||
+    project.shopify_order_reference ||
+    (project.shopify_order_state && project.shopify_order_state !== "pending")
+  )
     throw new GiftWorkspaceError(
-      "This gift is already an order. Message the team to discuss a change.",
+      "This gift is locked for the official order or production. Message the team for support.",
     );
   if (String(project.submission_key || "").startsWith("gyvft-demo-"))
     throw new GiftWorkspaceError(
@@ -201,6 +218,10 @@ export async function setGiftVisibility(
         ? await tx`SELECT id FROM gyvft_gift_options WHERE id=${id}::uuid AND project_id=${projectId}::uuid`
         : await tx`SELECT id FROM gyvft_gift_drafts WHERE id=${id}::uuid AND project_id=${projectId}::uuid`;
     if (!rows[0]) throw new GiftWorkspaceError("Option unavailable.");
+    if (!accountId && kind === "curated") {
+      await tx`UPDATE gyvft_gift_options SET operator_hidden=${hidden} WHERE id=${id}::uuid AND project_id=${projectId}::uuid`;
+      return;
+    }
     await tx`INSERT INTO gyvft_gift_visibility(project_id,option_id,kind,hidden) VALUES(${projectId}::uuid,${id}::uuid,${kind},${hidden}) ON CONFLICT(project_id,option_id,kind) DO UPDATE SET hidden=EXCLUDED.hidden`;
   });
 }

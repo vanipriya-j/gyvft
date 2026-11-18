@@ -471,7 +471,7 @@ function RequestList({
               Clear filters
             </button>
           ) : (
-            <Link href="/tell-your-story" className={`${smallButton} mt-4`}>
+            <Link href="/account/gifts/new" className={`${smallButton} mt-4`}>
               Start a new story <ArrowRight size={14} />
             </Link>
           )}
@@ -955,7 +955,7 @@ export function GiftingDashboard({
                 One place for enquiries, projects and the next step.
               </p>
             </div>
-            <Link href="/tell-your-story" className={smallButton}>
+            <Link href="/account/gifts/new" className={smallButton}>
               <Plus size={14} /> New request
             </Link>
           </div>

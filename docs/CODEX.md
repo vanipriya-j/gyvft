@@ -2,11 +2,15 @@
 
 **Start here when picking up this repo in Codex.**
 
-Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: *Your story. Our telling.*
+Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
-## Mock-up review handoff — 18 November 2026
+## Approved individual gifting application — 19 November 2026
 
-`/design-review.html` Revision 4 is a fictional-data interactive prototype. Its latest refinements do not implement the revised application flow. Before release, carry the three [development acceptance criteria](GYVFT-DESIGN-REVIEW-TEST.md#development-acceptance-criteria) into the real application: 44 × 44 px mobile controls, dialog names matching visible headings, and independently revocable public photo permissions. The mock-up verifies per-photo withdrawal with two featured photos; real persisted permissions, ownership checks and public media access still require implementation and verification. The confirmed payment policy is 50% advance after quote approval and the remaining 50% before dispatch.
+The Revision 4 customer and Operations flow is now implemented in the application. Start at [APPROVED-GIFTING-RELEASE.md](APPROVED-GIFTING-RELEASE.md) for routes, the shared object model, release migration, permissions, Shopify boundaries and verification. `/design-review.html` remains a fictional-data reference, separate from `/account` and `/operations`.
+
+The release adds private brief drafts/history, people/invitations/profiles, linked recurring occasions, version-specific changes, private operator approval drafts/notes/tasks, and independently revocable feedback/photo publication. Customer quote approval unlocks the 50% advance; the balance is due before dispatch. Production and official-order locks are enforced on the server. Named dialogs and 44px mobile targets carry into the real screens.
+
+Apply the explicit customer manifest through the production release build or `/setup`. The build migrates only on `VERCEL_ENV=production`, after successful compilation; previews never migrate the shared DB. Application authentication remains DB-owned, and Shopify requires its own deployment credential. AI curation and institutional circles remain future work.
 
 ## Working customer and Operations gifting flow — 17 November 2026
 
@@ -24,13 +28,13 @@ The reviewed customer flow now includes a two-column curated options page, separ
 
 The current customer release uses **GYVFT-owned email/password accounts and database sessions**, independent of the legacy Studio Supabase Auth code described below. Start with [`CUSTOMER-PORTAL.md`](CUSTOMER-PORTAL.md), [`USER-MANUAL.md`](USER-MANUAL.md) and [`PRODUCT-BACKLOG.md`](PRODUCT-BACKLOG.md). `/setup` installs only the explicit customer migration manifest; `/operations` provides app reports using the existing operator secret. Infrastructure monitoring remains on Vercel; no OpenTelemetry/Grafana service is required. Production still needs the new migrations applied before accounts can be created.
 
-| Doc | Use for |
-|---|---|
-| **This file (`docs/CODEX.md`)** | Current state, what to build next, gotchas |
-| [`README.md`](../README.md) | Full setup: Studio, DB, Auth, integrations, deploy, env table |
-| [`docs/gyvft/IMPLEMENT.md`](gyvft/IMPLEMENT.md) | Public imagery / case-study rules |
-| [`docs/gyvft/review.md`](gyvft/review.md) | Editorial backlog for stories |
-| [`AGENTS.md`](../AGENTS.md) | Next.js caveat (custom version — read `node_modules/next/dist/docs/`) |
+| Doc                                             | Use for                                                               |
+| ----------------------------------------------- | --------------------------------------------------------------------- |
+| **This file (`docs/CODEX.md`)**                 | Current state, what to build next, gotchas                            |
+| [`README.md`](../README.md)                     | Full setup: Studio, DB, Auth, integrations, deploy, env table         |
+| [`docs/gyvft/IMPLEMENT.md`](gyvft/IMPLEMENT.md) | Public imagery / case-study rules                                     |
+| [`docs/gyvft/review.md`](gyvft/review.md)       | Editorial backlog for stories                                         |
+| [`AGENTS.md`](../AGENTS.md)                     | Next.js caveat (custom version — read `node_modules/next/dist/docs/`) |
 
 ---
 
@@ -61,6 +65,7 @@ Public site can send lead emails **without** a database. Studio needs Postgres +
 ## 3. Current `main` status (as of docs refresh)
 
 ### Done and merged
+
 - Public site pages: home, why-gyvft, stories (portfolio), orgs, forms, legal.
 - Storytelling content in `src/content/stories.ts` (16 case studies after Kumon merge).
 - GYVFT image system under `public/images/gyvft/` + docs in `docs/gyvft/`.
@@ -73,15 +78,18 @@ Public site can send lead emails **without** a database. Studio needs Postgres +
 - Studio CRM foundation, RLS migrations, integrations, consent banner, crons.
 
 ### Permanent story redirects (`next.config.ts`)
-| From | To |
-|---|---|
-| `/stories/dancer-gift-sets` | `/stories/various-dance-schools` |
-| `/stories/sishyakulam` | `/stories/various-music-schools` |
+
+| From                                  | To                                   |
+| ------------------------------------- | ------------------------------------ |
+| `/stories/dancer-gift-sets`           | `/stories/various-dance-schools`     |
+| `/stories/sishyakulam`                | `/stories/various-music-schools`     |
 | `/stories/barclays-team-award-badges` | `/stories/natwest-team-event-badges` |
-| `/stories/kumon-winner-gifts` | `/stories/kumon-delegate-gifting` |
+| `/stories/kumon-winner-gifts`         | `/stories/kumon-delegate-gifting`    |
 
 ### Open product / editorial work
+
 See `docs/gyvft/review.md`. Highest signal:
+
 - Various Dance Schools / Various Music Schools still `review`
 - BITS 2001 still `review`
 - Several “ready” stories still have provisional copy
@@ -93,25 +101,26 @@ No open PRs required for the imagery/Kumon work — that is on `main`.
 
 ## 4. Public site map
 
-| Route | Notes |
-|---|---|
-| `/` | Hero + sections via `publicMedia` / `PublicImage` |
-| `/why-gyvft` | Brand story |
-| `/stories` | Grouped portfolio listing |
-| `/stories/[slug]` | Case study detail + related stories |
-| `/for-organisations` | Org page + hero from gyvft homepage assets |
-| `/tell-your-story` | Lead form |
-| `/become-a-merch-partner` | Partner form |
-| `/book-a-discovery` | Discovery form |
-| `/upload-a-brief` | Brief + file upload |
-| `/l/[slug]` | Published campaign landing pages |
-| `/thank-you`, `/privacy`, `/cookies`, `/terms` | Utility / legal |
+| Route                                          | Notes                                             |
+| ---------------------------------------------- | ------------------------------------------------- |
+| `/`                                            | Hero + sections via `publicMedia` / `PublicImage` |
+| `/why-gyvft`                                   | Brand story                                       |
+| `/stories`                                     | Grouped portfolio listing                         |
+| `/stories/[slug]`                              | Case study detail + related stories               |
+| `/for-organisations`                           | Org page + hero from gyvft homepage assets        |
+| `/tell-your-story`                             | Lead form                                         |
+| `/become-a-merch-partner`                      | Partner form                                      |
+| `/book-a-discovery`                            | Discovery form                                    |
+| `/upload-a-brief`                              | Brief + file upload                               |
+| `/l/[slug]`                                    | Published campaign landing pages                  |
+| `/thank-you`, `/privacy`, `/cookies`, `/terms` | Utility / legal                                   |
 
 **Content source of truth for stories:** `src/content/stories.ts`  
 **Homepage image registry:** `src/config/public-media.ts`  
 **Asset inventory:** `docs/gyvft/homepage.json`, `docs/gyvft/case-studies.json`
 
 ### Imagery rules (do not violate)
+
 1. Prefer `public/images/gyvft/...`. Do **not** move assets into `aarla-source` or `brand`.
 2. Do **not** move/rename/regenerate uploaded PNGs unless the user asks. If folder ≠ slug (e.g. Diwali), point the story hero at the existing path (`heroAsset()`).
 3. Statuses: `ready` | `review` | `reference-required`. In production, `reference-required` forces a placeholder in `StoryMedia` even if a file exists.
@@ -232,12 +241,14 @@ tests/unit|e2e|integration         Automated tests
 ## 11. Do / don’t for agents
 
 **Do**
+
 - Read Next local docs before framework changes.
 - Fail-open on secondary integrations (email CRM forward, AI, Meta, webhooks).
 - Keep story slug stable when only the asset folder differs.
 - Preserve human PR description edits if updating PRs.
 
 **Don’t**
+
 - Deploy unless asked.
 - Invent Barclays claims; merge the two cardiologist doctors; reassign music-school products.
 - Layer new hero images over old ones or reintroduce hero-embedded logos.

@@ -439,7 +439,7 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
                 <span className={styles.count}>({gifts.total})</span>
               )}
             </h2>
-            <Link href="/tell-your-story" className={styles.new}>
+            <Link href="/account/gifts/new" className={styles.new}>
               + <span className={styles.mobileText}>New gift</span>
               <span className={styles.desktopText}>Start a new gift</span>
             </Link>
@@ -499,7 +499,7 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
                 section={sections.gifts}
                 media="gift"
                 empty="Your next story starts here."
-                href="/tell-your-story"
+                href="/account/gifts/new"
                 label="Start a new gift"
               />
             )}

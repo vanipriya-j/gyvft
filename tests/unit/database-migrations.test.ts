@@ -157,6 +157,7 @@ describe("database migrations", () => {
       "20261115000001_b2c_pilot.sql",
       "20261116000001_gift_workspace.sql",
       "20261117000001_customer_home.sql",
+      "20261119000001_gifting_journeys.sql",
     ]);
     read
       .mockResolvedValueOnce("CUSTOMER ONLY SQL")
@@ -167,7 +168,8 @@ describe("database migrations", () => {
       .mockResolvedValueOnce("DASHBOARD SQL")
       .mockResolvedValueOnce("PILOT SQL")
       .mockResolvedValueOnce("GIFT WORKSPACE SQL")
-      .mockResolvedValueOnce("CUSTOMER HOME SQL");
+      .mockResolvedValueOnce("CUSTOMER HOME SQL")
+      .mockResolvedValueOnce("GIFT JOURNEYS SQL");
     const { sql, tx } = connection();
     expect(await runPendingMigrations(sql, undefined, "customer")).toEqual([
       "20261112000000_customer_portal.sql",
@@ -179,6 +181,7 @@ describe("database migrations", () => {
       "20261115000001_b2c_pilot.sql",
       "20261116000001_gift_workspace.sql",
       "20261117000001_customer_home.sql",
+      "20261119000001_gifting_journeys.sql",
     ]);
     expect(tx.unsafe).toHaveBeenNthCalledWith(1, "CUSTOMER ONLY SQL");
     expect(tx.unsafe).toHaveBeenNthCalledWith(2, "ACCOUNT SQL");
@@ -189,7 +192,8 @@ describe("database migrations", () => {
     expect(tx.unsafe).toHaveBeenNthCalledWith(7, "PILOT SQL");
     expect(tx.unsafe).toHaveBeenNthCalledWith(8, "GIFT WORKSPACE SQL");
     expect(tx.unsafe).toHaveBeenNthCalledWith(9, "CUSTOMER HOME SQL");
-    expect(read).toHaveBeenCalledTimes(9);
+    expect(tx.unsafe).toHaveBeenNthCalledWith(10, "GIFT JOURNEYS SQL");
+    expect(read).toHaveBeenCalledTimes(10);
   });
   it("fails closed instead of falling back to legacy SQL if the customer migration is missing", async () => {
     await expect(migrationFiles("customer")).rejects.toThrow(

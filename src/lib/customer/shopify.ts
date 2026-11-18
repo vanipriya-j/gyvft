@@ -260,6 +260,22 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
     throw new ShopifyError(
       "Review the approved prices, taxes, delivery charges and customer details before creation.",
     );
+  const [approvedQuote] =
+    await sql`SELECT id,version,status,amount_paise,gift_selection_id FROM customer_project_approvals WHERE project_id=${id}::uuid AND kind='proposal' ORDER BY version DESC LIMIT 1`;
+  const [selectedGift] =
+    await sql`SELECT id,snapshot FROM gyvft_gift_selections WHERE project_id=${id}::uuid ORDER BY created_at DESC,id DESC LIMIT 1`;
+  const [openChange] =
+    await sql`SELECT id FROM gyvft_gift_changes WHERE project_id=${id}::uuid AND status='open' LIMIT 1`;
+  if (
+    !approvedQuote ||
+    approvedQuote.status !== "approved" ||
+    Number(approvedQuote.amount_paise) !== Number(p.total_paise) ||
+    (selectedGift && approvedQuote.gift_selection_id !== selectedGift.id) ||
+    openChange
+  )
+    throw new ShopifyError(
+      "Approve the latest exact quote and resolve changes before creating the official order.",
+    );
   const [address] =
     await sql`SELECT * FROM customer_delivery_addresses WHERE project_id=${id}::uuid`;
   const items =
@@ -301,23 +317,46 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
           ? `+91${phone}`
           : `+${phone}`,
     },
-    lineItems: items.map((i) => ({
-      title: i.name,
-      quantity: i.quantity,
-      priceSet: {
-        shopMoney: {
-          amount: (Number(i.unit_paise) / 100).toFixed(2),
-          currencyCode: "INR",
+    // GYVFT sells the approved custom batch as one Shopify line. Its exact total
+    // avoids per-recipient rounding, and the approved breakdown stays in notes.
+    lineItems: [
+      {
+        title: `GYVFT custom gift order · ${p.title}`,
+        quantity: 1,
+        priceSet: {
+          shopMoney: {
+            amount: (Number(p.total_paise) / 100).toFixed(2),
+            currencyCode: "INR",
+          },
         },
+        requiresShipping: true,
+        properties: [
+          { name: "GYVFT request", value: id },
+          { name: "Approved quote", value: `v${approvedQuote.version}` },
+          ...(selectedGift?.snapshot?.recipients
+            ? [
+                {
+                  name: "Recipients",
+                  value: String(selectedGift.snapshot.recipients),
+                },
+              ]
+            : []),
+        ],
       },
-      requiresShipping: i.item_type === "gift",
-      properties: i.personalisation
-        ? [{ name: "Personalisation", value: i.personalisation }]
-        : [],
-    })),
+    ],
     tags: ["GYVFT", `gyvft_${id}`],
     sourceIdentifier: id,
-    note: `GYVFT personal gifting request ${id}. Approved quote total includes the charges reviewed by the operator.`,
+    note: [
+      `GYVFT personal gifting request ${id}. Approved quote v${approvedQuote.version}.`,
+      "Single custom batch. The approved total includes taxes and the listed charges.",
+      ...items.map(
+        (i) =>
+          `${i.quantity} × ${i.name}: INR ${(Number(i.unit_paise) / 100).toFixed(2)} each${i.personalisation ? ` · ${i.personalisation}` : ""}`,
+      ),
+      ...(selectedGift?.snapshot
+        ? [`Approved gift: ${JSON.stringify(selectedGift.snapshot)}`]
+        : []),
+    ].join("\n"),
     financialStatus:
       Number(p.paid_paise) >= Number(p.total_paise) ? "PAID" : "PARTIALLY_PAID",
     transactions: [
@@ -335,7 +374,12 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
     ],
   };
   const claimed =
-    await sql`UPDATE customer_projects SET shopify_order_state='creating',shopify_order_attempted_at=now() WHERE id=${id}::uuid AND shopify_order_state='pending' AND shopify_order_id IS NULL RETURNING id`;
+    await sql`UPDATE customer_projects SET shopify_order_state='creating',shopify_order_attempted_at=now() WHERE id=${id}::uuid AND shopify_order_state='pending' AND shopify_order_id IS NULL AND shopify_order_reference IS NULL AND total_paise=${p.total_paise} AND paid_paise=${p.paid_paise}
+      AND (SELECT a.id FROM customer_project_approvals a WHERE a.project_id=${id}::uuid AND a.kind='proposal' ORDER BY a.version DESC LIMIT 1)=${approvedQuote.id}::uuid
+      AND (SELECT a.status FROM customer_project_approvals a WHERE a.id=${approvedQuote.id}::uuid)='approved'
+      AND COALESCE((SELECT s.id FROM gyvft_gift_selections s WHERE s.project_id=${id}::uuid ORDER BY s.created_at DESC,s.id DESC LIMIT 1),'00000000-0000-0000-0000-000000000000'::uuid)=COALESCE(${selectedGift?.id || null}::uuid,'00000000-0000-0000-0000-000000000000'::uuid)
+      AND EXISTS(SELECT 1 FROM customer_delivery_addresses a WHERE a.project_id=${id}::uuid AND a.recipient_name=${address.recipient_name} AND a.phone=${address.phone} AND a.address=${address.address} AND a.city=${address.city} AND a.state=${address.state} AND a.postal_code=${address.postal_code})
+      AND NOT EXISTS(SELECT 1 FROM gyvft_gift_changes c WHERE c.project_id=${id}::uuid AND c.status='open') RETURNING id`;
   if (!claimed.length)
     throw new ShopifyError("Order creation is already in progress.");
   try {

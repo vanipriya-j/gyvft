@@ -1,14 +1,12 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 export type ActionResult = { message: string; ok: boolean };
 function Submit({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      disabled={pending}
-      className="mt-4 rounded-full bg-olive-dark px-6 py-3 text-sm text-white disabled:opacity-50"
-    >
+    <button disabled={pending} className="app-button primary mt-4">
       {pending ? "Sending…" : label}
     </button>
   );
@@ -17,15 +15,19 @@ export function ActionForm({
   action,
   label,
   children,
+  successHref,
 }: {
   action: (data: FormData) => Promise<ActionResult>;
   label: string;
-  children: React.ReactNode;
+  successHref?: string;
+  children?: React.ReactNode;
 }) {
+  const router = useRouter();
   const [state, submit] = useActionState(
     async (_: ActionResult, data: FormData) => {
       try {
         const result = await action(data);
+        if (result.ok && successHref) router.push(successHref);
         return result;
       } catch {
         return {
@@ -42,7 +44,7 @@ export function ActionForm({
       {children}
       <Submit label={label} />
       <p
-        role="status"
+        role={state.message && !state.ok ? "alert" : "status"}
         className={`mt-3 text-sm ${state.ok ? "text-olive" : "text-muted-text"}`}
       >
         {state.message}

@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { operationalExtras } from "./operations-workflow";
 import { giftWorkspace } from "./gift-workspace";
 import { getSql } from "@/lib/database/client";
 import type { Sql } from "postgres";
@@ -15,13 +16,14 @@ import { queueNotification } from "./notifications";
 export class PilotError extends Error {}
 export async function pilotList(query = "") {
   const q = `%${query.slice(0, 120)}%`;
-  return getSql()`SELECT p.id,p.title,p.customer_email,p.customer_type,p.kind,p.stage,p.next_action,p.total_paise,p.paid_paise,p.created_at,EXISTS(SELECT 1 FROM customer_project_approvals a WHERE a.project_id=p.id AND a.image_data IS NOT NULL) AS has_mockup FROM customer_projects p WHERE (p.title ILIKE ${q} OR p.customer_email ILIKE ${q}) ORDER BY p.created_at DESC LIMIT 200`;
+  return getSql()`SELECT p.id,p.title,p.customer_email,p.customer_type,p.kind,p.stage,p.next_action,p.total_paise,p.paid_paise,p.created_at,p.task_owner,p.task_due_at,p.production_started_at,p.delivery_date,(SELECT a.status FROM customer_project_approvals a WHERE a.project_id=p.id AND a.kind='proposal' ORDER BY a.version DESC LIMIT 1) AS quote_status,(SELECT a.status FROM customer_project_approvals a WHERE a.project_id=p.id AND a.kind='design' ORDER BY a.version DESC LIMIT 1) AS design_status,EXISTS(SELECT 1 FROM customer_payment_submissions pay WHERE pay.project_id=p.id AND pay.status='pending') AS pending_payment,EXISTS(SELECT 1 FROM gyvft_gift_selections s WHERE s.project_id=p.id) AS has_selection,EXISTS(SELECT 1 FROM gyvft_gift_options o WHERE o.project_id=p.id AND NOT o.operator_hidden) AS visible_options,EXISTS(SELECT 1 FROM customer_project_approvals a WHERE a.project_id=p.id AND a.image_data IS NOT NULL) AS has_mockup FROM customer_projects p WHERE p.is_draft=false AND (p.title ILIKE ${q} OR p.customer_email ILIKE ${q}) ORDER BY p.created_at DESC LIMIT 200`;
 }
 export async function pilotDetail(id: string) {
   const sql = getSql();
   const [project] =
     await sql`SELECT * FROM customer_projects WHERE id=${id}::uuid`;
-  if (!project) throw new PilotError("Request unavailable.");
+  if (!project || project.is_draft)
+    throw new PilotError("Request unavailable.");
   const [
     approvals,
     messages,
@@ -43,6 +45,7 @@ export async function pilotDetail(id: string) {
   ]);
   return {
     workspace: await giftWorkspace(id),
+    journey: await operationalExtras(id),
     project,
     approvals,
     messages,
@@ -75,7 +78,7 @@ export async function mutatePilot(raw: Record<string, unknown>) {
     const tx = txRaw as unknown as Sql;
     const [p] =
       await tx`SELECT * FROM customer_projects WHERE id=${id}::uuid FOR UPDATE`;
-    if (!p) throw new PilotError("Request unavailable.");
+    if (!p || p.is_draft) throw new PilotError("Request unavailable.");
     if (String(p.submission_key || "").startsWith("gyvft-demo-"))
       throw new PilotError(
         "Sample requests are read-only. Use a real enquiry to run the gifting workflow.",
@@ -96,6 +99,20 @@ export async function mutatePilot(raw: Record<string, unknown>) {
       await tx`INSERT INTO customer_project_messages(project_id,sender,body) VALUES(${id}::uuid,'team',${body.data})`;
       eventTitle = "New message from GYVFT";
     } else if (op === "publish") {
+      if (raw.saved_draft_version !== undefined) {
+        const [draft] =
+          await tx`SELECT document,version,image_data,image_type FROM gyvft_gift_approval_drafts WHERE project_id=${id}::uuid AND kind=${String(raw.kind)} FOR UPDATE`;
+        if (!draft || Number(draft.version) !== Number(raw.saved_draft_version))
+          throw new PilotError(
+            "The draft changed. Refresh and preview the latest version.",
+          );
+        Object.assign(raw, draft.document);
+        if (draft.image_data)
+          raw.image = {
+            data: Buffer.from(draft.image_data).toString("base64"),
+            mime: draft.image_type,
+          };
+      }
       const a = z
         .object({
           kind: z.enum(["proposal", "design"]),
@@ -105,13 +122,18 @@ export async function mutatePilot(raw: Record<string, unknown>) {
         .safeParse(raw);
       if (!a.success)
         throw new PilotError("Add an approval title and description.");
-      if (a.data.kind === "design" && p.stage >= 7)
+      if (p.production_started_at || p.stage >= 7)
         throw new PilotError(
           "This order is already in fulfilment. Resolve changes before publishing another design.",
         );
-      if (a.data.kind === "proposal" && p.kind === "project")
+      if (
+        a.data.kind === "proposal" &&
+        (p.shopify_order_id ||
+          p.shopify_order_reference ||
+          p.shopify_order_state !== "pending")
+      )
         throw new PilotError(
-          "This order has already been converted. Resolve pricing changes before publishing another order quote.",
+          "The official Shopify order is linked. Its quoted amount cannot be changed here.",
         );
       let items = null,
         total = null;
@@ -132,6 +154,10 @@ export async function mutatePilot(raw: Record<string, unknown>) {
           );
         }
       }
+      if (total !== null && Number(p.paid_paise) > total)
+        throw new PilotError(
+          "The revised quote is below verified payments. Reconcile receipts before changing the quote.",
+        );
       let selectionId: string | null = null;
       if (a.data.kind === "proposal") {
         const [latest] =
@@ -177,6 +203,8 @@ export async function mutatePilot(raw: Record<string, unknown>) {
       const [version] =
         await tx`SELECT COALESCE(MAX(version),0)+1 AS n FROM customer_project_approvals WHERE project_id=${id}::uuid AND kind=${a.data.kind}`;
       await tx`INSERT INTO customer_project_approvals(project_id,kind,version,title,description,amount_paise,items,image_data,image_type,gift_selection_id) VALUES(${id}::uuid,${a.data.kind},${Number(version.n)},${a.data.title},${a.data.description},${total},${items ? tx.json(items) : null},${image},${mime},${selectionId}::uuid)`;
+      await tx`UPDATE gyvft_gift_changes c SET status='addressed' FROM customer_project_approvals a WHERE c.approval_id=a.id AND c.project_id=${id}::uuid AND a.kind=${a.data.kind}`;
+      await tx`DELETE FROM gyvft_gift_approval_drafts WHERE project_id=${id}::uuid AND kind=${a.data.kind}`;
       await tx`UPDATE customer_projects SET stage=${a.data.kind === "proposal" ? 3 : 6},next_action=${a.data.kind === "proposal" ? "Review the proposal and tell us your decision." : "Review your latest design and approve it or request changes."} WHERE id=${id}::uuid`;
       eventTitle = `${a.data.kind === "proposal" ? "Proposal" : "Design"} shared · v${version.n}`;
       eventBody = a.data.title;
@@ -230,12 +258,20 @@ export async function mutatePilot(raw: Record<string, unknown>) {
       if (r.data.razorpay_url && !safePaymentUrl(r.data.razorpay_url))
         throw new PilotError("Use an approved HTTPS Razorpay payment link.");
       if (
-        p.shopify_order_id &&
+        p.shopify_order_reference &&
         r.data.shopify_order_reference !== p.shopify_order_reference
       )
         throw new PilotError(
           "A linked Shopify order reference cannot be replaced manually.",
         );
+      if (r.data.shopify_order_reference && !p.shopify_order_reference) {
+        const [quote] =
+          await tx`SELECT status FROM customer_project_approvals WHERE project_id=${id}::uuid AND kind='proposal' ORDER BY version DESC LIMIT 1`;
+        if (p.kind !== "project" || quote?.status !== "approved")
+          throw new PilotError(
+            "Approve the latest quote before linking an official order.",
+          );
+      }
       await tx`UPDATE customer_projects SET upi_id=${r.data.upi_id || null},razorpay_url=${r.data.razorpay_url || null},shopify_order_reference=${r.data.shopify_order_reference || null} WHERE id=${id}::uuid`;
       eventTitle = "Payment or order instructions updated";
       eventBody =
@@ -269,6 +305,14 @@ export async function mutatePilot(raw: Record<string, unknown>) {
         const amount = payment
           ? Number(payment.amount_paise)
           : z.number().int().positive().max(9999999999).parse(raw.amount_paise);
+        if (
+          payment &&
+          raw.expected_amount_paise !== undefined &&
+          Number(raw.expected_amount_paise) !== Number(payment.amount_paise)
+        )
+          throw new PilotError(
+            "This submission changed. Refresh and check the corrected bank receipt before verifying.",
+          );
         if (payment && payment.status !== "pending")
           throw new PilotError(
             "This reference has already received a decision.",
@@ -301,6 +345,8 @@ export async function mutatePilot(raw: Record<string, unknown>) {
           "Add a valid stage and customer-visible next step.",
         );
       const stage = r.data.stage;
+      if ((p.production_started_at || p.stage >= 7) && stage < 7)
+        throw new PilotError("Production has started. This gift is locked.");
       if (![1, 2, 7, 8, 9, 10, 11].includes(stage))
         throw new PilotError(
           "Quotes, approvals and payment actions control that stage.",
@@ -316,6 +362,16 @@ export async function mutatePilot(raw: Record<string, unknown>) {
         )
           throw new PilotError(
             "Move the order forward one fulfilment stage at a time.",
+          );
+        if (stage === 7 && !p.shopify_order_id && !p.shopify_order_reference)
+          throw new PilotError(
+            "Link the official Shopify order before starting production.",
+          );
+        const [openChanges] =
+          await tx`SELECT id FROM gyvft_gift_changes WHERE project_id=${id}::uuid AND status='open' LIMIT 1`;
+        if (openChanges)
+          throw new PilotError(
+            "Resolve customer change requests before starting production.",
           );
         const [design] =
           await tx`SELECT status FROM customer_project_approvals WHERE project_id=${id}::uuid AND kind='design' ORDER BY version DESC LIMIT 1`;
@@ -349,7 +405,7 @@ export async function mutatePilot(raw: Record<string, unknown>) {
       const tracking = secureLink(r.data.tracking_url);
       if (tracking === null)
         throw new PilotError("Use a valid HTTPS tracking link.");
-      await tx`UPDATE customer_projects SET stage=${stage},next_action=${r.data.next_action},tracking_reference=${r.data.tracking_reference || p.tracking_reference || null},tracking_url=${tracking || p.tracking_url || null} WHERE id=${id}::uuid`;
+      await tx`UPDATE customer_projects SET stage=${stage},production_started_at=CASE WHEN ${stage}>=7 THEN COALESCE(production_started_at,now()) ELSE production_started_at END,next_action=${r.data.next_action},tracking_reference=${r.data.tracking_reference || p.tracking_reference || null},tracking_url=${tracking || p.tracking_url || null} WHERE id=${id}::uuid`;
       eventTitle = "Progress update";
       eventBody = r.data.next_action;
     }

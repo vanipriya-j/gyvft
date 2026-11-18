@@ -3,9 +3,9 @@ import { CustomerAuth } from "@/components/customer/auth";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string }>;
+  searchParams: Promise<{ reset?: string; next?: string; mode?: string }>;
 }) {
-  const { reset } = await searchParams;
+  const { reset, next, mode } = await searchParams;
   const resetToken =
     typeof reset === "string" && reset.length <= 512 ? reset : undefined;
 
@@ -41,6 +41,12 @@ export default async function LoginPage({
         <CustomerAuth
           key={resetToken ? "reset" : "signin"}
           resetToken={resetToken}
+          next={
+            next && next.startsWith("/account/") && !next.startsWith("//")
+              ? next
+              : undefined
+          }
+          initialMode={mode === "forgot" ? "recover" : undefined}
         />
       </section>
     </div>

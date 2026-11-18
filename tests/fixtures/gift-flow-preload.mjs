@@ -11,14 +11,15 @@ process.env.SHOPIFY_SHOP_DOMAIN = "gyvft-fixture.myshopify.com";
 process.env.SHOPIFY_ADMIN_ACCESS_TOKEN = "local-fixture-token";
 process.env.RESEND_API_KEY = "";
 mkdirSync("work", { recursive: true });
-writeFileSync(
-  "work/gift-flow-fixture.json",
-  JSON.stringify({
-    pid: process.pid,
-    origin: new URL(process.env.NEXT_PUBLIC_APP_URL).origin,
-    database: `${database.host}${database.pathname}`,
-  }),
-);
+if (process.argv.some((arg) => /next[\\/]dist[\\/]bin[\\/]next$/.test(arg)))
+  writeFileSync(
+    "work/gift-flow-fixture.json",
+    JSON.stringify({
+      pid: process.pid,
+      origin: new URL(process.env.NEXT_PUBLIC_APP_URL).origin,
+      database: `${database.host}${database.pathname}`,
+    }),
+  );
 globalThis.__gyvftSql = postgres(process.env.DATABASE_URL, {
   max: 1,
   prepare: false,
@@ -58,7 +59,9 @@ globalThis.fetch = async (input, init) => {
         !o.customer.toAssociate.id ||
         !o.shippingAddress.zip ||
         !o.shippingAddress.provinceCode ||
-        !o.lineItems.length
+        o.lineItems.length !== 1 ||
+        o.lineItems[0].quantity !== 1 ||
+        !o.note.includes("Single custom batch")
       )
         throw Error("Incomplete Shopify payload");
       const order = {

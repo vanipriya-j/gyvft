@@ -1,4 +1,9 @@
 import {
+  operatorJourneyCommand,
+  operationsDirectory,
+} from "@/lib/customer/operations-workflow";
+import { JourneyError } from "@/lib/customer/journey-model";
+import {
   ShopifyError,
   shopifyConfigured,
   syncShopifyCustomer,
@@ -120,6 +125,34 @@ export async function POST(request: Request) {
         message: `Linked ${linked} pending customer accounts. Run again for the next batch.`,
       });
     }
+    if (raw.op === "directory")
+      return reply({ ok: true, ...(await operationsDirectory()) });
+    if (
+      [
+        "task",
+        "internal_note",
+        "save_approval_draft",
+        "feature_photo",
+        "feature_testimonial",
+      ].includes(String(raw.op))
+    ) {
+      await operatorJourneyCommand(raw);
+      revalidatePath("/account", "layout");
+      return reply({ ok: true, message: "Saved." });
+    }
+    if (raw.op === "publish_saved_approval") {
+      await mutatePilot({
+        ...raw,
+        op: "publish",
+        saved_draft_version: raw.version,
+      });
+      scheduleNotifications(String(raw.id));
+      revalidatePath("/account", "layout");
+      return reply({
+        ok: true,
+        message: "Published. The customer can now review this exact version.",
+      });
+    }
     const id = z.string().uuid().parse(raw.id);
     if (raw.op === "shopify_customer") {
       const [p] =
@@ -170,6 +203,7 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (
+      error instanceof JourneyError ||
       error instanceof PilotError ||
       error instanceof ShopifyError ||
       error instanceof GiftWorkspaceError
