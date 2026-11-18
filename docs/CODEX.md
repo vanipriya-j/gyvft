@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: *Your story. Our telling.*
 
+## Mock-up review handoff — 18 November 2026
+
+`/design-review.html` Revision 4 is a fictional-data interactive prototype. Its latest refinements do not implement the revised application flow. Before release, carry the three [development acceptance criteria](GYVFT-DESIGN-REVIEW-TEST.md#development-acceptance-criteria) into the real application: 44 × 44 px mobile controls, dialog names matching visible headings, and independently revocable public photo permissions. The mock-up verifies per-photo withdrawal with two featured photos; real persisted permissions, ownership checks and public media access still require implementation and verification. The confirmed payment policy is 50% advance after quote approval and the remaining 50% before dispatch.
+
 ## Working customer and Operations gifting flow — 17 November 2026
 
 The individual gift workspace is implemented: compact Overview, Options, Quote & payment, Activity and Messages, with separate occasion/delivery details. Operations groups the same request into brief/next steps, options, quote/design, payments, fulfilment, messages and activity. `request.ts` reads the owned request aggregate; `request-workflow.ts` resolves its domain state for both roles. Existing commands retain authoritative ownership, immutable selections/approval versions and payment/fulfilment checks. No screen-specific endpoint or migration was added. See [CUSTOMER-PORTAL.md](CUSTOMER-PORTAL.md#working-gift-workspace-and-operations) for usage, testing and Shopify limitations. AI curation remains future work.
