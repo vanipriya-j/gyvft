@@ -14,6 +14,10 @@ const {
   createSession,
   sendEmail,
   jar,
+  logError,
+  logWarn,
+  logInfo,
+  event,
 } = vi.hoisted(() => {
   const transaction = vi.fn();
   const begin = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
@@ -29,6 +33,10 @@ const {
     createSession: vi.fn(),
     sendEmail: vi.fn(),
     jar: { get: vi.fn(), set: vi.fn() },
+    logError: vi.fn(),
+    logWarn: vi.fn(),
+    logInfo: vi.fn(),
+    event: vi.fn(),
   };
 });
 vi.mock("@/lib/database/client", () => ({ getSql: () => query }));
@@ -47,7 +55,11 @@ vi.mock("@/lib/customer/accounts", async (original) => ({
 vi.mock("@/services/email/public-resend", () => ({
   sendPublicResendEmail: sendEmail,
 }));
-vi.mock("@/lib/logging/logger", () => ({ logger: { warn: vi.fn() } }));
+vi.mock("@/lib/logging/logger", () => ({
+  logger: { warn: logWarn, error: logError, info: logInfo },
+}));
+vi.mock("@/lib/customer/observability", () => ({ recordCustomerEvent: event }));
+import { CustomerRateLimitError } from "@/lib/customer/accounts";
 import {
   registerCustomerAction,
   loginCustomerAction,
@@ -72,6 +84,10 @@ beforeAll(async () => {
   storedHash = await hashCustomerPassword(password);
 });
 beforeEach(() => {
+  logError.mockReset();
+  logWarn.mockReset();
+  logInfo.mockReset();
+  event.mockReset().mockResolvedValue(undefined);
   query.mockReset().mockResolvedValue([]);
   transaction.mockReset().mockResolvedValue([]);
   begin.mockClear();
@@ -187,6 +203,85 @@ describe("database-owned customer authentication actions", () => {
     );
     expect(failedMail).toEqual(absent);
     expect(failedMail.message).not.toContain("private");
+  });
+
+  it("identifies the failing signup boundary and SQLSTATE without logging private errors", async () => {
+    query.mockRejectedValueOnce(
+      Object.assign(new Error("private SQL containing email and password"), {
+        code: "42703",
+      }),
+    );
+    const result = await registerCustomerAction(
+      form({ email: account.email, password }),
+    );
+    expect(result.ok).toBe(false);
+    expect(logError).toHaveBeenCalledWith(
+      "Customer authentication operation failed",
+      expect.objectContaining({
+        operation: "register",
+        phase: "account",
+        code: "DB_42703",
+        status: 500,
+      }),
+    );
+    expect(event).toHaveBeenCalledWith(
+      "app.error",
+      expect.objectContaining({
+        requestId: expect.any(String),
+        metadata: expect.objectContaining({
+          operation: "register",
+          code: "DB_42703",
+        }),
+      }),
+    );
+    expect(JSON.stringify(logError.mock.calls)).not.toContain(account.email);
+    expect(JSON.stringify(logError.mock.calls)).not.toContain("private SQL");
+  });
+  it("records classified reset-mail failures without exposing provider messages or account existence", async () => {
+    query.mockResolvedValueOnce([{ id: account.id }]).mockResolvedValueOnce([]);
+    sendEmail.mockRejectedValueOnce(
+      Object.assign(new Error("private sender, reset URL and credentials"), {
+        code: "validation_error",
+      }),
+    );
+    const result = await requestCustomerPasswordResetAction(
+      form({ email: account.email }),
+    );
+    expect(result.ok).toBe(true);
+    expect(logError).toHaveBeenCalledWith(
+      "Customer authentication operation failed",
+      expect.objectContaining({
+        operation: "reset-request",
+        phase: "email",
+        code: "EMAIL_VALIDATION_ERROR",
+      }),
+    );
+    expect(JSON.stringify(logError.mock.calls)).not.toContain("private sender");
+    expect(JSON.stringify(logError.mock.calls)).not.toContain(account.email);
+  });
+  it("shows the same retry wait for throttled recovery before any account lookup", async () => {
+    limit.mockRejectedValueOnce(
+      new CustomerRateLimitError(
+        "Too many attempts. Please wait 15 minutes before trying again.",
+      ),
+    );
+    const result = await requestCustomerPasswordResetAction(
+      form({ email: account.email }),
+    );
+    expect(result).toEqual({
+      ok: false,
+      message: "Too many attempts. Please wait 15 minutes before trying again.",
+    });
+    expect(query).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(logWarn).toHaveBeenCalledWith(
+      "Customer authentication operation limited",
+      expect.objectContaining({
+        phase: "rate-limit",
+        code: "AUTH_RATE_LIMITED",
+        status: 429,
+      }),
+    );
   });
 
   it("consumes a reset token once and revokes all account sessions within the same transaction", async () => {

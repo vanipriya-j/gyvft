@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Customer authentication verification — 19 November 2026
+
+See [CUSTOMER-AUTH-VERIFICATION.md](CUSTOMER-AUTH-VERIFICATION.md) for actual browser/database coverage and unresolved live recovery. Reset throttling now shows the retry wait; classified auth diagnostics record operation and failure stage without input or raw errors. Local/captured-mail success does not establish production signup or reset delivery. Do not describe the application as fully browser-verified.
+
 ## Shared theme, navigation and Operations dashboard — 19 November 2026
 
 The public site and applications now use one approved root palette; Customer Home no longer keeps its own brown actions. Account navigation has pending feedback/loading states, Home defers external catalogue reads, and request aggregates load related data concurrently after ownership checks. `/operations` starts with the live dashboard, while `/operations/requests` remains the queue. See [OPERATIONS-DASHBOARD.md](OPERATIONS-DASHBOARD.md) for definitions, exclusions and next design work. Rich analytics/report exports, customer administration, named team roles and circles/organisations remain separate follow-up work.
