@@ -19,6 +19,8 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { OperationsPageHeader } from "@/components/operations/page-header";
+import { OperationsNotifications } from "@/components/operations/notifications";
+import { deliveryLabel } from "@/lib/customer/notification-model";
 import { useHydrated } from "@/hooks/use-hydrated";
 /* eslint-disable @next/next/no-img-element -- Operator previews use authenticated blob URLs. */
 import Link from "next/link";
@@ -1933,8 +1935,9 @@ export function B2CAdmin({
                       ))}
                       {detail.notifications.map((n) => (
                         <p className="app-muted mt-3" key={n.id}>
-                          {n.destination} notification · {n.state} ·{" "}
-                          {n.attempts} attempts
+                          Email · {n.destination} ·{" "}
+                          {deliveryLabel(n.state, n.can_retry)} · {n.attempts}{" "}
+                          attempts
                         </p>
                       ))}
                       <button
@@ -2156,6 +2159,7 @@ export function B2CAdmin({
                 description="Receiving account, Shopify and workspace configuration."
               />
             )}
+            {area === "settings" && <OperationsNotifications post={post} />}
             {area === "settings" && (
               <div className="app-grid">
                 <section className="app-panel">

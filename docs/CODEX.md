@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Customer email recovery — 19 November 2026
+
+Email-first notifications reuse the existing outbox with no migration. Immediate attempts have bounded transient retry; a dedicated customer cron and Operations controls recover due batches independently of legacy Studio tables. Operations shows configuration, attempts and queue counts; provider acceptance is not labelled inbox delivery. Demo identities and sample requests never send. WhatsApp is deferred at the user's request. See [CUSTOMER-NOTIFICATIONS.md](CUSTOMER-NOTIFICATIONS.md) for coverage, deployment checks and daily recovery limits, and [CUSTOMER-PILOT-REVIEW.md](CUSTOMER-PILOT-REVIEW.md) for the copyable review brief. No production migration or data deletion is part of this release.
+
 ## Completing disconnected sample data — 19 November 2026
 
 `/operations/demo-data/circles` completes existing demo memberships without customer passwords. The explicit operator command also corrects untouched v1 occasion relationships/recipient links using the canonical fixture context map. No migration or deletion is involved. Existing memberships, consent and account passwords are preserved; production data changes still require the operator to submit the command. See [CIRCLES.md](CIRCLES.md).
