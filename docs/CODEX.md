@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Shared theme, navigation and Operations dashboard — 19 November 2026
+
+The public site and applications now use one approved root palette; Customer Home no longer keeps its own brown actions. Account navigation has pending feedback/loading states, Home defers external catalogue reads, and request aggregates load related data concurrently after ownership checks. `/operations` starts with the live dashboard, while `/operations/requests` remains the queue. See [OPERATIONS-DASHBOARD.md](OPERATIONS-DASHBOARD.md) for definitions, exclusions and next design work. Rich analytics/report exports, customer administration, named team roles and circles/organisations remain separate follow-up work.
+
 ## Approved individual gifting application — 19 November 2026
 
 The Revision 4 customer and Operations flow is now implemented in the application. Start at [APPROVED-GIFTING-RELEASE.md](APPROVED-GIFTING-RELEASE.md) for routes, the shared object model, release migration, permissions, Shopify boundaries and verification. `/design-review.html` remains a fictional-data reference, separate from `/account` and `/operations`.

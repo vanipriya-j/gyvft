@@ -8,6 +8,9 @@ export default async function Page({
 }) {
   const { request } = await searchParams;
   return (
-    <B2CAdmin initialId={request && uuidPattern.test(request) ? request : ""} />
+    <B2CAdmin
+      initialArea="worklist"
+      initialId={request && uuidPattern.test(request) ? request : ""}
+    />
   );
 }

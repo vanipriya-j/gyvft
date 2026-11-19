@@ -439,7 +439,14 @@ test("approved customer and Operations flow, real persistence and individual pho
         path: "/",
       },
     ]);
-    expect((await foreign.request.get(baseURL + href())).status()).toBe(404);
+    const denied = await foreign.request.get(baseURL + href());
+    // Next streams loading UI before notFound; status may already be committed.
+    expect([200, 404]).toContain(denied.status());
+    const deniedBody = await denied.text();
+    expect(deniedBody).toMatch(
+      /NEXT_HTTP_ERROR_FALLBACK;404|This page could not be found/,
+    );
+    expect(deniedBody).not.toContain(title);
     expect(
       (
         await foreign.request.get(

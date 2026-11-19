@@ -51,7 +51,7 @@ export default async function GiftMoments() {
         </p>
       )}
       <Link
-        className="mt-8 inline-flex rounded-lg bg-olive-dark px-5 py-3 text-white"
+        className="mt-8 inline-flex rounded-lg bg-action px-5 py-3 text-white"
         href="/tell-your-story"
       >
         Start your gifting story →

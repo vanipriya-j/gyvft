@@ -1,8 +1,8 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Private previews require session cookies; feed images are already validated. */
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bookmark,
@@ -34,7 +34,7 @@ type Occasion = NonNullable<
 async function getSection(name: string, offset = 0, limit = 6) {
   const response = await fetch(
     `/api/customer/home?section=${name}&offset=${offset}&limit=${limit}`,
-    { cache: "no-store" },
+    { cache: "no-store", signal: AbortSignal.timeout(15000) },
   );
   const result = await response.json();
   if (!response.ok || !result.ok)
@@ -42,6 +42,9 @@ async function getSection(name: string, offset = 0, limit = 6) {
   return result.data.sections[name];
 }
 function useCarousel<T>(name: string, initial?: HomeSection<Page<T>>) {
+  const [source, setSource] = useState<
+    HomeSection<Page<T> & { savingAvailable?: boolean }> | undefined
+  >(initial);
   const [cache, setCache] = useState(
     () =>
       new Map<number, T>(
@@ -54,8 +57,38 @@ function useCarousel<T>(name: string, initial?: HomeSection<Page<T>>) {
       initial?.status === "ready" ? initial.data.total : 0,
     ),
     [index, setIndex] = useState(0),
-    [pending, setPending] = useState(false),
+    [pending, setPending] = useState(!initial),
     [error, setError] = useState("");
+  // External recommendations load independently of the customer's own gifts.
+  useEffect(() => {
+    if (initial) return;
+    let active = true;
+    getSection(name)
+      .then((section: HomeSection<Page<T>>) => {
+        if (!active) return;
+        setSource(section);
+        if (section.status === "ready") {
+          setCache(
+            new Map(
+              section.data.items.map((item, i) => [
+                section.data.offset + i,
+                item,
+              ]),
+            ),
+          );
+          setTotal(section.data.total);
+        }
+      })
+      .catch(() => {
+        if (active) setSource({ status: "unavailable", data: null });
+      })
+      .finally(() => {
+        if (active) setPending(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [initial, name]);
   async function move(direction: number) {
     if (pending || total < 2) return;
     const target = (index + direction + total) % total;
@@ -87,6 +120,7 @@ function useCarousel<T>(name: string, initial?: HomeSection<Page<T>>) {
     }
   }
   return {
+    source,
     item: cache.get(index) || null,
     total,
     index,
@@ -624,8 +658,8 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
                     src={product.image}
                     alt={product.title}
                   />
-                  {sections.aarla?.status === "ready" &&
-                    sections.aarla.data.savingAvailable && (
+                  {products.source?.status === "ready" &&
+                    products.source.data.savingAvailable && (
                       <SaveButton
                         key={product.id}
                         kind="product"
@@ -665,9 +699,18 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
                   </a>
                 </div>
               </div>
+            ) : products.pending ? (
+              <div className={styles.empty} role="status">
+                <LoaderCircle
+                  size={20}
+                  className="animate-spin text-olive"
+                  aria-hidden="true"
+                />
+                <p>Finding a little inspiration at Aarla…</p>
+              </div>
             ) : (
               <Missing
-                section={sections.aarla}
+                section={products.source}
                 media="aarla"
                 empty="A little more inspiration awaits."
                 href="https://aarla.in"

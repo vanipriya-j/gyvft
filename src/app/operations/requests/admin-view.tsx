@@ -1,4 +1,21 @@
 "use client";
+import {
+  OperationsDashboard,
+  ReceiptChart,
+} from "@/components/operations/dashboard";
+import type { OperationsSnapshot } from "@/lib/customer/operations-snapshot";
+import { BrandLogo } from "@/components/public/BrandLogo";
+import {
+  LayoutDashboard,
+  Inbox,
+  Users,
+  CalendarDays,
+  MessageSquareQuote,
+  BarChart3,
+  Settings,
+  RefreshCw,
+  LockKeyhole,
+} from "lucide-react";
 import { useHydrated } from "@/hooks/use-hydrated";
 /* eslint-disable @next/next/no-img-element -- Operator previews use authenticated blob URLs. */
 import Link from "next/link";
@@ -24,6 +41,7 @@ type Row = {
   task_due_at: string | null;
   delivery_date: string | null;
   pending_payment: boolean;
+  is_sample?: boolean;
   has_selection?: boolean;
   visible_options?: boolean;
   quote_status: string | null;
@@ -113,19 +131,29 @@ async function picture(file: FormDataEntryValue | null) {
   for (const b of bytes) binary += String.fromCharCode(b);
   return { mime: file.type, data: btoa(binary) };
 }
-export function B2CAdmin({ initialId }: { initialId: string }) {
+export function B2CAdmin({
+  initialId,
+  initialArea = "dashboard",
+}: {
+  initialId: string;
+  initialArea?: "dashboard" | "worklist";
+}) {
   const hydrated = useHydrated();
   const imageOpener = useRef<HTMLElement | null>(null),
     confirmOpener = useRef<HTMLElement | null>(null);
+  const readAbort = useRef<AbortController | null>(null);
+  const readSequence = useRef(0);
   const secret = useRef(""),
     lock = useRef(false),
     retry = useRef<{ key: string; id: string } | null>(null);
   const [unlocked, setUnlocked] = useState(false),
     [busy, setBusy] = useState(false),
+    [actionLocked, setActionLocked] = useState(false),
     [message, setMessage] = useState(""),
     [rows, setRows] = useState<Row[]>([]),
     [detail, setDetail] = useState<Detail | null>(null),
-    [area, setArea] = useState("worklist"),
+    [area, setArea] = useState<string>(initialId ? "worklist" : initialArea),
+    [snapshot, setSnapshot] = useState<OperationsSnapshot | null>(null),
     [tab, setTab] = useState("overview"),
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
@@ -175,6 +203,7 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
   async function post(
     payload: Record<string, unknown>,
     candidate = secret.current,
+    signal?: AbortSignal,
   ) {
     const response = await fetch("/api/operations/requests", {
       method: "POST",
@@ -184,6 +213,9 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
       },
       body: JSON.stringify(payload),
       cache: "no-store",
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(30000)])
+        : AbortSignal.timeout(30000),
     });
     const data = await response.json();
     if (!response.ok || !data.ok)
@@ -193,14 +225,19 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
       );
     return data;
   }
-  async function loadList(search = query) {
-    const data = await post({ op: "list", query: search });
+  async function loadList(search = query, signal?: AbortSignal) {
+    const data = await post(
+      { op: "list", query: search },
+      secret.current,
+      signal,
+    );
     setRows(data.requests);
     setShopify(data.shopifyConfigured);
   }
   async function open(id: string, nextTab = "overview") {
     if (lock.current) return;
     lock.current = true;
+    setActionLocked(true);
     setBusy(true);
     try {
       const d = await post({ op: "detail", id });
@@ -221,12 +258,14 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
       setMessage((e as Error).message);
     } finally {
       lock.current = false;
+      setActionLocked(false);
       setBusy(false);
     }
   }
   async function perform(payload: Record<string, unknown>) {
     if (lock.current) return false;
     lock.current = true;
+    setActionLocked(true);
     setBusy(true);
     try {
       const key = JSON.stringify(payload);
@@ -239,45 +278,76 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
       });
       retry.current = null;
       setMessage(result.message || "Saved.");
-      await loadList();
-      if (detail)
-        setDetail(await post({ op: "detail", id: detail.project.id }));
+      await Promise.all([
+        loadList(),
+        detail
+          ? post({ op: "detail", id: detail.project.id }).then(setDetail)
+          : Promise.resolve(),
+      ]);
       return true;
     } catch (e) {
       setMessage((e as Error).message);
       return false;
     } finally {
       lock.current = false;
+      setActionLocked(false);
       setBusy(false);
     }
   }
-  async function navigate(next: string) {
-    if (busy) return;
+  async function navigate(next: string, search = query) {
+    if (lock.current) return;
+    const sequence = ++readSequence.current;
+    readAbort.current?.abort();
+    const controller = new AbortController();
+    readAbort.current = controller;
     setArea(next);
     setDetail(null);
     setMessage("");
     setBusy(true);
     try {
-      if (next === "worklist") await loadList();
-      else if (["customers", "occasions", "stories"].includes(next))
-        setDirectory(await post({ op: "directory" }));
-      else if (next === "reports") {
-        const r = await fetch("/api/operations", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-setup-secret": secret.current,
-          },
-          body: JSON.stringify({}),
-        });
+      if (next === "dashboard") {
+        const data = await post(
+          { op: "snapshot" },
+          secret.current,
+          controller.signal,
+        );
+        if (sequence === readSequence.current) setSnapshot(data.snapshot);
+      } else if (next === "worklist") await loadList(search, controller.signal);
+      else if (["customers", "occasions", "stories"].includes(next)) {
+        const data = await post(
+          { op: "directory" },
+          secret.current,
+          controller.signal,
+        );
+        if (sequence === readSequence.current) setDirectory(data);
+      } else if (next === "reports") {
+        const [r, facts] = await Promise.all([
+          fetch("/api/operations", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "x-setup-secret": secret.current,
+            },
+            body: JSON.stringify({}),
+            signal: AbortSignal.any([
+              controller.signal,
+              AbortSignal.timeout(30000),
+            ]),
+          }),
+          post({ op: "snapshot" }, secret.current, controller.signal),
+        ]);
         const data = await r.json();
         if (!r.ok) throw Error(data.message || "Reports unavailable.");
-        setReport(data);
+        if (sequence === readSequence.current) {
+          setReport(data);
+          setSnapshot(facts.snapshot);
+        }
       }
     } catch (e) {
-      setMessage((e as Error).message);
+      if (sequence === readSequence.current && !controller.signal.aborted)
+        setMessage((e as Error).message);
     } finally {
-      setBusy(false);
+      if (sequence === readSequence.current) setBusy(false);
     }
   }
   async function preview(kind: string, id: string) {
@@ -332,6 +402,7 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
       : {},
   );
   const menu = [
+    ["dashboard", "Dashboard"],
     ["worklist", "Requests & orders"],
     ["customers", "Customers"],
     ["occasions", "Occasions"],
@@ -339,10 +410,25 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
     ["reports", "Reports & health"],
     ["settings", "Settings & connections"],
   ];
+  const menuIcons: Record<string, typeof LayoutDashboard> = {
+    dashboard: LayoutDashboard,
+    worklist: Inbox,
+    customers: Users,
+    occasions: CalendarDays,
+    stories: MessageSquareQuote,
+    reports: BarChart3,
+    settings: Settings,
+  };
   const draft = detail?.journey.drafts.find(
     (d) => d.kind === (tab === "design" ? "design" : "proposal"),
   );
   const displayed = rows
+    .filter(
+      (r) =>
+        !["active", "production", "packed", "overdue", "payments"].includes(
+          filter,
+        ) || !r.is_sample,
+    )
     .filter(
       (r) =>
         !query ||
@@ -353,6 +439,19 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
     .filter(
       (r) =>
         filter === "all" ||
+        (filter === "active" && r.stage < 10) ||
+        (filter === "production" && [7, 8].includes(r.stage)) ||
+        (filter === "packed" && r.stage === 8) ||
+        (filter === "overdue" &&
+          r.stage < 10 &&
+          !!r.delivery_date &&
+          r.delivery_date <
+            new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Kolkata",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            }).format(new Date())) ||
         (filter === "payments" && r.pending_payment) ||
         (filter === "action" && nextOperatorTask(r).waiting === "Aarla") ||
         (filter === "delivered" && r.stage >= 10),
@@ -371,13 +470,12 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
   };
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-5 md:px-6">
-      <header className="app-title">
-        <div>
-          <Link className="app-eyebrow" href="/">
-            GYVFT
+      <header className="ops-header">
+        <div className="ops-brand">
+          <Link href="/" aria-label="GYVFT home">
+            <BrandLogo height={28} className="h-7 w-[115px]" />
           </Link>
-          <h1>Operations</h1>
-          <p>A clear next step for every thoughtful gift.</p>
+          <span>Operations</span>
         </div>
         {unlocked && (
           <div className="app-actions mt-0">
@@ -386,20 +484,32 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
               className="app-button"
               onClick={() => void navigate(area)}
             >
+              <RefreshCw size={14} className={busy ? "animate-spin" : ""} />{" "}
               Refresh
             </button>
             <button
               className="app-button"
               onClick={() => {
+                readAbort.current?.abort();
+                readSequence.current++;
                 secret.current = "";
                 setUnlocked(false);
                 setDetail(null);
                 setRows([]);
+                setSnapshot(null);
+                setReport(null);
+                setDirectory(null);
               }}
             >
-              Lock desk
+              <LockKeyhole size={14} /> Lock desk
             </button>
           </div>
+        )}
+        {busy && unlocked && (
+          <span role="status" className="ops-header-status">
+            <RefreshCw size={14} className="animate-spin" aria-hidden="true" />
+            Working… please wait.
+          </span>
         )}
       </header>
       {!unlocked ? (
@@ -410,10 +520,20 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
               setBusy(true);
               try {
                 const value = String(d.get("secret"));
-                const data = await post({ op: "list" }, value);
+                const data = await post(
+                  {
+                    op:
+                      initialId || initialArea === "worklist"
+                        ? "list"
+                        : "snapshot",
+                  },
+                  value,
+                );
                 secret.current = value;
-                setRows(data.requests);
+                setRows(data.requests || []);
+                setSnapshot(data.snapshot || null);
                 setShopify(data.shopifyConfigured);
+                setArea(initialId ? "worklist" : initialArea);
                 setUnlocked(true);
                 if (initialId) await open(initialId);
               } catch (e) {
@@ -444,23 +564,27 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
         </form>
       ) : (
         <div className="app-nav-grid">
-          <aside className="app-side" aria-label="Operations areas">
-            {menu.map(([key, label]) => (
-              <button
-                key={key}
-                disabled={busy || !hydrated}
-                aria-current={area === key ? "page" : undefined}
-                onClick={() => void navigate(key)}
-              >
-                {label}
-              </button>
-            ))}
+          <aside className="app-side ops-side" aria-label="Operations areas">
+            {menu.map(([key, label]) => {
+              const Icon = menuIcons[key];
+              return (
+                <button
+                  key={key}
+                  disabled={actionLocked || !hydrated}
+                  aria-current={area === key ? "page" : undefined}
+                  onClick={() => void navigate(key)}
+                >
+                  <Icon size={17} strokeWidth={1.7} /> {label}
+                </button>
+              );
+            })}
           </aside>
           <section className="min-w-0">
             <label className="app-mobile-ops">
               Operations area
               <select
                 className="app-input"
+                disabled={actionLocked || !hydrated}
                 value={area}
                 onChange={(e) => void navigate(e.target.value)}
               >
@@ -471,6 +595,20 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
                 ))}
               </select>
             </label>
+            {area === "dashboard" && (
+              <OperationsDashboard
+                data={snapshot}
+                busy={busy}
+                onOpen={(id, tab) => void open(id, tab)}
+                onQueue={(nextFilter) => {
+                  setFilter(nextFilter || "all");
+                  setQuery("");
+                  void navigate("worklist", "");
+                }}
+                onReports={() => void navigate("reports")}
+                onRefresh={() => void navigate("dashboard")}
+              />
+            )}
             {area === "worklist" && !detail && (
               <>
                 <div className="app-title">
@@ -506,6 +644,12 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
                       onChange={(e) => setFilter(e.target.value)}
                     >
                       <option value="all">All requests</option>
+                      <option value="active">Active gifts</option>
+                      <option value="production">In production</option>
+                      <option value="packed">Packed · awaiting dispatch</option>
+                      <option value="overdue">
+                        Requested delivery overdue
+                      </option>
                       <option value="action">Needs Aarla</option>
                       <option value="payments">Payment verification</option>
                       <option value="delivered">Delivered</option>
@@ -1794,7 +1938,8 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
                       className="app-button"
                       onClick={() => {
                         setQuery(c.email);
-                        setArea("worklist");
+                        setFilter("all");
+                        void navigate("worklist", c.email);
                       }}
                     >
                       View their gifts
@@ -1821,7 +1966,8 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
                       className="app-button"
                       onClick={() => {
                         setQuery(o.customer_email);
-                        setArea("worklist");
+                        setFilter("all");
+                        void navigate("worklist", o.customer_email);
                       }}
                     >
                       View customer gifts
@@ -1855,6 +2001,29 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
             )}
             {area === "reports" && (
               <div className="app-stack">
+                {snapshot && (
+                  <section className="ops-panel">
+                    <h2>Money received & outstanding</h2>
+                    <p className="app-muted mt-2">
+                      Real customer records. Receipts are dated when verified in
+                      the bank.
+                    </p>
+                    <div className="ops-money mt-4">
+                      <div>
+                        <span>Verified receipts · last 30 days</span>
+                        <strong>
+                          {money(snapshot.money.verifiedLast30Days)}
+                        </strong>
+                      </div>
+                      <div>
+                        <span>Outstanding on confirmed orders</span>
+                        <strong>{money(snapshot.money.outstanding)}</strong>
+                      </div>
+                    </div>
+                    <ReceiptChart data={snapshot} />
+                  </section>
+                )}
+
                 <section className="app-panel">
                   <h2>Application reports</h2>
                   <div className="app-fields">
@@ -1976,11 +2145,7 @@ export function B2CAdmin({ initialId }: { initialId: string }) {
           {message}
         </p>
       )}
-      {busy && (
-        <p role="status" className="app-muted mt-3">
-          Working… please wait.
-        </p>
-      )}
+
       <Dialog.Root
         open={!!image}
         onOpenChange={(on) => {

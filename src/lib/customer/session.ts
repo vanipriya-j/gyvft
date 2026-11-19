@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSql } from "@/lib/database/client";
@@ -14,15 +15,19 @@ export const customerCookieOptions = {
   path: "/",
   maxAge: duration,
 };
-export async function getCustomerAccount(): Promise<CustomerAccount | null> {
-  if (!process.env.DATABASE_URL) return null;
-  const token = (await cookies()).get(sessionCookie)?.value;
-  if (!token || !isOpaqueToken(token)) return null;
-  const rows = await getSql()<
-    CustomerAccount[]
-  >`SELECT a.id, a.email FROM gyvft_customer_sessions s JOIN gyvft_customer_accounts a ON a.id = s.account_id WHERE s.token_hash = ${hashOpaqueToken(token)} AND s.expires_at > now() AND a.is_active = true LIMIT 1`;
-  return rows[0] ?? null;
-}
+// React cache deduplicates identity reads only within one server render.
+// This is never a shared or cross-customer cache.
+export const getCustomerAccount = cache(
+  async (): Promise<CustomerAccount | null> => {
+    if (!process.env.DATABASE_URL) return null;
+    const token = (await cookies()).get(sessionCookie)?.value;
+    if (!token || !isOpaqueToken(token)) return null;
+    const rows = await getSql()<
+      CustomerAccount[]
+    >`SELECT a.id, a.email FROM gyvft_customer_sessions s JOIN gyvft_customer_accounts a ON a.id = s.account_id WHERE s.token_hash = ${hashOpaqueToken(token)} AND s.expires_at > now() AND a.is_active = true LIMIT 1`;
+    return rows[0] ?? null;
+  },
+);
 export async function requireCustomerAccount(returnTo?: string) {
   const account = await getCustomerAccount();
   if (!account)

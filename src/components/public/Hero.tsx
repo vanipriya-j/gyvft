@@ -20,8 +20,8 @@ export function Hero() {
           sizes="100vw"
           src={heroImage.src}
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#f6f1e8]/94 via-[#f6f1e8]/78 to-[#f6f1e8]/28" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#f6f1e8]/70 via-transparent to-[#f6f1e8]/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/94 via-background/78 to-background/28" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-background/35" />
       </div>
 
       <div className="relative mx-auto flex min-h-[calc(100svh-4.5rem)] max-w-7xl items-end px-5 pb-16 pt-24 lg:items-center lg:px-8 lg:pb-24 lg:pt-20">
@@ -40,7 +40,8 @@ export function Hero() {
             animate={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.12 }}
           >
-            We turn people, milestones and memories into gifts, books, merchandise and experiences.
+            We turn people, milestones and memories into gifts, books,
+            merchandise and experiences.
           </motion.p>
           <motion.div
             className="mt-8 flex flex-col gap-3 sm:flex-row"

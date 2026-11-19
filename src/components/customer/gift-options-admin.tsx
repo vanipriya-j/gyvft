@@ -264,10 +264,7 @@ export function GiftOptionsAdmin({
               </p>
             </>
           )}
-          <button
-            className={button + " bg-olive-dark text-white"}
-            disabled={busy}
-          >
+          <button className={button + " bg-action text-white"} disabled={busy}>
             {busy ? "Saving…" : "Publish gift option"}
           </button>
           <p role="alert" className="text-sm">

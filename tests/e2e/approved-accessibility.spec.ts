@@ -212,6 +212,7 @@ test("real customer and operator mobile controls, names, focus and layouts", asy
       page.getByRole("button", { name: "Manage sharing", exact: true }),
     ).toBeFocused();
     const areas = [
+      "Dashboard",
       "Requests & orders",
       "Customers",
       "Occasions",
@@ -227,7 +228,7 @@ test("real customer and operator mobile controls, names, focus and layouts", asy
         .getByRole("button", { name: "Open customer desk", exact: true })
         .click();
       await expect(
-        page.getByRole("heading", { name: "Requests & orders", exact: true }),
+        page.getByRole("heading", { name: "Dashboard", exact: true }),
       ).toBeVisible();
       for (const area of areas) {
         await page

@@ -1,12 +1,15 @@
-import Link from "next/link";
-import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from "react";
+import Link from "@/components/ui/navigation-link";
+import type {
+  AnchorHTMLAttributes,
+  ButtonHTMLAttributes,
+  ReactNode,
+} from "react";
 import { cn } from "@/lib/utils/cn";
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "dark";
 
 const variants: Record<ButtonVariant, string> = {
-  primary:
-    "bg-olive-dark text-paper shadow-[0_12px_28px_rgba(74,52,41,0.18)] hover:bg-[#3a291f]",
+  primary: "bg-action text-on-action shadow-sm hover:bg-action-hover",
   secondary:
     "border border-ink/15 bg-paper/70 text-ink hover:border-olive/45 hover:bg-paper",
   ghost: "text-ink hover:bg-ink/5",
@@ -20,8 +23,19 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
 };
 
-export function Button({ className, variant = "primary", type = "button", ...props }: ButtonProps) {
-  return <button className={cn(base, variants[variant], className)} type={type} {...props} />;
+export function Button({
+  className,
+  variant = "primary",
+  type = "button",
+  ...props
+}: ButtonProps) {
+  return (
+    <button
+      className={cn(base, variants[variant], className)}
+      type={type}
+      {...props}
+    />
+  );
 }
 
 export type ButtonLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
@@ -38,7 +52,11 @@ export function ButtonLink({
   ...props
 }: ButtonLinkProps) {
   return (
-    <Link className={cn(base, variants[variant], className)} href={href} {...props}>
+    <Link
+      className={cn(base, variants[variant], className)}
+      href={href}
+      {...props}
+    >
       {children}
     </Link>
   );

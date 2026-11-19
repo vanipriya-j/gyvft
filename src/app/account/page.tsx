@@ -36,7 +36,9 @@ export default async function AccountPage({
           ? { section: "payments", limit: 20 }
           : {},
     );
-    const data = await customerHome(account, query);
+    const data = await customerHome(account, query, new Date(), {
+      deferExternalCatalogue: query.section === "all",
+    });
     if (view === "saved")
       return <SavedIdeasPage key={data.generatedAt} data={data} />;
     if (view === "payments")

@@ -1,6 +1,5 @@
 .home {
-  --brown: #50372b;
-  --soft: #eeeade;
+  --soft: var(--surface);
   color: var(--foreground);
 }
 .welcome {
@@ -82,7 +81,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--brown);
+  color: var(--ink);
   text-decoration: underline;
   text-underline-offset: 4px;
   font-size: 0.875rem;
@@ -92,7 +91,7 @@
   border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--paper);
-  color: var(--brown);
+  color: var(--ink);
   width: 36px;
   height: 36px;
   display: grid;
@@ -535,8 +534,8 @@
   padding: 10px 12px;
   border: 0;
   border-radius: 8px;
-  background: var(--brown);
-  color: #fffaf4;
+  background: var(--action);
+  color: var(--on-action);
   font-size: 0.875rem;
   line-height: 1.25rem;
   text-decoration: none;
@@ -585,7 +584,7 @@
   place-items: center;
   border: 0;
   background: none;
-  color: var(--brown);
+  color: var(--ink);
 }
 .occasionMedia {
   display: none;
@@ -862,4 +861,9 @@
   .promptCopy {
     padding: 12px 16px 0;
   }
+}
+
+.new:hover,
+.primary:hover {
+  background: var(--action-hover);
 }

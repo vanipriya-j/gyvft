@@ -195,7 +195,7 @@ export function CustomerAuth({
           )}
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-olive-dark px-5 py-3 text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-action px-5 py-3 text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {busy ? (
               <>
