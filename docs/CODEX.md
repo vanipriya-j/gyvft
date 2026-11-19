@@ -4,9 +4,13 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Real Circles implementation — 19 November 2026
+
+See [CIRCLES.md](CIRCLES.md). Real circle records, navigation, creation, accepted memberships, invitations, admin-only recipients, shared occasions, per-circle profile consent, owner/admin controls and institutional verification are implemented on the Circles release branch. Production activation is held for explicit approval of additive migration `20261119000002_circles.sql`. No production migration or deletion was performed. Builds/startup never migrate. The explicit demo action adds five circles without resetting existing passwords or membership choices.
+
 ## Explicit customer demo workspaces — 19 November 2026
 
-`/operations/demo-data` is an insert-only operator command for four fictional accounts with rich history. It uses the existing schema, preserves existing passwords and records, and does not run migrations or external writes. See the four-workspace section in [CUSTOMER-PORTAL.md](CUSTOMER-PORTAL.md). Organisation/community labels do not implement circles or memberships. Demo customer money is labelled and scoped to those four identities; live Operations totals exclude it.
+`/operations/demo-data` is an explicit data-only operator command for four fictional accounts with rich history. It uses the approved schema, preserves existing passwords and records, links only known fictional gifts to their new circles, and does not run migrations or external writes. See the four-workspace section in [CUSTOMER-PORTAL.md](CUSTOMER-PORTAL.md). Before the Circles release, organisation/community labels were context only; the new explicit seed adds real memberships after its separately approved schema update. Demo customer money is labelled and scoped to those four identities; live Operations totals exclude it.
 
 ## Customer authentication verification — 19 November 2026
 
@@ -14,7 +18,7 @@ See [CUSTOMER-AUTH-VERIFICATION.md](CUSTOMER-AUTH-VERIFICATION.md) for actual br
 
 ## Shared theme, navigation and Operations dashboard — 19 November 2026
 
-The public site and applications now use one approved root palette; Customer Home no longer keeps its own brown actions. Account navigation has pending feedback/loading states, Home defers external catalogue reads, and request aggregates load related data concurrently after ownership checks. `/operations` starts with the live dashboard, while `/operations/requests` remains the queue. See [OPERATIONS-DASHBOARD.md](OPERATIONS-DASHBOARD.md) for definitions, exclusions and next design work. Rich analytics/report exports, customer administration, named team roles and circles/organisations remain separate follow-up work.
+The public site and applications now use one approved root palette; Customer Home no longer keeps its own brown actions. Account navigation has pending feedback/loading states, Home defers external catalogue reads, and request aggregates load related data concurrently after ownership checks. `/operations` starts with the live dashboard, while `/operations/requests` remains the queue. See [OPERATIONS-DASHBOARD.md](OPERATIONS-DASHBOARD.md) for definitions, exclusions and next design work. Rich analytics/report exports, customer administration and named team roles remain separate follow-up work. Circles is covered by the proposed release above.
 
 ## Approved individual gifting application — 19 November 2026
 
@@ -22,7 +26,7 @@ The Revision 4 customer and Operations flow is now implemented in the applicatio
 
 The release adds private brief drafts/history, people/invitations/profiles, linked recurring occasions, version-specific changes, private operator approval drafts/notes/tasks, and independently revocable feedback/photo publication. Customer quote approval unlocks the 50% advance; the balance is due before dispatch. Production and official-order locks are enforced on the server. Named dialogs and 44px mobile targets carry into the real screens.
 
-Apply the explicit customer manifest manually through the secret-protected `/setup` workflow. Builds and deployments do not run migrations. The automatic production-build hook from PR #45 was removed on 19 November 2026; do not reintroduce migration execution into build, deployment or startup hooks. The user requires explicit approval before each production migration or data-deletion operation. Approval to build/deploy or add demo records does not authorize either action. Removing the hook does not roll back applied SQL or restore missing records. Application authentication remains DB-owned, and Shopify requires its own deployment credential. AI curation and institutional circles remain future work.
+Apply the explicit customer manifest manually through the secret-protected `/setup` workflow. Builds and deployments do not run migrations. The automatic production-build hook from PR #45 was removed on 19 November 2026; do not reintroduce migration execution into build, deployment or startup hooks. The user requires explicit approval before each production migration or data-deletion operation. Approval to build/deploy or add demo records does not authorize either action. Removing the hook does not roll back applied SQL or restore missing records. Application authentication remains DB-owned, and Shopify requires its own deployment credential. AI curation remains future work; the proposed Circles release is described above.
 
 ## Working customer and Operations gifting flow — 17 November 2026
 

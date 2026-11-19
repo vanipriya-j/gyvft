@@ -80,14 +80,10 @@ This content work is independent of customer access. Do not invent hamper conten
 - Do not reshape existing Aarla business tables to satisfy unused legacy Studio migrations.
 
 
-## Next customer navigation feature: Circles · 19 November 2026
+## Circles implementation · 19 November 2026
 
-Circles is not implemented by the demo workspace's relationship labels. It must have a working destination before appearing in the live navigation. Proposed main navigation is **Home / My gifts / Occasions / Circles** on desktop and mobile; profile/people remain under the existing account icon, and ideas remain accessible from Home and saved inspiration.
+Implemented and locally verified on `codex/real-circles`; production activation waits for explicit approval of additive SQL `20261119000002_circles.sql`. See [CIRCLES.md](CIRCLES.md) for the domain, screens, permissions, demo data and approval-controlled rollout. This replaces the prior plan-only backlog entry; labels alone did not implement Circles.
 
-The first implementation should provide a circle list, circle detail and member list, private circle creation, category selection, owner/admin controls, invitation acceptance and membership removal/leave rules. Categories cover family, friends, corporate, school/college, alumni and other communities. Each person keeps one individual account and can be in several circles.
+Includes real records, multi-circle membership, owner/admin/member rules, invitation acceptance/revocation, recipients, profile consent, shared occasions, gift context, archive/restore and institutional verification in Operations. Cross-company intelligence, automatic membership, budgets, shared purchasing authority, bulk import and reminders are later work.
 
-The proposed domain records are `gyvft_circles` (UUID, name, category, owner-account UUID, optional organisation website/domain, verification state and timestamps), `gyvft_circle_members` (circle/account composite key, admin/member role and joined timestamp), and `gyvft_circle_invitations` (UUID, circle, normalized recipient email, hashed token, expiry, invited role and acceptance timestamp). Owner transfer and last-admin rules must be atomic. An email-domain match is a claim, not proof of verified organisation status. All reads and commands enforce accepted membership and administration on the server; database tables deny direct browser access. Private recipient notes, occasion dates and customer gifts must not become circle-wide simply because someone joins.
-
-Implement domain commands and ownership/acceptance tests before connecting screens. Keep circle administration, organisation verification and optional occasion-sharing permissions distinct. Cross-company occasion intelligence and gifting across accepted circles follow after those permissions work.
-
-**No circle tables or memberships were created by the current demo seed.** A concrete SQL migration and rollout will be reviewed with the owner before any production migration executes. The existing manual `/setup` manifest must not be extended or run for Circles without explicit approval. Current UI/loading work does not activate a placeholder or dead Circles link.
+No production SQL or data deletion was performed during implementation. The manifest change is proposed for review, with no automatic execution hook.

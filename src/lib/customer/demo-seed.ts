@@ -10,6 +10,7 @@ import { indiaToday } from "./dashboard-model";
 import { draftSchema } from "./gift-workspace-model";
 import { giftBriefSchema } from "./journey-model";
 import { storyRequestSchema } from "./story-request";
+import { seedDemoCircles } from "./circle-demo";
 import { logger } from "@/lib/logging/logger";
 
 const marker = "GYVFT-DEMO-v1";
@@ -140,7 +141,8 @@ const scenarios = {
   },
 } as const;
 
-/** Data-only command. No schema commands, updates, deletes, notifications or integrations. */
+/** Explicit data-only command. No schema commands, deletion, notifications or integrations.
+ * Circle context is attached only to exact known fictional gifts, when empty. */
 export async function seedCustomerDemos(password: string, now = new Date()) {
   const today = indiaToday(now);
   const day = (offset: number) =>
@@ -152,7 +154,20 @@ export async function seedCustomerDemos(password: string, now = new Date()) {
     demoAccounts.map(() => hashCustomerPassword(password)),
   );
   const images = await Promise.all(
-    demoImagePaths.map((p) => readFile(path.join(process.cwd(), p))),
+    demoImagePaths.map((p) =>
+      readFile(
+        path.join(
+          process.cwd(),
+          "public",
+          "images",
+          "gyvft",
+          "case-studies",
+          p.endsWith("bits-2001-reunion/hero.png")
+            ? "bits-2001-reunion/hero.png"
+            : "various-dance-schools/hero.png",
+        ),
+      ),
+    ),
   );
   const tables = new Map<string, Table>();
   function add(table: string, row: Row, owner?: string, primaryKey = "id") {
@@ -776,11 +791,14 @@ export async function seedCustomerDemos(password: string, now = new Date()) {
         throw error;
       }
     }
+    inserted += await seedDemoCircles(tx);
   });
   return {
     inserted,
     accounts: demoAccounts.map((a) => ({ ...a, loginUrl: "/account/login" })),
     counts: {
+      circles: 5,
+      circleMemberships: 11,
       gifts: tables.get("customer_projects")!.rows.length,
       people: tables.get("gyvft_customer_people")!.rows.length,
       occasions: tables.get("gyvft_customer_occasions")!.rows.length,

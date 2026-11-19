@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>GYVFT · Circles implementation review</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f8f6ef;
+        color: #1b1e18;
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+      }
+      header,
+      main {
+        max-width: 1440px;
+        margin: auto;
+        padding: 24px;
+      }
+      header {
+        border-bottom: 1px solid #ded9cd;
+      }
+      h1 {
+        font:
+          32px/1.2 Georgia,
+          serif;
+        margin: 8px 0;
+      }
+      p {
+        max-width: 840px;
+        color: #66675e;
+      }
+      .eyebrow {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #626b3b;
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0 0 20px;
+      }
+      button {
+        font: inherit;
+        min-height: 44px;
+        border: 1px solid #d8d5c9;
+        background: #fffdf8;
+        padding: 10px 14px;
+        border-radius: 7px;
+        color: inherit;
+        cursor: pointer;
+      }
+      button[aria-pressed="true"] {
+        background: #636e3b;
+        border-color: #636e3b;
+        color: white;
+      }
+      button:focus-visible,
+      a:focus-visible {
+        outline: 3px solid #b91f2b;
+        outline-offset: 3px;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        margin-bottom: 12px;
+      }
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid #ded9cd;
+        border-radius: 10px;
+        background: #fffdf8;
+      }
+      .mobile {
+        max-width: 420px;
+        margin: auto;
+      }
+      a {
+        color: #ac1d2b;
+      }
+      footer {
+        margin-top: 24px;
+        font-size: 13px;
+        color: #68695f;
+      }
+      @media (max-width: 600px) {
+        header,
+        main {
+          padding: 16px;
+        }
+        h1 {
+          font-size: 26px;
+        }
+        nav {
+          flex-wrap: nowrap;
+          overflow: auto;
+        }
+        button {
+          white-space: nowrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="eyebrow">GYVFT · Implemented application</span>
+      <h1>Circles, connected to real records.</h1>
+      <p>
+        These are captures of the working application using fictional records in
+        an isolated local database. They show the customer and Operations
+        screens; this gallery is a read-only review aid. Production activation
+        waits for the separately approved database update.
+      </p>
+    </header>
+    <main>
+      <nav aria-label="Review screens">
+        <button
+          aria-pressed="true"
+          data-screen="desktop-circles"
+          data-caption="Circle list · Accepted memberships, categories, ownership and creation."
+        >
+          Your circles
+        </button>
+        <button
+          aria-pressed="false"
+          data-screen="desktop-circle"
+          data-caption="Circle overview · People, shared occasions and only the current customer’s own gifts."
+        >
+          Overview
+        </button>
+        <button
+          aria-pressed="false"
+          data-screen="desktop-people"
+          data-caption="People · Accepted members, owner/admin controls, invitations and admin-only recipients."
+        >
+          People
+        </button>
+        <button
+          aria-pressed="false"
+          data-screen="desktop-occasions"
+          data-caption="Occasions · Explicit sharing and a direct path into the existing gift flow."
+        >
+          Occasions
+        </button>
+        <button
+          aria-pressed="false"
+          data-screen="desktop-settings"
+          data-caption="Settings · Per-circle profile consent, circle details and retained archive state."
+        >
+          Settings
+        </button>
+        <button
+          aria-pressed="false"
+          data-screen="mobile-circle"
+          data-caption="Mobile · Circle tabs, compact content and persistent navigation."
+        >
+          Mobile
+        </button>
+        <button
+          aria-pressed="false"
+          data-screen="mobile-create-company"
+          data-caption="Company creation · Organisation details support a separate team verification check."
+        >
+          Create a company
+        </button>
+        <button
+          aria-pressed="false"
+          data-screen="operations-organisations"
+          data-caption="Operations · Institutional claims, recorded reviews and a guard against verifying fictional organisations."
+        >
+          Operations
+        </button>
+      </nav>
+      <figure>
+        <figcaption id="caption">
+          Circle list · Accepted memberships, categories, ownership and
+          creation.
+        </figcaption>
+        <img
+          id="screen"
+          src="/images/review/circles/desktop-circles.png"
+          alt="Your circles application screen"
+          width="1440"
+          height="1000"
+        />
+      </figure>
+      <footer>
+        The implementation includes domain commands, authenticated APIs,
+        invitations and membership rules.
+        <a
+          href="https://github.com/vanipriya-j/gyvft/blob/codex/real-circles/docs/CIRCLES.md"
+          >Implementation, privacy and rollout details</a
+        >
+        ·
+        <a
+          href="https://github.com/vanipriya-j/gyvft/blob/codex/real-circles/supabase/migrations/20261119000002_circles.sql"
+          >Complete proposed SQL</a
+        >
+      </footer>
+    </main>
+    <script>
+      const screen = document.getElementById("screen"),
+        caption = document.getElementById("caption");
+      document.querySelectorAll("nav button").forEach((button) =>
+        button.addEventListener("click", () => {
+          document
+            .querySelectorAll("nav button")
+            .forEach((b) =>
+              b.setAttribute("aria-pressed", String(b === button)),
+            );
+          screen.src =
+            "/images/review/circles/" + button.dataset.screen + ".png";
+          screen.alt = button.dataset.caption;
+          screen.className = button.dataset.screen.startsWith("mobile")
+            ? "mobile"
+            : "";
+          caption.textContent = button.dataset.caption;
+        }),
+      );
+    </script>
+  </body>
+</html>

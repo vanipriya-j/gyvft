@@ -55,6 +55,8 @@ export const giftBriefSchema = z.object({
   phone: z.string().trim().min(7).max(40),
   occasion_id: z.string().uuid().nullable(),
   person_id: z.string().uuid().nullable(),
+  circle_id: z.string().uuid().nullable().optional(),
+  circle_occasion_id: z.string().uuid().nullable().optional(),
 });
 export const draftGiftBriefSchema = giftBriefSchema.extend({
   title: z.string().trim().max(160),

@@ -6,6 +6,7 @@ import {
   briefFromProject,
 } from "@/lib/customer/journeys";
 import { ownedProject } from "@/lib/customer/data";
+import { circleGiftContext } from "@/lib/customer/circles";
 import { GiftIntake } from "@/components/customer/gift-intake";
 export const dynamic = "force-dynamic";
 export default async function NewGift({
@@ -15,6 +16,8 @@ export default async function NewGift({
     occasion?: string;
     person?: string;
     repeat?: string;
+    circle?: string;
+    circle_occasion?: string;
   }>;
 }) {
   const account = await requireCustomerAccount(),
@@ -29,12 +32,18 @@ export default async function NewGift({
     ? await ownedProject(params.repeat, account.id)
     : null;
   const repeat = previous ? briefFromProject(previous) : {};
+  const context = params.circle
+    ? await circleGiftContext(account.id, params.circle, params.circle_occasion)
+    : null;
   return (
     <GiftIntake
-      key={`${params.occasion || ""}-${params.person || ""}-${params.repeat || ""}`}
+      key={`${params.occasion || ""}-${params.person || ""}-${params.repeat || ""}-${params.circle || ""}-${params.circle_occasion || ""}`}
       id={randomUUID()}
       email={account.email}
+      contextLabel={context?.circle.name}
       initial={{
+        circle_id: null,
+        circle_occasion_id: null,
         ...repeat,
         ...(previous
           ? {
@@ -51,6 +60,18 @@ export default async function NewGift({
               likes: p.shared_interests || p.likes,
               avoid: p.shared_avoid || p.avoid,
               recipients: 1,
+            }
+          : {}),
+        ...(context
+          ? {
+              circle_id: context.circle.id,
+              circle_occasion_id: context.occasion?.id || null,
+              ...(context.occasion
+                ? {
+                    title: context.occasion.title,
+                    occasion: context.occasion.title,
+                  }
+                : {}),
             }
           : {}),
         phone: "",

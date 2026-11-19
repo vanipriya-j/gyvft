@@ -752,3 +752,106 @@
     animation: none;
   }
 }
+
+/* Circles use the same compact application shell at every breakpoint. */
+.circles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+}
+.circle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.circle-card > .app-button {
+  margin-top: auto;
+  padding-top: 12px;
+}
+.circle-card > .app-note {
+  margin-bottom: 16px;
+}
+.circle-card > div:first-child {
+  width: 100%;
+}
+.circle-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: var(--color-olive-light, #ecefdd);
+  color: var(--color-olive-dark, #535e2e);
+}
+.circle-empty {
+  max-width: 640px;
+  padding: 28px;
+}
+.circles-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.gyvft-app .app-tabs.circle-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+.gyvft-app .circle-tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.gyvft-app .circle-tabs a[aria-current="page"] {
+  border-color: var(--color-olive-dark, #535e2e);
+  color: var(--color-olive-dark, #535e2e);
+}
+.circle-recipient {
+  border-top: 1px solid var(--color-border, #ded9cb);
+  margin-top: 12px;
+  padding-top: 4px;
+}
+.circle-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 48px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.circle-summary::after {
+  content: "+";
+  color: var(--color-olive-dark, #535e2e);
+}
+[open] > .circle-summary::after {
+  content: "−";
+}
+@media (max-width: 767px) {
+  .circles-overview {
+    grid-template-columns: 1fr;
+  }
+  .circle-member {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .circle-member .app-actions {
+    flex-wrap: wrap;
+  }
+  .gyvft-app .circle-tabs a {
+    padding: 10px 12px;
+  }
+  .circle-card {
+    padding: 18px;
+  }
+  .circle-empty {
+    padding: 20px;
+  }
+}

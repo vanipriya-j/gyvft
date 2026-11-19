@@ -28,6 +28,7 @@ const customerMigrations = [
   "20261116000001_gift_workspace.sql",
   "20261117000001_customer_home.sql",
   "20261119000001_gifting_journeys.sql",
+  "20261119000002_circles.sql",
 ] as const;
 export type MigrationStatus = { id: string; appliedAt: string | null };
 export class MigrationBusyError extends Error {

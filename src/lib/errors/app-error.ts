@@ -6,6 +6,7 @@ export type ErrorCode =
   | "CONFLICT"
   | "RATE_LIMITED"
   | "INTEGRATION_ERROR"
+  | "SETUP_REQUIRED"
   | "INTERNAL_ERROR";
 
 export class AppError extends Error {
@@ -17,7 +18,12 @@ export class AppError extends Error {
   constructor(
     code: ErrorCode,
     message: string,
-    options?: { status?: number; details?: unknown; expose?: boolean; cause?: unknown },
+    options?: {
+      status?: number;
+      details?: unknown;
+      expose?: boolean;
+      cause?: unknown;
+    },
   ) {
     super(message, { cause: options?.cause });
     this.name = "AppError";
@@ -32,6 +38,7 @@ export class AppError extends Error {
         CONFLICT: 409,
         RATE_LIMITED: 429,
         INTEGRATION_ERROR: 502,
+        SETUP_REQUIRED: 503,
         INTERNAL_ERROR: 500,
       }[code] as number);
     this.details = options?.details;
@@ -64,4 +71,7 @@ export function toErrorResponse(error: unknown): {
 
 export type ActionResult<T> =
   | { ok: true; data: T }
-  | { ok: false; error: { code: ErrorCode; message: string; details?: unknown } };
+  | {
+      ok: false;
+      error: { code: ErrorCode; message: string; details?: unknown };
+    };

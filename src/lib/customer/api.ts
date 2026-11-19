@@ -14,7 +14,7 @@ export const customerReply = (body: unknown, status = 200) =>
       ...(status === 429 ? { "Retry-After": "60" } : {}),
     },
   });
-export async function customerJson(request: Request) {
+export async function customerJson(request: Request, maxBytes = 2048) {
   if (
     !request.headers
       .get("content-type")
@@ -30,7 +30,7 @@ export async function customerJson(request: Request) {
     const { done, value } = await reader.read();
     if (done) break;
     length += value.byteLength;
-    if (length > 2048) {
+    if (length > maxBytes) {
       await reader.cancel();
       throw new AppError("VALIDATION_ERROR", "Request is too large.", {
         status: 413,

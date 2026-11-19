@@ -2,6 +2,7 @@ import Link from "@/components/ui/navigation-link";
 import { randomUUID } from "node:crypto";
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { occasionsFor, peopleFor } from "@/lib/customer/journeys";
+import { circleOccasionsFor } from "@/lib/customer/circles";
 import { OccasionForm } from "@/components/customer/people-forms";
 import { nextOccasionDate, indiaToday } from "@/lib/customer/dashboard-model";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ export default async function OccasionsPage({
       peopleFor(a.id),
     ]),
     today = indiaToday();
+  const shared = add === "1" ? [] : await circleOccasionsFor(a.id);
   return (
     <>
       <div className="app-title">
@@ -84,6 +86,33 @@ export default async function OccasionsPage({
               </Link>
             </div>
           )}
+        </section>
+      )}
+      {!!shared.length && (
+        <section className="app-panel mt-5">
+          <h2>Within your circles</h2>
+          {shared.map((o) => (
+            <article className="app-row" key={o.id}>
+              <div>
+                <p className="app-eyebrow">
+                  {nextOccasionDate(o, today) || o.occasion_date}
+                </p>
+                <h2>{o.title}</h2>
+                <Link
+                  className="app-button quiet"
+                  href={`/account/circles/${o.circle_id}?tab=occasions`}
+                >
+                  {o.circle_name} →
+                </Link>
+              </div>
+              <Link
+                className="app-button primary"
+                href={`/account/gifts/new?circle=${o.circle_id}&circle_occasion=${o.id}`}
+              >
+                Plan a gift
+              </Link>
+            </article>
+          ))}
         </section>
       )}
     </>

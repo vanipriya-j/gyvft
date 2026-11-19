@@ -18,6 +18,7 @@ import {
   type Profile,
   type GiftBrief,
 } from "./journey-model";
+import { validateCircleGiftContext, circlesReady } from "./circles";
 import { queueNotification } from "./notifications";
 export async function journeyProject(
   tx: Sql,
@@ -129,8 +130,28 @@ export async function saveGift(
           "Your gift has a quote. Request a version-specific change from Quote & pay.",
         );
     }
-    const rows =
-      await tx`INSERT INTO customer_projects(id,customer_account_id,customer_email,title,brief,is_draft,draft_document,occasion_id,person_id,delivery_date,next_action) VALUES(${id}::uuid,${account.id}::uuid,${account.email},${b.title},${b.story},${draft},${tx.json(b)},${b.occasion_id}::uuid,${b.person_id}::uuid,${b.delivery_date || null}::date,${draft ? "Private draft" : "Your story is with Aarla. We will curate options for you."}) ON CONFLICT(id) DO UPDATE SET title=EXCLUDED.title,brief=EXCLUDED.brief,is_draft=EXCLUDED.is_draft,draft_document=EXCLUDED.draft_document,occasion_id=EXCLUDED.occasion_id,person_id=EXCLUDED.person_id,delivery_date=EXCLUDED.delivery_date,next_action=EXCLUDED.next_action WHERE customer_projects.customer_account_id=${account.id}::uuid RETURNING id`;
+    const circleSchema = await circlesReady(tx);
+    if ((b.circle_id || b.circle_occasion_id) && !circleSchema)
+      throw new JourneyError(
+        "Circles needs the approved database update before a gift can be attached.",
+      );
+    if (b.circle_occasion_id && !b.circle_id)
+      throw new JourneyError("Choose a circle for this shared occasion.");
+    if (
+      b.circle_id &&
+      (!existing ||
+        b.circle_id !== existing.circle_id ||
+        (b.circle_occasion_id || null) !== existing.circle_occasion_id)
+    )
+      await validateCircleGiftContext(
+        tx,
+        account.id,
+        b.circle_id,
+        b.circle_occasion_id,
+      );
+    const rows = circleSchema
+      ? await tx`INSERT INTO customer_projects(id,customer_account_id,customer_email,title,brief,is_draft,draft_document,occasion_id,person_id,circle_id,circle_occasion_id,delivery_date,next_action) VALUES(${id}::uuid,${account.id}::uuid,${account.email},${b.title},${b.story},${draft},${tx.json(b)},${b.occasion_id}::uuid,${b.person_id}::uuid,${b.circle_id || null}::uuid,${b.circle_occasion_id || null}::uuid,${b.delivery_date || null}::date,${draft ? "Private draft" : "Your story is with Aarla. We will curate options for you."}) ON CONFLICT(id) DO UPDATE SET title=EXCLUDED.title,brief=EXCLUDED.brief,is_draft=EXCLUDED.is_draft,draft_document=EXCLUDED.draft_document,occasion_id=EXCLUDED.occasion_id,person_id=EXCLUDED.person_id,circle_id=EXCLUDED.circle_id,circle_occasion_id=EXCLUDED.circle_occasion_id,delivery_date=EXCLUDED.delivery_date,next_action=EXCLUDED.next_action WHERE customer_projects.customer_account_id=${account.id}::uuid RETURNING id`
+      : await tx`INSERT INTO customer_projects(id,customer_account_id,customer_email,title,brief,is_draft,draft_document,occasion_id,person_id,delivery_date,next_action) VALUES(${id}::uuid,${account.id}::uuid,${account.email},${b.title},${b.story},${draft},${tx.json(b)},${b.occasion_id}::uuid,${b.person_id}::uuid,${b.delivery_date || null}::date,${draft ? "Private draft" : "Your story is with Aarla. We will curate options for you."}) ON CONFLICT(id) DO UPDATE SET title=EXCLUDED.title,brief=EXCLUDED.brief,is_draft=EXCLUDED.is_draft,draft_document=EXCLUDED.draft_document,occasion_id=EXCLUDED.occasion_id,person_id=EXCLUDED.person_id,delivery_date=EXCLUDED.delivery_date,next_action=EXCLUDED.next_action WHERE customer_projects.customer_account_id=${account.id}::uuid RETURNING id`;
     if (!rows[0]) throw new JourneyError("Gift unavailable.");
     if (!draft) {
       const [last] =
