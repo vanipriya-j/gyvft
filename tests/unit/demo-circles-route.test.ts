@@ -1,13 +1,17 @@
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
 import { resetMemoryGuardsForTests } from "@/lib/security/memory-guards";
-const { complete, log } = vi.hoisted(() => ({
+const { complete, log, refresh } = vi.hoisted(() => ({
   complete: vi.fn(),
   log: vi.fn(),
+  refresh: vi.fn(),
 }));
+vi.mock("next/cache", () => ({ revalidatePath: refresh }));
 vi.mock("@/lib/customer/circle-demo", () => ({
   completeDemoCircles: complete,
 }));
-vi.mock("@/lib/logging/logger", () => ({ logger: { info: log, error: log } }));
+vi.mock("@/lib/logging/logger", () => ({
+  logger: { info: log, error: log, warn: log },
+}));
 import { POST } from "@/app/api/operations/demo-circles/route";
 import { CircleError } from "@/lib/customer/circle-model";
 const secret = "local-demo-circles-secret";
@@ -78,9 +82,32 @@ describe("explicit demo-circle completion command", () => {
     const r = await post({ confirm: true });
     const result = await r.json();
     expect(r.status).toBe(500);
-    expect(result.message).toContain("No partial update");
+    expect(result.diagnostic.code).toBe("DATABASE_ERROR");
+    expect(result.reference).toEqual(expect.any(String));
     expect(
       JSON.stringify(result) + JSON.stringify(log.mock.calls),
     ).not.toContain("password@");
   });
+});
+
+it("supports a rollback-only check without invalidating pages or claiming data was saved", async () => {
+  complete.mockResolvedValueOnce({
+    inserted: 5,
+    corrected: 14,
+    accounts: [],
+    checkOnly: true,
+    message: "Check passed. No changes saved.",
+  });
+  const r = await post({ confirm: true, check_only: true });
+  expect(r.status).toBe(200);
+  expect(complete).toHaveBeenCalledWith({ checkOnly: true });
+  expect(refresh).not.toHaveBeenCalled();
+});
+it("does not turn successful data completion into a false rollback claim when cache refresh fails", async () => {
+  refresh.mockImplementationOnce(() => {
+    throw Error("cache offline");
+  });
+  const r = await post({ confirm: true });
+  expect(r.status).toBe(200);
+  expect((await r.json()).ok).toBe(true);
 });

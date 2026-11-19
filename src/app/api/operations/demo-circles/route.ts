@@ -6,6 +6,10 @@ import { assertPublicFormRateLimit } from "@/lib/security/memory-guards";
 import { completeDemoCircles } from "@/lib/customer/circle-demo";
 import { CircleError } from "@/lib/customer/circle-model";
 import { logger } from "@/lib/logging/logger";
+import {
+  DemoCircleFailure,
+  demoCircleDiagnostic,
+} from "@/lib/customer/demo-circle-diagnostic";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const reply = (body: unknown, status = 200) =>
@@ -45,21 +49,41 @@ export async function POST(request: Request) {
       { ok: false, message: "The database connection is unavailable." },
       503,
     );
+  let checkOnly = false;
   try {
     const raw = await request.text();
     if (Buffer.byteLength(raw) > 1024)
       return reply({ ok: false, message: "Request too large." }, 413);
-    z.object({ confirm: z.literal(true) })
+    const input = z
+      .object({ confirm: z.literal(true), check_only: z.boolean().optional() })
       .strict()
       .parse(JSON.parse(raw));
-    const result = await completeDemoCircles();
-    revalidatePath("/account/circles", "layout");
-    revalidatePath("/account/occasions");
-    revalidatePath("/account");
-    logger.info("Operator completed demo circles", {
-      inserted: result.inserted,
-      corrected: result.corrected,
-    });
+    checkOnly = !!input.check_only;
+    const result = input.check_only
+      ? await completeDemoCircles({ checkOnly: true })
+      : await completeDemoCircles();
+    if (!result.checkOnly) {
+      try {
+        revalidatePath("/account/circles", "layout");
+        revalidatePath("/account/occasions");
+        revalidatePath("/account");
+      } catch {
+        logger.warn("Demo circles saved; page refresh could not be confirmed", {
+          code: "DEMO_CIRCLES_CACHE_REFRESH_FAILED",
+        });
+      }
+    }
+
+    logger.info(
+      result.checkOnly
+        ? "Operator checked demo circles without saving"
+        : "Operator completed demo circles",
+      {
+        inserted: result.inserted,
+        corrected: result.corrected,
+        checkOnly: !!result.checkOnly,
+      },
+    );
     return reply({ ok: true, ...result });
   } catch (error) {
     if (error instanceof CircleError)
@@ -73,15 +97,20 @@ export async function POST(request: Request) {
         400,
       );
     const reference = randomUUID();
-    logger.error("Demo circle update failed", {
-      code: "DEMO_CIRCLES_FAILED",
-      reference,
-    });
+    const diagnostic =
+      error instanceof DemoCircleFailure
+        ? error.diagnostic
+        : demoCircleDiagnostic(error);
+    logger.error("Demo circle update failed", { ...diagnostic, reference });
     return reply(
       {
         ok: false,
         message:
-          "No partial update was committed. Check the server log using this reference.",
+          diagnostic.message +
+          (checkOnly
+            ? " The check did not save changes. Share the diagnostic below."
+            : " Check current circles before another save attempt."),
+        diagnostic,
         reference,
       },
       500,

@@ -8,21 +8,39 @@ import { demoAccounts } from "@/lib/customer/demo-accounts";
 type Result = {
   ok: boolean;
   message: string;
+  reference?: string;
+  checkOnly?: boolean;
+  diagnostic?: {
+    code: string;
+    operation: string;
+    table?: string;
+    column?: string;
+    constraint?: string;
+  };
   corrected?: number;
   accounts?: { id: string; email: string; circles: number }[];
 };
 export default function CompleteCircles() {
   const router = useRouter();
   const hydrated = useHydrated();
-  const [busy, setBusy] = useState(false),
+  const [mode, setMode] = useState<"check" | "save" | null>(null),
     [result, setResult] = useState<Result | null>(null),
     lock = useRef(false);
+  const busy = mode !== null;
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    await run(e.currentTarget, false);
+  }
+  async function run(form: HTMLFormElement, checkOnly: boolean) {
     if (lock.current) return;
-    const f = new FormData(e.currentTarget);
+    const f = new FormData(form);
+    if (!String(f.get("secret") || "").trim()) {
+      setResult({ ok: false, message: "Enter the Operations secret first." });
+      return;
+    }
+
     lock.current = true;
-    setBusy(true);
+    setMode(checkOnly ? "check" : "save");
     setResult(null);
     try {
       const r = await fetch("/api/operations/demo-circles", {
@@ -31,11 +49,14 @@ export default function CompleteCircles() {
           "Content-Type": "application/json",
           "x-setup-secret": String(f.get("secret")),
         },
-        body: JSON.stringify({ confirm: f.has("confirm") }),
+        body: JSON.stringify({
+          confirm: checkOnly || f.has("confirm"),
+          ...(checkOnly ? { check_only: true } : {}),
+        }),
       });
       const next = await r.json();
       setResult(next);
-      if (next.ok) router.refresh();
+      if (next.ok && !next.checkOnly) router.refresh();
     } catch {
       setResult({
         ok: false,
@@ -44,7 +65,7 @@ export default function CompleteCircles() {
       });
     } finally {
       lock.current = false;
-      setBusy(false);
+      setMode(null);
     }
   }
   return (
@@ -97,18 +118,44 @@ export default function CompleteCircles() {
             <label className="app-check mt-4">
               <input name="confirm" type="checkbox" required />
               Complete only these four fictional workspaces and correct their
-              untouched occasion labels.
+              untouched occasion labels. The check tests the same writes and
+              rolls them back.
             </label>
+            <button
+              className="app-button app-pending-button mt-4 mr-3"
+              aria-busy={mode === "check"}
+              aria-label="Check without saving"
+              type="button"
+              disabled={busy || !hydrated}
+              onClick={(e) => {
+                const form = e.currentTarget.form;
+                if (form) void run(form, true);
+              }}
+            >
+              <span
+                style={{ visibility: mode === "check" ? "hidden" : "visible" }}
+              >
+                Check without saving
+              </span>
+              {mode === "check" && (
+                <span className="app-button-pending" aria-hidden>
+                  <LoaderCircle size={16} className="app-spinner" />
+                  Checking…
+                </span>
+              )}
+            </button>
             <button
               className="app-button primary app-pending-button mt-4"
               aria-label="Complete demo circles"
-              aria-busy={busy}
+              aria-busy={mode === "save"}
               disabled={busy || !hydrated}
             >
-              <span style={{ visibility: busy ? "hidden" : "visible" }}>
+              <span
+                style={{ visibility: mode === "save" ? "hidden" : "visible" }}
+              >
                 Complete demo circles
               </span>
-              {busy && (
+              {mode === "save" && (
                 <span className="app-button-pending" aria-hidden>
                   <LoaderCircle size={16} className="app-spinner" />
                   Working…
@@ -118,19 +165,47 @@ export default function CompleteCircles() {
           </fieldset>
         </form>
         {result && (
-          <div className="app-soft mt-4" role={result.ok ? "status" : "alert"}>
+          <div
+            className="app-soft mt-4"
+            role={result.ok ? "status" : "alert"}
+            aria-label="Demo circle result"
+          >
             <p>{result.message}</p>
+            {result.diagnostic && (
+              <p className="mt-2">
+                <strong>{result.diagnostic.operation}</strong> ·{" "}
+                {result.diagnostic.code}
+                {result.diagnostic.table
+                  ? ` · Table: ${result.diagnostic.table}`
+                  : ""}
+                {result.diagnostic.column
+                  ? ` · Column: ${result.diagnostic.column}`
+                  : ""}
+                {result.diagnostic.constraint
+                  ? ` · Constraint: ${result.diagnostic.constraint}`
+                  : ""}
+              </p>
+            )}
+            {result.reference && (
+              <p className="mt-2">
+                Reference: <code>{result.reference}</code>
+              </p>
+            )}
             {result.corrected !== undefined && (
               <p className="mt-2">
-                {result.corrected} untouched occasion contexts corrected.
+                {result.corrected} untouched occasion contexts{" "}
+                {result.checkOnly ? "would be corrected" : "corrected"}.
               </p>
             )}
             {result.accounts?.map((a) => (
               <p className="mt-2 break-all" key={a.id}>
-                {a.email} · {a.circles} active circles
+                {a.email} · {a.circles}{" "}
+                {result.checkOnly
+                  ? "circles after completion (not saved)"
+                  : "active circles"}
               </p>
             ))}
-            {result.ok && (
+            {result.ok && !result.checkOnly && (
               <Link className="app-button mt-4" href="/account/circles">
                 Open your circles →
               </Link>

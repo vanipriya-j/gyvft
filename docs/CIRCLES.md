@@ -40,6 +40,12 @@ Operations → **Circles & organisations** lists institutional claims and record
 
 Invitation links are returned only to their authenticated creator. Email is optional and only sent when the operator of the circle chooses “Also email the invitation”; copy-link works without email configuration. Tokens are stored as hashes. No live invitation emails were sent during local verification.
 
+## Diagnosing a failed completion
+
+The operator page now shows a safe SQLSTATE, failing operation, available schema identifiers and the request reference. The earlier generic handler discarded those details and the page omitted the reference. `Check without saving` validates the same guarded transaction and deliberately rolls it back; its membership counts are forecasts, not saved records. No emails, migrations, deletions or external integrations are involved.
+
+The data transaction is separated from cache invalidation: a page-refresh failure after commit cannot be reported as a data rollback. A 5-second lock timeout bounds row-lock waits. Diagnosis tests use the complete 28-gift fixture, inject a local-only constraint failure to verify SQLSTATE/phase and rollback, then verify rollback-only checking and explicit completion independently. Local checks have not reproduced the live database failure. Production execution still requires the operator secret; the live failure remains unresolved until the production diagnostic is collected.
+
 ## Completing earlier demo accounts
 
 An empty Circles page alongside “Alumni network” occasions means those private sample labels have not created accepted memberships. The earlier data generator also assigned occasion relationships by cycling through people; this incorrectly labelled some book-club and neighbourhood occasions.
