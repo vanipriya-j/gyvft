@@ -132,7 +132,7 @@ The fixtures include 28 gifts, 22 recipient records and 20 occasions, with curat
 
 The command uses a single transaction and an advisory lock. It runs no migrations, updates, deletion, notifications or Shopify writes. A repeat fills only missing fixture rows and never resets an existing password. Collisions with pre-existing accounts or another record's ownership abort the batch. The existing `aarla@aarla.in` identity is not created, replaced or recovered by this action.
 
-Every seeded request has the established `gyvft-demo-` marker. Operations live workload and financial summaries continue excluding sample requests. The four explicitly identified demo customers can see their own fictional payment totals, with a demo notice on every account page; ordinary customer totals continue excluding sample money. Shopify customer syncing skips these four accounts. Sample quotes do not display live payment instructions.
+Every seeded request has the established `gyvft-demo-` marker. Operations live workload and financial summaries continue excluding sample requests. The four explicitly identified demo customers can see their own fictional payment totals, with sample labels on individual gift cards; ordinary customer totals continue excluding sample money. Shopify customer syncing skips these four accounts. Sample quotes do not display live payment instructions.
 
 Organisation and community names are profile/recipient/request context labels in the current object model. This command does not add an organisation or circle table, verified membership, circle invitations or administrators. Those features require their own design and explicitly approved schema work.
 

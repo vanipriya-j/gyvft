@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { tasteSuggestions } from "@/lib/customer/journeys";
 import { reviewTaste } from "@/app/account/journey-actions";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { profileFor } from "@/lib/customer/journeys";
 import { ProfileForm } from "@/components/customer/people-forms";

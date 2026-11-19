@@ -76,7 +76,7 @@ test("operator adds four rich demo accounts, preserves existing data/passwords a
     expect(accounts).toHaveLength(4);
     expect(new Set(accounts.map((a) => a.password_hash)).size).toBe(4);
     const counts = () =>
-      sql`SELECT (SELECT count(*)::int FROM customer_projects WHERE customer_account_id IN ${sql(demoAccounts.map((a) => a.id))}) AS gifts,(SELECT count(*)::int FROM gyvft_customer_people WHERE account_id IN ${sql(demoAccounts.map((a) => a.id))}) AS people,(SELECT count(*)::int FROM gyvft_customer_occasions WHERE account_id IN ${sql(demoAccounts.map((a) => a.id))}) AS occasions`;
+      sql`SELECT (SELECT count(*)::int FROM customer_projects WHERE customer_account_id IN ${sql(demoAccounts.map((a) => a.id))} AND submission_key LIKE 'gyvft-demo-v1-%') AS gifts,(SELECT count(*)::int FROM gyvft_customer_people WHERE account_id IN ${sql(demoAccounts.map((a) => a.id))}) AS people,(SELECT count(*)::int FROM gyvft_customer_occasions WHERE account_id IN ${sql(demoAccounts.map((a) => a.id))}) AS occasions`;
     const countBefore = await counts();
     expect(countBefore[0]).toMatchObject({
       gifts: 28,
@@ -118,7 +118,9 @@ test("operator adds four rich demo accounts, preserves existing data/passwords a
         .getByRole("button", { name: "Sign in to My GYVFT", exact: true })
         .click();
       await expect(p).toHaveURL(baseURL + "/account");
-      await expect(p.getByText(/Demo workspace · People/)).toBeVisible();
+      await expect(
+        p.locator('summary[aria-label="Your account"]'),
+      ).toBeVisible();
       const home = await p.evaluate(async () => {
         const response = await fetch("/api/customer/home?section=all", {
           credentials: "same-origin",
@@ -152,7 +154,9 @@ test("operator adds four rich demo accounts, preserves existing data/passwords a
         "/account?view=saved",
       ]) {
         await p.goto(baseURL + path);
-        await expect(p.getByText(/Demo workspace · People/)).toBeVisible();
+        await expect(
+          p.locator('summary[aria-label="Your account"]'),
+        ).toBeVisible();
       }
       const other = demoAccounts.find((x) => x.id !== a.id)!;
       const [foreign] =

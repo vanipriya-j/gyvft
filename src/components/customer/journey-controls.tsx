@@ -3,6 +3,7 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { useState, useTransition, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
 import { ActionForm, type ActionResult } from "./action-form";
 import {
   setPhotoSharing,
@@ -19,16 +20,38 @@ export function GiftSectionSelect({
 }) {
   const router = useRouter();
   const hydrated = useHydrated();
+  const [pending, start] = useTransition();
+  const [destination, setDestination] = useState(value);
   return (
-    <label className="app-mobile-section">
-      Gift section
+    <label className="app-mobile-section" aria-busy={pending}>
+      <span className="app-section-label">
+        Gift section
+        <span
+          className="app-pending-slot"
+          role={pending ? "status" : undefined}
+          aria-label={pending ? "Opening gift section" : undefined}
+        >
+          <LoaderCircle
+            size={15}
+            className="app-spinner"
+            style={{ visibility: pending ? "visible" : "hidden" }}
+          />
+        </span>
+      </span>
       <select
         className="app-input"
-        disabled={!hydrated}
-        value={value}
-        onChange={(e) =>
-          router.push(sections.find((s) => s.id === e.target.value)!.href)
-        }
+        aria-label="Gift section"
+        disabled={!hydrated || pending}
+        value={pending ? destination : value}
+        onChange={(e) => {
+          const selected = e.target.value;
+          setDestination(selected);
+          start(() =>
+            router.push(sections.find((s) => s.id === selected)!.href, {
+              scroll: false,
+            }),
+          );
+        }}
       >
         {sections.map((s) => (
           <option key={s.id} value={s.id}>

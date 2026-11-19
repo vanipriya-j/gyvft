@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import { randomUUID } from "node:crypto";
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { peopleFor } from "@/lib/customer/journeys";

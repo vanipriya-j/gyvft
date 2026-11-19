@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import { RequestNavigation } from "@/components/customer/request-navigation";
 import styles from "@/components/customer/request.module.css";
 import { requireCustomerAccount } from "@/lib/customer/session";

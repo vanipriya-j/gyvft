@@ -37,5 +37,3 @@ export const demoAccountIds: string[] = demoAccounts.map((a) => a.id);
 export function isDemoAccount(id: string) {
   return demoAccountIds.includes(id);
 }
-export const demoNotice =
-  "Demo workspace · People, gifts, payments and amounts are fictional. No real payments or Shopify orders are created.";

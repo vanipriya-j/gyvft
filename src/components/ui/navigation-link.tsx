@@ -2,16 +2,31 @@
 
 import Link, { useLinkStatus } from "next/link";
 import type { ComponentProps } from "react";
+import { createPortal } from "react-dom";
 
 function NavigationFeedback() {
   const { pending } = useLinkStatus();
   return (
-    <span
-      className="navigation-feedback"
-      data-pending={pending}
-      role={pending ? "status" : undefined}
-      aria-label={pending ? "Opening page" : undefined}
-    />
+    <>
+      <span
+        hidden
+        aria-hidden="true"
+        className="navigation-feedback-marker"
+        data-pending={pending}
+      />
+      {pending &&
+        createPortal(
+          <span
+            className="navigation-feedback"
+            data-pending="true"
+            role="status"
+            aria-label="Opening page"
+          >
+            <span className="sr-only">Opening page…</span>
+          </span>,
+          document.body,
+        )}
+    </>
   );
 }
 
