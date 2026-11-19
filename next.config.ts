@@ -42,6 +42,10 @@ const nextConfig: NextConfig = {
   },
   experimental: { serverActions: { bodySizeLimit: "3mb" } },
   outputFileTracingIncludes: {
+    "/api/operations/demo-data": [
+      "./public/images/gyvft/case-studies/bits-2001-reunion/hero.png",
+      "./public/images/gyvft/case-studies/various-dance-schools/hero.png",
+    ],
     "/api/setup": ["./supabase/migrations/*.sql"],
     "/studio/settings/migrations": ["./supabase/migrations/*.sql"],
   },

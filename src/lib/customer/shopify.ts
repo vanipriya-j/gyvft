@@ -1,6 +1,7 @@
 import "server-only";
 import { getSql } from "@/lib/database/client";
 import { after } from "next/server";
+import { demoAccountIds, isDemoAccount } from "./demo-accounts";
 import { quoteTotal, type OrderItem } from "./pilot-model";
 export const CUSTOMER_LOOKUP = `query GYVFTCustomer($query:String!){customers(first:20,query:$query){nodes{id email}}}`;
 export const CUSTOMER_CREATE = `mutation GYVFTCustomerCreate($input:CustomerInput!){customerCreate(input:$input){customer{id email} userErrors{field message}}}`;
@@ -72,6 +73,7 @@ async function findCustomer(email: string): Promise<Customer | null> {
   return found[0] || null;
 }
 export async function syncShopifyCustomer(accountId: string) {
+  if (isDemoAccount(accountId)) return null;
   if (!shopifyConfigured()) return null;
   const sql = getSql();
   const [existing] =
@@ -102,6 +104,7 @@ export async function syncShopifyCustomer(accountId: string) {
   }
 }
 export function scheduleCustomerSync(accountId: string) {
+  if (isDemoAccount(accountId)) return;
   if (shopifyConfigured())
     after(async () => {
       try {
@@ -112,8 +115,9 @@ export function scheduleCustomerSync(accountId: string) {
     });
 }
 export async function syncPendingCustomers() {
+  const sql = getSql();
   const accounts =
-    await getSql()`SELECT id FROM gyvft_customer_accounts WHERE shopify_customer_id IS NULL ORDER BY created_at LIMIT 3`;
+    await sql`SELECT id FROM gyvft_customer_accounts WHERE shopify_customer_id IS NULL AND id NOT IN ${sql(demoAccountIds)} ORDER BY created_at LIMIT 3`;
   let linked = 0;
   for (const a of accounts) {
     try {

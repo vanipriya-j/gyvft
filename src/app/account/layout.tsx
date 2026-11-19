@@ -4,13 +4,23 @@ import { Suspense } from "react";
 import { AccountNavigation } from "@/components/customer/account-navigation";
 import { getCustomerAccount } from "@/lib/customer/session";
 import { BrandLogo } from "@/components/public/BrandLogo";
+import { isDemoAccount, demoNotice } from "@/lib/customer/demo-accounts";
 export const metadata = {
   title: "My GYVFT",
   robots: { index: false, follow: false },
 };
 async function AccountHeader() {
   const account = await getCustomerAccount();
-  return <AccountNavigation email={account?.email || null} />;
+  return (
+    <>
+      <AccountNavigation email={account?.email || null} />
+      {account && isDemoAccount(account.id) && (
+        <p className="mx-auto w-full max-w-7xl bg-olive/10 px-4 py-2 text-sm text-ink md:px-6">
+          {demoNotice}
+        </p>
+      )}
+    </>
+  );
 }
 export default function AccountLayout({
   children,

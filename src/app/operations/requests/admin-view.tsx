@@ -2189,6 +2189,12 @@ export function B2CAdmin({
                   <Link className="app-button quiet mt-3" href="/setup">
                     Database setup →
                   </Link>
+                  <Link
+                    className="app-button quiet mt-3"
+                    href="/operations/demo-data"
+                  >
+                    Add fictional demo accounts →
+                  </Link>
                   <p className="app-note">
                     Operator access is separate from customer accounts. Use Lock
                     desk when finished.
