@@ -70,6 +70,7 @@ export function ConfirmForm({
   label,
   primary = false,
   description,
+  successHref,
 }: {
   title: string;
   trigger: string;
@@ -78,6 +79,7 @@ export function ConfirmForm({
   label: string;
   primary?: boolean;
   description: string;
+  successHref?: string;
 }) {
   const [open, setOpen] = useState(false);
   const hydrated = useHydrated();
@@ -96,6 +98,7 @@ export function ConfirmForm({
           <Dialog.Title>{title}</Dialog.Title>
           <Dialog.Description>{description}</Dialog.Description>
           <ActionForm
+            successHref={successHref}
             label={label}
             action={async (f) => {
               const r = await action(f);

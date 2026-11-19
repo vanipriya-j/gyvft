@@ -9,6 +9,8 @@ type Result = {
   inserted?: number;
   reference?: string;
   counts?: {
+    circles: number;
+    circleMemberships: number;
     gifts: number;
     people: number;
     occasions: number;
@@ -76,11 +78,10 @@ export default function DemoDataPage() {
         ))}
       </div>
       <p className="app-note mt-4">
-        Organisation and community names are context labels in the current app.
-        Verified organisations, circle membership and circle administration are
-        not created by this tool. These +aliases are intended for the
-        aarla@aarla.in Google Workspace inbox; receipt still depends on its mail
-        routing.
+        Five real circles include family, company, alumni, book club and
+        neighbourhood membership. The fictional company remains unverified. Only
+        these known fictional gifts receive circle links. Existing passwords and
+        membership choices are preserved. Invitations are not sent.
       </p>
       <form onSubmit={submit} className="app-panel mt-5" aria-busy={busy}>
         <fieldset disabled={busy}>
@@ -152,6 +153,8 @@ export default function DemoDataPage() {
           )}
           {result.counts && (
             <p className="mt-2">
+              {result.counts.circles} circles ·{" "}
+              {result.counts.circleMemberships} memberships ·{" "}
               {result.counts.gifts} gifts · {result.counts.people} people ·{" "}
               {result.counts.occasions} occasions · {result.counts.options}{" "}
               curated options · {result.counts.receipts} fictional receipts

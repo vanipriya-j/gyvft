@@ -1,4 +1,6 @@
 "use client";
+import { CircleOrganisations } from "@/components/operations/circle-organisations";
+import type { circleOrganisationDirectory } from "@/lib/customer/circles";
 import {
   OperationsDashboard,
   ReceiptChart,
@@ -168,6 +170,9 @@ export function B2CAdmin({
     [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
     [directory, setDirectory] = useState<Directory | null>(null),
+    [circleOrgs, setCircleOrgs] = useState<Awaited<
+      ReturnType<typeof circleOrganisationDirectory>
+    > | null>(null),
     [report, setReport] = useState<Report | null>(null),
     [shopify, setShopify] = useState(false),
     [image, setImage] = useState<{ url: string; title: string } | null>(null),
@@ -330,6 +335,14 @@ export function B2CAdmin({
           controller.signal,
         );
         if (sequence === readSequence.current) setDirectory(data);
+      } else if (next === "circles") {
+        const data = await post(
+          { op: "circle_organisations" },
+          secret.current,
+          controller.signal,
+        );
+        if (sequence === readSequence.current)
+          setCircleOrgs(data.organisations);
       } else if (next === "reports") {
         const [r, facts] = await Promise.all([
           fetch("/api/operations", {
@@ -415,6 +428,7 @@ export function B2CAdmin({
     ["dashboard", "Dashboard"],
     ["worklist", "Requests & orders"],
     ["customers", "Customers"],
+    ["circles", "Circles & organisations"],
     ["occasions", "Occasions"],
     ["stories", "Feedback & photos"],
     ["reports", "Reports & health"],
@@ -424,6 +438,7 @@ export function B2CAdmin({
     dashboard: LayoutDashboard,
     worklist: Inbox,
     customers: Users,
+    circles: Users,
     occasions: CalendarDays,
     stories: MessageSquareQuote,
     reports: BarChart3,
@@ -1935,6 +1950,24 @@ export function B2CAdmin({
                   </div>
                 )}
               </>
+            )}
+            {area === "circles" && (
+              <CircleOrganisations
+                entries={circleOrgs}
+                busy={busy}
+                verify={async (id, details) => {
+                  const ok = await perform({
+                    op: "verify_circle_organisation",
+                    id,
+                    ...details,
+                  });
+                  if (ok) {
+                    const data = await post({ op: "circle_organisations" });
+                    setCircleOrgs(data.organisations);
+                  }
+                  return ok;
+                }}
+              />
             )}
             {area === "customers" && (
               <OperationsPageHeader

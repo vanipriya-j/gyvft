@@ -14,6 +14,7 @@ import {
   type GiftCard,
 } from "./home-model";
 import { stages } from "./model";
+import { circlesReady } from "./circles";
 import { isDemoAccount } from "./demo-accounts";
 import { storyRequestSchema } from "./story-request";
 type GiftRow = {
@@ -105,12 +106,21 @@ export async function homeOccasions(
 ) {
   // Recurrence precedes pagination: an old birthday may be the next occasion.
   const rows = await getSql()<
-    (Occasion & { source: "calendar" | "gift" })[]
+    (Occasion & {
+      source: "calendar" | "gift" | "circle";
+      circle_id?: string;
+    })[]
   >`SELECT id,title,occasion_date::text,repeats_annually,photo_data IS NOT NULL AS has_photo,'calendar' AS source
     FROM gyvft_customer_occasions WHERE account_id=${accountId}::uuid
     UNION ALL SELECT id,title,occasion_date::text,false AS repeats_annually,false AS has_photo,'gift' AS source
     FROM customer_projects WHERE customer_account_id=${accountId}::uuid AND occasion_date IS NOT NULL AND stage<10
       AND COALESCE(submission_key NOT LIKE 'gyvft-demo-%',true)`;
+  if (await circlesReady()) {
+    const shared = await getSql()<
+      (Occasion & { source: "circle"; circle_id: string })[]
+    >`SELECT o.id,o.title,o.occasion_date::text,o.repeats_annually,false AS has_photo,'circle' AS source,c.id AS circle_id FROM public.gyvft_circle_occasions o JOIN public.gyvft_circles c ON c.id=o.circle_id JOIN public.gyvft_circle_members m ON m.circle_id=c.id AND m.account_id=${accountId} AND m.state='active' WHERE c.archived_at IS NULL AND o.archived_at IS NULL`;
+    rows.push(...shared);
+  }
   const items = rows
     .flatMap((o) => {
       const date = nextOccasionDate(o, today);
@@ -135,7 +145,9 @@ export async function homeOccasions(
                 href:
                   o.source === "gift"
                     ? `/account/projects/${o.id}`
-                    : "/tell-your-story",
+                    : o.source === "circle"
+                      ? `/account/gifts/new?circle=${o.circle_id}&circle_occasion=${o.id}`
+                      : `/account/gifts/new?occasion=${o.id}`,
               },
             },
           ]

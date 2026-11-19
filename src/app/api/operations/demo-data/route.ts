@@ -1,3 +1,4 @@
+import { CircleError } from "@/lib/customer/circle-model";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -65,6 +66,8 @@ export async function POST(request: Request) {
     });
     return reply({ ok: true, ...result });
   } catch (error) {
+    if (error instanceof CircleError)
+      return reply({ ok: false, message: error.message }, error.status);
     if (error instanceof DemoSeedConflict)
       return reply({ ok: false, message: error.message }, 409);
     const code =

@@ -18,6 +18,7 @@ import {
   photoPermission,
   deleteMomentPhoto,
 } from "@/lib/customer/moments";
+import { CircleError } from "@/lib/customer/circle-model";
 import { JourneyError } from "@/lib/customer/journey-model";
 import { scheduleNotifications } from "@/lib/customer/notifications";
 import { recordCustomerEvent } from "@/lib/customer/observability";
@@ -41,7 +42,7 @@ async function run(
     revalidatePath("/account", "layout");
     return { ok: true as const, message: "Saved.", ...result };
   } catch (error) {
-    if (error instanceof JourneyError)
+    if (error instanceof JourneyError || error instanceof CircleError)
       return { ok: false as const, message: error.message };
     if (error instanceof z.ZodError)
       return {

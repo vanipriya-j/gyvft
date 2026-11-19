@@ -18,11 +18,13 @@ export function GiftIntake({
   initial = {},
   email,
   submitted = false,
+  contextLabel,
 }: {
   id: string;
   initial?: Partial<GiftBrief>;
   email: string;
   submitted?: boolean;
+  contextLabel?: string;
 }) {
   const router = useRouter();
   const hydrated = useHydrated();
@@ -106,6 +108,11 @@ export function GiftIntake({
   }
   return (
     <div className="app-stack">
+      {contextLabel && (
+        <p className="app-soft mb-4">
+          For {contextLabel} · This gift is private to your account.
+        </p>
+      )}
       <div className="app-title">
         <div>
           <p className="app-eyebrow">A little thought begins here</p>

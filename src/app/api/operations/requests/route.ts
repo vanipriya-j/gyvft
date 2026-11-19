@@ -1,4 +1,9 @@
 import {
+  circleOrganisationDirectory,
+  verifyCircleOrganisation,
+} from "@/lib/customer/circles";
+import { AppError } from "@/lib/errors/app-error";
+import {
   operatorJourneyCommand,
   operationsDirectory,
 } from "@/lib/customer/operations-workflow";
@@ -132,6 +137,20 @@ export async function POST(request: Request) {
         message: `Linked ${linked} pending customer accounts. Run again for the next batch.`,
       });
     }
+    if (raw.op === "circle_organisations")
+      return reply({
+        ok: true,
+        organisations: await circleOrganisationDirectory(),
+      });
+    if (raw.op === "verify_circle_organisation") {
+      await verifyCircleOrganisation(String(raw.id), {
+        state: raw.state,
+        note: raw.note,
+        confirmed: raw.confirmed,
+      });
+      revalidatePath("/account/circles", "layout");
+      return reply({ ok: true, message: "Organisation review saved." });
+    }
     if (raw.op === "directory")
       return reply({ ok: true, ...(await operationsDirectory()) });
     if (
@@ -209,6 +228,8 @@ export async function POST(request: Request) {
       message: "Saved. Customer-visible details are updated.",
     });
   } catch (error) {
+    if (error instanceof AppError)
+      return reply({ ok: false, message: error.message }, error.status);
     if (
       error instanceof JourneyError ||
       error instanceof PilotError ||

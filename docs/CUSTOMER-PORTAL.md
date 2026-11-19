@@ -1,3 +1,7 @@
+## Circles release status — 19 November 2026
+
+Real Circles is implemented on the proposed release branch. See [CIRCLES.md](CIRCLES.md) for customer routes, accepted memberships, privacy, organisation verification, actual demo circles and the required production migration approval. Until that approval and deployment, earlier descriptions of relationship labels reflect the existing production release.
+
 # My GYVFT — implementation and setup
 
 ## Customer login
@@ -50,7 +54,7 @@ Lead emails already render the form answers. Aarla's existing fields retain thei
 
 `customer_projects` holds enquiries/projects and current status. Published events and conversations are separate customer-visible tables; never copy internal notes into them. New public submissions still email the existing inbox and forward to Aarla OS, with a secondary customer-portal mirror. Mirror failure is logged rather than turning a successfully emailed submission into a duplicate retry.
 
-Enquiry pages show the request, status, timeline and conversations. Payment/production sidebars appear only after an explicit project conversion. The B2C Operations desk provides conversion, replies, versioned approvals, verified receipts and fulfilment. Shopify handoff is optional and requires its server connection; B2B circles and Aarla OS synchronisation remain later work.
+Enquiry pages show the request, status, timeline and conversations. Payment/production sidebars appear only after an explicit project conversion. The B2C Operations desk provides conversion, replies, versioned approvals, verified receipts and fulfilment. Shopify handoff is optional and requires its server connection; Aarla OS synchronisation remains later work; Circles is implemented in the proposed release described above.
 
 ## Canned data and cleanup
 
@@ -126,14 +130,14 @@ The fixture refuses production/non-local database use, forces the Shopify fixtur
 
 ## Four fictional customer workspaces
 
-The explicit operator tool at `/operations/demo-data` adds four demo customers using existing tables. Enter the Operations secret, choose a password for newly inserted demo accounts and confirm the addition. Account aliases are `aarla+demo-single@aarla.in`, `aarla+demo-business@aarla.in`, `aarla+demo-communities@aarla.in` and `aarla+demo-family@aarla.in`. Plus-address delivery to `aarla@aarla.in` depends on that Google Workspace inbox's routing; the tool sends no email and does not depend on email to establish the initial password.
+The explicit operator tool at `/operations/demo-data` adds four demo customers using the approved customer schema. The Circles release also adds five actual circle records, eleven memberships, sixteen circle-recipient records and seven explicitly shared occasions. Enter the Operations secret, choose a password for newly inserted demo accounts and confirm the addition. Account aliases are `aarla+demo-single@aarla.in`, `aarla+demo-business@aarla.in`, `aarla+demo-communities@aarla.in` and `aarla+demo-family@aarla.in`. Plus-address delivery to `aarla@aarla.in` depends on that Google Workspace inbox's routing; the tool sends no email and does not depend on email to establish the initial password.
 
 The fixtures include 28 gifts, 22 recipient records and 20 occasions, with curated visuals, immutable chosen compositions, versioned sample quotes/artwork, timeline entries, conversations, historical sample receipts, saved inspiration and private feedback/photos. The single-gift scenario has only one active request; the other scenarios cover business gifting, several community contexts, and family/friend occasions. Existing Aarla photographs illustrate fictional proposals and memories; they are not represented as actual photographs of the sample customers or deliveries.
 
-The command uses a single transaction and an advisory lock. It runs no migrations, updates, deletion, notifications or Shopify writes. A repeat fills only missing fixture rows and never resets an existing password. Collisions with pre-existing accounts or another record's ownership abort the batch. The existing `aarla@aarla.in` identity is not created, replaced or recovered by this action.
+The command uses a single transaction and an advisory lock. It runs no migrations, deletion, notifications or Shopify writes. The Circles release attaches only exact known fictional gift records to their new circle when that context is empty. A repeat fills only missing fixture rows and never resets an existing password. Collisions with pre-existing accounts or another record's ownership abort the batch. The existing `aarla@aarla.in` identity is not created, replaced or recovered by this action.
 
 Every seeded request has the established `gyvft-demo-` marker. Operations live workload and financial summaries continue excluding sample requests. The four explicitly identified demo customers can see their own fictional payment totals, with sample labels on individual gift cards; ordinary customer totals continue excluding sample money. Shopify customer syncing skips these four accounts. Sample quotes do not display live payment instructions.
 
-Organisation and community names are profile/recipient/request context labels in the current object model. This command does not add an organisation or circle table, verified membership, circle invitations or administrators. Those features require their own design and explicitly approved schema work.
+Before the Circles release, organisation/community names were context labels. The new release implements actual membership, invitations, owner/admin controls and shared occasions. Organisation claims start unverified and require a separate operator check; fictional companies cannot receive genuine verification. Production SQL still requires explicit owner approval. See [CIRCLES.md](CIRCLES.md).
 
 Browser verification uses only a disposable local PostgreSQL database and blocked external integrations. It exercises the manual seed form, repeat-run/password preservation, customer sign-in, populated screens, ownership isolation and unchanged live Operations totals. Its fictional local fixture records are retained; the test performs no deletion. Production records are added only after the operator explicitly submits the live tool.
