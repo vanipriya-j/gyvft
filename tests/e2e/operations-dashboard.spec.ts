@@ -85,6 +85,9 @@ test("Operations dashboard uses real facts, excludes drafts/samples and opens th
         name: /Verified receipts over the last 30 days/,
       }),
     ).toBeVisible();
+    await page.evaluate(async () => {
+      await document.fonts.ready;
+    });
     await page.screenshot({
       path: "/tmp/gyvft-operations-dashboard-desktop.png",
       fullPage: true,

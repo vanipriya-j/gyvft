@@ -20,7 +20,7 @@ Private drafts and labelled samples are excluded from all dashboard facts. Empty
 
 The approved cream, near-black, red and olive palette is owned by `src/app/globals.css`. Customer Home, public buttons, authentication, gifting workspaces, dialogs and Operations consume these tokens. Do not add another brown palette or redeclare the business theme in a page stylesheet. Red identifies primary actions, olive provides secondary emphasis, and colour always accompanies text.
 
-Account navigation acknowledges pending clicks and has a route loading state. Home loads external Aarla recommendations independently of owned gift data; a slow catalogue cannot block the customer’s gifts. Request aggregates read independent child records together after ownership checks. Identity reads are deduplicated only inside a React server render, never in a shared customer cache. Operations refreshes its list and selected request concurrently after a save. Switching Operations areas cancels obsolete reads instead of disabling navigation; writes retain their existing duplicate-action lock. A sticky header shows pending work.
+Account navigation acknowledges pending clicks and has a route loading state. Home loads external Aarla recommendations independently of owned gift data; a slow catalogue cannot block the customer’s gifts. Request aggregates read independent child records together after ownership checks. Identity reads are deduplicated only inside a React server render, never in a shared customer cache. Operations refreshes its list and selected request concurrently after a save. Switching Operations areas cancels obsolete reads instead of disabling navigation; writes retain their existing duplicate-action lock. A thin progress bar below the sticky toolbar shows pending work without joining its flex layout. Toolbar controls keep their position.
 
 Next may commit a streamed account-page response before an ownership check calls `notFound`, so page status alone can be 200. The isolation checks verify the not-found boundary and the absence of protected content; protected media endpoints continue to return 404.
 
@@ -29,3 +29,9 @@ The browser checks cover computed colours across public/customer/Operations scre
 ## Next design work
 
 The next Operations screens to review are richer analytics and downloadable reports, customer account management and named team access/roles. These are not implemented by this dashboard change. Individual circle and organisation flows must be planned and reviewed before their permissions or data model are built. The existing individual gifting and Shopify rules remain in force.
+
+## Stable workspace frame and review pack
+
+Every top-level area uses `OperationsPageHeader`: an unboxed title and subtitle at a shared position, with content panels below. The sidebar remains unboxed and has intrinsic height; scrollbar space is reserved across long and short views. Screen-reader loading announcements remain available while visual progress stays out of the toolbar flow. The browser regression holds data requests open and compares toolbar controls, navigation, content alignment and page headings at 320/390/1024/1440 px.
+
+The public `/operations-review` pack uses captures of the actual application with fictional local records and the matching review brief. It shares no operator secret or live customer information. It is for the same independent review desk; publishing it does not record a review result. See [OPERATIONS-REVIEW-BRIEF.md](OPERATIONS-REVIEW-BRIEF.md).

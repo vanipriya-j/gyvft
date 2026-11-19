@@ -1,0 +1,314 @@
+[
+  {
+    "width": 1440,
+    "area": "Requests & orders",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Requests & orders",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Customers",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Customers",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Occasions",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Occasions",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Feedback & photos",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Feedback & photos",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Reports & health",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Reports & health",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Settings & connections",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Dashboard",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1440,
+    "area": "Dashboard",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Requests & orders",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Requests & orders",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Customers",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Customers",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Occasions",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Occasions",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Feedback & photos",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Feedback & photos",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Reports & health",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Reports & health",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Settings & connections",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Dashboard",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 1024,
+    "area": "Dashboard",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Requests & orders",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Requests & orders",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Customers",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Customers",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Occasions",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Occasions",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Feedback & photos",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Feedback & photos",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Reports & health",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Reports & health",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Settings & connections",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Dashboard",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 390,
+    "area": "Dashboard",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Requests & orders",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Requests & orders",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Customers",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Customers",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Occasions",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Occasions",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Feedback & photos",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Feedback & photos",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Reports & health",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Reports & health",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Settings & connections",
+    "phase": "loaded",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Dashboard",
+    "phase": "pending",
+    "maxMovement": 0
+  },
+  {
+    "width": 320,
+    "area": "Dashboard",
+    "phase": "loaded",
+    "maxMovement": 0
+  }
+]

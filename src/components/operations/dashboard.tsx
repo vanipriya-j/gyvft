@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Wallet,
 } from "lucide-react";
+import { OperationsPageHeader } from "./page-header";
 import type { OperationsSnapshot } from "@/lib/customer/operations-snapshot";
 import { money, stages } from "@/lib/customer/model";
 const shortDate = (value: string) =>
@@ -91,20 +92,28 @@ export function OperationsDashboard({
 }) {
   if (!data)
     return (
-      <div className="ops-dashboard-loading" role="status">
-        <RefreshCw size={20} className={busy ? "animate-spin" : ""} />
-        <h2>{busy ? "Opening your dashboard…" : "Dashboard could not load"}</h2>
-        <p>
-          {busy
-            ? "Bringing your live work together."
-            : "Refresh to try again. No customer record has changed."}
-        </p>
-        {!busy && (
-          <button className="app-button primary" onClick={onRefresh}>
-            Try again
-          </button>
-        )}
-      </div>
+      <>
+        <OperationsPageHeader
+          title="Dashboard"
+          description="A clear next move for every thoughtful gift."
+        />
+        <div className="ops-dashboard-loading" role="status">
+          <RefreshCw size={20} className={busy ? "animate-spin" : ""} />
+          <h2>
+            {busy ? "Opening your dashboard…" : "Dashboard could not load"}
+          </h2>
+          <p>
+            {busy
+              ? "Bringing your live work together."
+              : "Refresh to try again. No customer record has changed."}
+          </p>
+          {!busy && (
+            <button className="app-button primary" onClick={onRefresh}>
+              Try again
+            </button>
+          )}
+        </div>
+      </>
     );
   const metrics = [
     {
@@ -139,22 +148,21 @@ export function OperationsDashboard({
   const maxPipeline = Math.max(...data.pipeline.map((p) => p.count), 1);
   return (
     <div className="ops-dashboard" aria-busy={busy}>
-      <div className="ops-dashboard-title">
-        <div>
-          <p className="ops-kicker">THE WORKDAY, AT A GLANCE</p>
-          <h1>Dashboard</h1>
-          <p>A clear next move for every thoughtful gift.</p>
-        </div>
-        <span className="ops-updated">
-          Updated{" "}
-          {new Date(data.generatedAt).toLocaleTimeString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "Asia/Kolkata",
-          })}{" "}
-          IST
-        </span>
-      </div>
+      <OperationsPageHeader
+        title="Dashboard"
+        description="A clear next move for every thoughtful gift."
+        meta={
+          <span className="ops-updated">
+            Updated{" "}
+            {new Date(data.generatedAt).toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Asia/Kolkata",
+            })}{" "}
+            IST
+          </span>
+        }
+      />
       {(data.counts.pendingPayments > 0 ||
         data.counts.overdueDeliveries > 0) && (
         <div className="ops-attention">
