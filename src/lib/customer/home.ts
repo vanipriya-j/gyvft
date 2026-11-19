@@ -58,6 +58,7 @@ export async function customerHome(
   account: CustomerAccount,
   query: z.infer<typeof homeQuery>,
   now = new Date(),
+  options: { deferExternalCatalogue?: boolean } = {},
 ) {
   const today = indiaToday(now),
     { offset, limit } = query;
@@ -115,7 +116,9 @@ export async function customerHome(
       requested("saved") ? section(loaders.saved) : undefined,
       requested("payments") ? section(loaders.payments) : undefined,
       requested("inspiration") ? section(loaders.inspiration) : undefined,
-      requested("aarla") ? section(loaders.aarla) : undefined,
+      requested("aarla") && !options.deferExternalCatalogue
+        ? section(loaders.aarla)
+        : undefined,
     ]);
   return {
     version: 1 as const,

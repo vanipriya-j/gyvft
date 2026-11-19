@@ -161,7 +161,7 @@
   align-items: center;
   min-height: 44px;
   border-radius: 7px;
-  background: var(--olive-dark);
+  background: var(--action);
   color: white;
   padding: 10px 14px;
 }

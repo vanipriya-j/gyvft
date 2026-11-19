@@ -1,15 +1,4 @@
 .gyvft-app {
-  --background: #f9f6ef;
-  --paper: #fffdf8;
-  --surface: #eceedf;
-  --text: #191b17;
-  --foreground: #191b17;
-  --ink: #191b17;
-  --muted-text: #66665c;
-  --olive: #62683d;
-  --olive-dark: #62683d;
-  --border: #dfdccf;
-  --action: #b8232b;
   min-height: 100dvh;
   background: var(--background);
   color: var(--text);
@@ -96,12 +85,12 @@
 .gyvft-app .app-button.primary {
   background: var(--action);
   border-color: var(--action);
-  color: #fff;
+  color: var(--on-action);
 }
 .gyvft-app .app-button.olive {
   background: var(--olive);
   border-color: var(--olive);
-  color: #fff;
+  color: var(--on-action);
 }
 .gyvft-app .app-button.quiet {
   background: transparent;
@@ -129,8 +118,8 @@
   line-height: 1.4;
 }
 .gyvft-app .app-badge.attention {
-  background: #fbe9e2;
-  color: #932027;
+  background: var(--action-soft);
+  color: var(--action-text);
 }
 .gyvft-app .app-eyebrow {
   font-size: 11px;
@@ -216,7 +205,7 @@
   border-radius: 7px;
 }
 .gyvft-app .app-alert {
-  color: #932027;
+  color: var(--action-text);
   font-size: 13px;
 }
 .gyvft-app .app-list {
@@ -388,7 +377,7 @@
 .app-dialog-overlay {
   position: fixed;
   inset: 0;
-  background: #191b176b;
+  background: color-mix(in srgb, var(--ink) 42%, transparent);
   z-index: 60;
 }
 .app-dialog {
@@ -400,10 +389,10 @@
   max-width: 580px;
   max-height: 90dvh;
   overflow: auto;
-  border: 1px solid #dfdccf;
+  border: 1px solid var(--border);
   border-radius: 12px;
-  background: #fffdf8;
-  color: #191b17;
+  background: var(--paper);
+  color: var(--ink);
   padding: 24px;
   z-index: 61;
   font:
@@ -427,20 +416,20 @@
   align-items: center;
   justify-content: center;
   padding: 9px 14px;
-  border: 1px solid #dfdccf;
+  border: 1px solid var(--border);
   border-radius: 7px;
 }
 .app-dialog .primary {
-  background: #b8232b;
-  color: white;
-  border-color: #b8232b;
+  background: var(--action);
+  color: var(--on-action);
+  border-color: var(--action);
 }
 .app-dialog .app-input {
   display: block;
   width: 100%;
   padding: 9px 12px;
   min-height: 44px;
-  border: 1px solid #dfdccf;
+  border: 1px solid var(--border);
   border-radius: 7px;
   font-size: 16px;
   background: transparent;
@@ -568,5 +557,37 @@
 @media (max-width: 760px) {
   .customer-application > main {
     padding-bottom: 88px;
+  }
+}
+
+.gyvft-app .app-button.primary:hover:not(:disabled),
+.app-dialog .primary:hover:not(:disabled) {
+  background: var(--action-hover);
+  border-color: var(--action-hover);
+}
+.gyvft-app .app-route-loading {
+  padding-top: 4px;
+}
+.gyvft-app .app-loading-title {
+  width: min(45%, 300px);
+  height: 28px;
+  margin: 16px 0;
+  background: var(--surface);
+  border-radius: 6px;
+}
+.gyvft-app .app-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.gyvft-app .app-loading-panel {
+  min-height: 180px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--paper);
+}
+@media (max-width: 760px) {
+  .gyvft-app .app-loading-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

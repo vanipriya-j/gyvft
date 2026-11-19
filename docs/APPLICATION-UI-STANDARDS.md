@@ -15,15 +15,15 @@ Reviewed 17 November 2026. These are GYVFT application design decisions informed
 
 Values below are nominal at a 16px browser root. Implement with rem units and support browser zoom.
 
-| Role | Desktop | Mobile | Treatment |
-| --- | --- | --- | --- |
-| Page title | 28 / 36px | 24 / 32px | Brand serif, regular |
-| Desktop Home slogan | 32 / 40px | Omitted | Brand serif, regular |
-| Section / carousel title | 20 / 24px | 20 / 24px | Brand serif, regular |
-| Gift / option title | 20 / 24px | 20 / 24px | Brand serif, regular |
-| Normal UI text / button labels | 14 / 20px | 14 / 20px | Existing sans, regular/medium |
-| Messages, longer reading and mobile editable text | 16 / 24px | 16 / 24px | Existing sans |
-| Secondary dates, captions, status | 12 / 16px | 12 / 16px | Secondary information only |
+| Role                                              | Desktop   | Mobile    | Treatment                     |
+| ------------------------------------------------- | --------- | --------- | ----------------------------- |
+| Page title                                        | 28 / 36px | 24 / 32px | Brand serif, regular          |
+| Desktop Home slogan                               | 32 / 40px | Omitted   | Brand serif, regular          |
+| Section / carousel title                          | 20 / 24px | 20 / 24px | Brand serif, regular          |
+| Gift / option title                               | 20 / 24px | 20 / 24px | Brand serif, regular          |
+| Normal UI text / button labels                    | 14 / 20px | 14 / 20px | Existing sans, regular/medium |
+| Messages, longer reading and mobile editable text | 16 / 24px | 16 / 24px | Existing sans                 |
+| Secondary dates, captions, status                 | 12 / 16px | 12 / 16px | Secondary information only    |
 
 Keep the existing brand fonts; introducing another font is unnecessary. Preserve sentence case. Avoid 10px essential labels, widely tracked uppercase instructions and large explanatory paragraphs on task screens. Use tabular numerals for changing or aligned prices, quantities and totals. Font weight, wording and position should reinforce hierarchy without creating many similar heading styles.
 
@@ -31,17 +31,17 @@ Keep the existing brand fonts; introducing another font is unnecessary. Preserve
 
 Core scale: 4, 8, 12, 16, 24, 32px. Use the larger steps only when the relationship warrants it.
 
-| Relationship | Starting value |
-| --- | --- |
-| Closely related text / icon-to-label | 4–8px |
-| Heading to its content | 8px |
-| Description to its action | 8–12px |
-| Desktop card body padding | 16px |
-| Mobile compact card padding | 12–16px |
-| Related field or row groups | 12–16px |
-| Separate sections | 24px |
-| Desktop page inset | 24px |
-| Mobile page inset | 16px |
+| Relationship                         | Starting value |
+| ------------------------------------ | -------------- |
+| Closely related text / icon-to-label | 4–8px          |
+| Heading to its content               | 8px            |
+| Description to its action            | 8–12px         |
+| Desktop card body padding            | 16px           |
+| Mobile compact card padding          | 12–16px        |
+| Related field or row groups          | 12–16px        |
+| Separate sections                    | 24px           |
+| Desktop page inset                   | 24px           |
+| Mobile page inset                    | 16px           |
 
 Apply a gap once: stacked parent padding, child margins and fixed spacer elements must not silently add together. Reduce excessive page inset and card padding in addition to correcting oversized card heights. Keep actions close to the content they affect. Align peer card edges, but do not distribute their internal whitespace simply to fill a large box. Use content-driven minimum heights and permit expansion when text grows.
 
@@ -70,3 +70,9 @@ An empty occasion calendar invites a personal choice: “Whose special day is co
 Use existing GYVFT library photographs for missing gift previews, occasion photos and empty carousel visuals. Real customer/curation images take priority. Generic gift imagery is labelled as inspiration; a failed actual image is labelled unavailable so it is not represented as a prepared option. The original source PNGs remain unchanged.
 
 Carousel image containers use full-frame, aspect-preserving cover crops with focal positions chosen for each library photo and a separate portrait crop on mobile. Catalogue imagery fills the same frame rather than appearing as a small contained square. Public assets use the existing image optimizer/CSP; private preview URLs remain native cookie-authenticated images. Image rendering and fallback priority are covered by the Home browser regression suite.
+
+## Shared approved palette — 19 November 2026
+
+The public site, customer application and Operations share the root tokens in `src/app/globals.css`: cream `#f9f6ef`, paper `#fffdf8`, near-black `#191b17`, red primary action `#b8232b`, and olive `#62683d`. Component styles consume semantic variables. Customer Home must not retain its own brown buttons, and dialogs outside application wrappers must inherit the same root palette. Colour checks must inspect the rendered UI, not only the presence of a stylesheet.
+
+See [Operations dashboard](OPERATIONS-DASHBOARD.md) for the live overview, data meanings, loading behaviour and next design scope.

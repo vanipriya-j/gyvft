@@ -3,20 +3,34 @@ import "@/components/customer/application.css";
 import { Suspense } from "react";
 import { AccountNavigation } from "@/components/customer/account-navigation";
 import { getCustomerAccount } from "@/lib/customer/session";
+import { BrandLogo } from "@/components/public/BrandLogo";
 export const metadata = {
   title: "My GYVFT",
   robots: { index: false, follow: false },
 };
-export default async function AccountLayout({
+async function AccountHeader() {
+  const account = await getCustomerAccount();
+  return <AccountNavigation email={account?.email || null} />;
+}
+export default function AccountLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const account = await getCustomerAccount();
   return (
     <div className="gyvft-app customer-application">
-      <Suspense>
-        <AccountNavigation email={account?.email || null} />
+      <Suspense
+        fallback={
+          <header className="border-b border-border bg-paper">
+            <div className="mx-auto flex h-16 max-w-7xl items-center px-4 md:h-[72px] md:px-6">
+              <Link href="/" aria-label="GYVFT home">
+                <BrandLogo height={28} className="h-7 w-[115px]" />
+              </Link>
+            </div>
+          </header>
+        }
+      >
+        <AccountHeader />
       </Suspense>
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-4 md:px-6 md:py-6">
         {children}

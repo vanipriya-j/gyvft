@@ -21,13 +21,21 @@ export function SectionIntro({
 
   return (
     <div className="max-w-3xl">
-      <p className={`text-xs font-medium uppercase tracking-[0.28em] ${eyeClass}`}>{eyebrow}</p>
+      <p
+        className={`text-xs font-medium uppercase tracking-[0.28em] ${eyeClass}`}
+      >
+        {eyebrow}
+      </p>
       <h2
         className={`mt-4 font-display text-4xl leading-[1.08] tracking-[-0.02em] sm:text-5xl ${titleClass}`}
       >
         {title}
       </h2>
-      {copy ? <p className={`mt-4 max-w-2xl text-lg leading-8 ${copyClass}`}>{copy}</p> : null}
+      {copy ? (
+        <p className={`mt-4 max-w-2xl text-lg leading-8 ${copyClass}`}>
+          {copy}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -74,8 +82,12 @@ export function WhatStoryCanBecomeSection() {
                   />
                 </div>
                 <div className="px-5 py-6">
-                  <h3 className="font-display text-2xl text-ink">{item.title}</h3>
-                  <p className="mt-2 text-base leading-7 text-muted-text">{item.copy}</p>
+                  <h3 className="font-display text-2xl text-ink">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-base leading-7 text-muted-text">
+                    {item.copy}
+                  </p>
                 </div>
               </article>
             </MotionReveal>
@@ -131,20 +143,26 @@ export function StoryWorldsSection() {
             const wide = index < 2;
             return (
               <MotionReveal
-                className={wide ? "md:col-span-1 xl:col-span-3" : "xl:col-span-2"}
+                className={
+                  wide ? "md:col-span-1 xl:col-span-3" : "xl:col-span-2"
+                }
                 delay={index * 0.05}
                 key={world.title}
               >
                 <article className="group relative overflow-hidden border border-border bg-paper">
-                  <div className={`relative ${wide ? "aspect-[16/10]" : "aspect-[4/5]"}`}>
+                  <div
+                    className={`relative ${wide ? "aspect-[16/10]" : "aspect-[4/5]"}`}
+                  >
                     <PublicImage
                       className="transition duration-700 group-hover:scale-[1.03]"
                       image={world.image}
                       sizes="(max-width: 1280px) 50vw, 33vw"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#202202]/72 via-[#202202]/15 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink/72 via-ink/15 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 p-5 text-paper sm:p-6">
-                      <h3 className="font-display text-2xl sm:text-3xl">{world.title}</h3>
+                      <h3 className="font-display text-2xl sm:text-3xl">
+                        {world.title}
+                      </h3>
                       <p className="mt-2 max-w-sm text-sm leading-6 text-paper/80 sm:text-base">
                         {world.copy}
                       </p>
@@ -179,7 +197,8 @@ export function StoryTransformationSection() {
             copy="A night of music, movement, or memory — distilled into a book, a gift set, or a limited edition people can hold long after the applause."
           />
           <p className="mt-6 text-base leading-7 text-muted-text">
-            We listen for the emotional centre, then choose the form that serves it — not the other way around.
+            We listen for the emotional centre, then choose the form that serves
+            it — not the other way around.
           </p>
           <ButtonLink className="mt-8" href="/tell-your-story">
             Tell us your story
@@ -217,14 +236,22 @@ export function ForOrganisationsSection() {
           />
           <ul className="mt-8 space-y-3">
             {points.map((point) => (
-              <li className="flex gap-3 text-base leading-7 text-muted-text" key={point}>
-                <span aria-hidden="true" className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-olive" />
+              <li
+                className="flex gap-3 text-base leading-7 text-muted-text"
+                key={point}
+              >
+                <span
+                  aria-hidden="true"
+                  className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-olive"
+                />
                 <span>{point}</span>
               </li>
             ))}
           </ul>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <ButtonLink href="/become-a-merch-partner">Make us your merch partner</ButtonLink>
+            <ButtonLink href="/become-a-merch-partner">
+              Make us your merch partner
+            </ButtonLink>
             <ButtonLink href="/for-organisations" variant="secondary">
               Explore for organisations
             </ButtonLink>
@@ -268,9 +295,15 @@ export function HowItWorksSection() {
           {steps.map((step, index) => (
             <MotionReveal delay={index * 0.06} key={step.n}>
               <div className="min-h-52 bg-background px-6 py-8">
-                <p className="text-xs font-medium tracking-[0.24em] text-olive">{step.n}</p>
-                <h3 className="mt-8 font-display text-2xl text-ink">{step.title}</h3>
-                <p className="mt-3 text-base leading-7 text-muted-text">{step.copy}</p>
+                <p className="text-xs font-medium tracking-[0.24em] text-olive">
+                  {step.n}
+                </p>
+                <h3 className="mt-8 font-display text-2xl text-ink">
+                  {step.title}
+                </h3>
+                <p className="mt-3 text-base leading-7 text-muted-text">
+                  {step.copy}
+                </p>
               </div>
             </MotionReveal>
           ))}
@@ -293,7 +326,8 @@ export function FinalCtaSection() {
               Bring us the story.
             </h2>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-paper/72">
-              Personal celebrations, organisational culture, or a recurring merch partnership.
+              Personal celebrations, organisational culture, or a recurring
+              merch partnership.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">

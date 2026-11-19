@@ -98,7 +98,7 @@ function EventArt({ title }: { title: string }) {
         ? Users
         : Gift;
   return (
-    <div className="relative flex h-full min-h-40 items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_25%_30%,#e6c8a7,transparent_65%),linear-gradient(130deg,#f4ebdc,#d5d7c3)]">
+    <div className="relative flex h-full min-h-40 items-center justify-center overflow-hidden bg-gradient-to-br from-paper via-surface to-background">
       <div className="absolute -right-5 -top-8 h-40 w-40 rounded-full border-[20px] border-white/20" />
       <div className="absolute -bottom-16 left-0 h-40 w-40 rounded-full border border-white/50" />
       <Icon size={54} strokeWidth={1} className="relative text-olive-dark/70" />
@@ -229,7 +229,7 @@ export function CustomerVisuals({
                   <p className="mt-3 line-clamp-2 text-xs leading-5 text-muted-text">
                     {r.nextAction}
                   </p>
-                  <span className="mt-3 inline-flex items-center gap-1 rounded-lg bg-olive-dark px-4 py-2 text-xs text-white">
+                  <span className="mt-3 inline-flex items-center gap-1 rounded-lg bg-action px-4 py-2 text-xs text-white">
                     Open your story <ArrowRight size={13} />
                   </span>
                 </div>
@@ -247,7 +247,7 @@ export function CustomerVisuals({
             <p className="mt-3 text-sm text-muted-text">
               Start with a person, a moment or a little idea.
             </p>
-            <span className="mt-5 inline-block rounded-lg bg-olive-dark px-4 py-2 text-sm text-white">
+            <span className="mt-5 inline-block rounded-lg bg-action px-4 py-2 text-sm text-white">
               Start a new gift
             </span>
           </Link>
@@ -297,7 +297,7 @@ export function CustomerVisuals({
                 </p>
                 <Link
                   href={o.href || "/account/gifts/new"}
-                  className="mt-3 inline-flex items-center gap-1 rounded-lg bg-olive-dark px-4 py-2 text-xs text-white"
+                  className="mt-3 inline-flex items-center gap-1 rounded-lg bg-action px-4 py-2 text-xs text-white"
                 >
                   {o.href ? "Plan this gift" : "Find a gift"}{" "}
                   <ArrowRight size={13} />

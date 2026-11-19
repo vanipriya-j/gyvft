@@ -29,7 +29,7 @@ export function UPIPayment({
       <p className="text-sm font-medium">Direct UPI · ₹{value}</p>
       <a
         href={`upi://pay?${params.toString()}`}
-        className="mt-3 block rounded-full bg-olive-dark px-4 py-3 text-center text-sm text-white"
+        className="mt-3 block rounded-full bg-action px-4 py-3 text-center text-sm text-white"
       >
         Pay via UPI app
       </a>

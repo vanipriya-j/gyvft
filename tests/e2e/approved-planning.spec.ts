@@ -254,11 +254,18 @@ test("private people, invitation-controlled profiles, occasions and a persisted 
         exact: true,
       }),
     ).toHaveCount(0);
-    expect(
-      (
-        await second.request.get(baseURL + `/account/projects/${giftId}`)
-      ).status(),
-    ).toBe(404);
+    const denied = await second.request.get(
+      baseURL + `/account/projects/${giftId}`,
+    );
+    expect([200, 404]).toContain(denied.status());
+    const deniedBody = await denied.text();
+    expect(deniedBody).toMatch(
+      /NEXT_HTTP_ERROR_FALLBACK;404|This page could not be found/,
+    );
+    expect(deniedBody).not.toContain("You make every morning warmer.");
+    expect(deniedBody).not.toContain(
+      "Something useful for her morning coffee.",
+    );
     await second.close();
     expect(errors).toEqual([]);
   } finally {

@@ -2,37 +2,43 @@
 
 :root {
   color-scheme: light;
-  /* Aarla-extracted cream / olive / warm earth tokens */
-  --background: #f6f1e8;
-  --surface: #efe7da;
-  --text: #2b2b2b;
-  --muted-text: #6a635a;
-  --olive: #70715b;
-  --olive-dark: #4a3429;
-  --border: rgba(43, 43, 43, 0.12);
-  --warm-neutral: #efe7da;
-
-  /* Semantic aliases used across the public site */
+  /* Shared GYVFT / Aarla UI palette, from the approved design review. */
+  --background: #f9f6ef;
+  --paper: #fffdf8;
+  --surface: #eceedc;
+  --text: #191b17;
   --foreground: var(--text);
-  --paper: #fbf7f0;
-  --paper-deep: var(--surface);
   --ink: var(--text);
-  --ink-soft: #3d342c;
+  --ink-soft: #34372e;
+  --muted-text: #66665c;
+  --border: #dfdccf;
   --line: var(--border);
-  --shadow-soft: 0 24px 60px rgba(43, 43, 43, 0.08);
-  --shadow-pop: 0 18px 40px rgba(74, 52, 41, 0.16);
+  --action: #b8232b;
+  --action-hover: #9e1e25;
+  --on-action: #ffffff;
+  --action-soft: #fbe9e2;
+  --action-text: #932027;
+  --olive: #62683d;
+  --olive-dark: #535932;
+  --warm-neutral: var(--surface);
+  --paper-deep: var(--surface);
+  --shadow-soft: 0 12px 32px rgb(25 27 23 / 6%);
+  --shadow-pop: 0 12px 28px rgb(25 27 23 / 12%);
   --radius-large: 1.25rem;
 
-  /* Map legacy accent class names to the olive/earth system */
-  --coral: var(--olive);
-  --coral-deep: var(--olive-dark);
+  /* Compatibility aliases use this palette rather than a second earth theme. */
+  --coral: var(--action);
+  --coral-deep: var(--action-hover);
   --saffron: #9a8f6a;
   --jade: var(--olive);
-  --blush: var(--surface);
-  --plum: var(--olive-dark);
+  --blush: var(--action-soft);
+  --plum: var(--ink);
 }
 
 @theme inline {
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-on-action: var(--on-action);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -64,17 +70,14 @@
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(112, 113, 91, 0.08), transparent 26rem),
-    radial-gradient(circle at 88% 12%, rgba(74, 52, 41, 0.05), transparent 22rem),
-    linear-gradient(180deg, #fbf7f0 0%, var(--background) 42%, #f0e8da 100%);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: rgba(112, 113, 91, 0.28);
+  background: color-mix(in srgb, var(--olive) 25%, transparent);
 }
 
 a {
@@ -84,18 +87,29 @@ a {
 .gift-shell,
 .editorial-shell {
   background-image:
-    radial-gradient(circle at 18% 12%, rgba(112, 113, 91, 0.07), transparent 18rem),
-    radial-gradient(circle at 82% 0%, rgba(239, 231, 218, 0.9), transparent 16rem);
+    radial-gradient(
+      circle at 18% 12%,
+      color-mix(in srgb, var(--olive) 7%, transparent),
+      transparent 18rem
+    ),
+    radial-gradient(
+      circle at 82% 0%,
+      color-mix(in srgb, var(--surface) 90%, transparent),
+      transparent 16rem
+    );
 }
 
 .texture-dot {
-  background-image: radial-gradient(rgba(43, 43, 43, 0.06) 0.7px, transparent 0.7px);
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--ink) 6%, transparent) 0.7px,
+    transparent 0.7px
+  );
   background-size: 16px 16px;
 }
 
 .paper-panel {
   border: 1px solid var(--border);
-  background: rgba(251, 247, 240, 0.9);
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(10px);
 }
@@ -103,8 +117,12 @@ a {
 .ink-band,
 .ink-gradient {
   background:
-    radial-gradient(circle at 18% 20%, rgba(112, 113, 91, 0.28), transparent 20rem),
-    linear-gradient(145deg, #202202 0%, #2b2b2b 48%, #4a3429 100%);
+    radial-gradient(
+      circle at 18% 20%,
+      color-mix(in srgb, var(--olive) 28%, transparent),
+      transparent 20rem
+    ),
+    linear-gradient(145deg, var(--ink) 0%, var(--ink-soft) 100%);
 }
 
 .focus-ring {
@@ -122,4 +140,23 @@ a {
 
 .font-display {
   font-family: var(--font-display), Georgia, "Times New Roman", serif;
+}
+
+/* Navigation feedback is outside document flow, so actions never jump in size. */
+.navigation-feedback {
+  display: none;
+}
+.navigation-feedback[data-pending="true"] {
+  display: block;
+  position: fixed;
+  z-index: 100;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--action);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--action) 25%, transparent);
+  pointer-events: none;
+}
+a:has(> .navigation-feedback[data-pending="true"]) {
+  cursor: progress;
+  opacity: 0.7;
 }

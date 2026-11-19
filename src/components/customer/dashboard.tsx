@@ -167,8 +167,8 @@ function ActivityChart({
       >
         <defs>
           <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#85876c" stopOpacity=".28" />
-            <stop offset="100%" stopColor="#85876c" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--olive)" stopOpacity=".28" />
+            <stop offset="100%" stopColor="var(--olive)" stopOpacity="0" />
           </linearGradient>
         </defs>
         {[28, 70, 112].map((y) => (
@@ -178,7 +178,7 @@ function ActivityChart({
             x2="460"
             y1={y}
             y2={y}
-            stroke="#ded8cc"
+            stroke="var(--border)"
             strokeDasharray="3 5"
           />
         ))}
@@ -186,7 +186,7 @@ function ActivityChart({
         <polyline
           points={points}
           fill="none"
-          stroke="#73765c"
+          stroke="var(--olive)"
           strokeWidth="2.5"
           strokeLinejoin="round"
         />
@@ -196,8 +196,8 @@ function ActivityChart({
               cx={20 + i * 88}
               cy={112 - (v.count / max) * 85}
               r="4"
-              fill="#73765c"
-              stroke="#fbf8f2"
+              fill="var(--olive)"
+              stroke="var(--paper)"
               strokeWidth="2"
             />
             <text
@@ -205,7 +205,7 @@ function ActivityChart({
               y={101 - (v.count / max) * 85}
               textAnchor="middle"
               fontSize="14"
-              fill="#625b50"
+              fill="var(--muted-text)"
             >
               {v.count}
             </text>

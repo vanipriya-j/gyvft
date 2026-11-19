@@ -3,6 +3,7 @@ import {
   operationsDirectory,
 } from "@/lib/customer/operations-workflow";
 import { JourneyError } from "@/lib/customer/journey-model";
+import { operationsSnapshot } from "@/lib/customer/operations-snapshot";
 import {
   ShopifyError,
   shopifyConfigured,
@@ -80,6 +81,12 @@ export async function POST(request: Request) {
       string,
       unknown
     >;
+    if (raw.op === "snapshot")
+      return reply({
+        ok: true,
+        snapshot: await operationsSnapshot(),
+        shopifyConfigured: shopifyConfigured(),
+      });
     if (raw.op === "list")
       return reply({
         ok: true,
