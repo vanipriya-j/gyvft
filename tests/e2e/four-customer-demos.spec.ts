@@ -119,11 +119,14 @@ test("operator adds four rich demo accounts, preserves existing data/passwords a
         .click();
       await expect(p).toHaveURL(baseURL + "/account");
       await expect(p.getByText(/Demo workspace · People/)).toBeVisible();
-      const home = await own.request.get(
-        baseURL + "/api/customer/home?section=all",
-      );
-      expect(home.status()).toBe(200);
-      const payload = (await home.json()).data;
+      const home = await p.evaluate(async () => {
+        const response = await fetch("/api/customer/home?section=all", {
+          credentials: "same-origin",
+        });
+        return { status: response.status, payload: await response.json() };
+      });
+      expect(home.status).toBe(200);
+      const payload = home.payload.data;
       expect(payload.sections.gifts.data.total).toBeGreaterThan(0);
       expect(payload.sections.occasions.data.total).toBeGreaterThan(0);
       expect(payload.sections.payments.data.completedGifts).toBeGreaterThan(0);

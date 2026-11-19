@@ -16,9 +16,11 @@ The older `customer-gift-flow.spec.ts` still targets the pre-Revision-4 controls
 
 ## Production investigation: unresolved
 
-The live login page rendered and its create-account/recovery controls hydrated. One recovery request for the reported customer returned the deliberate generic response; no matching reset email was found in the connected mailbox afterward. Health reports configuration present, which does not establish provider acceptance or mailbox delivery. Production signup, successful password recovery and live Shopify writes are **not signed off** by these local checks.
+The live login page rendered and its create-account/recovery controls hydrated. The user's Vercel recovery log at 09:33 IST on 19 November reported `no_active_account`. Their read-only lookup in `public.gyvft_customer_accounts` returned no row for `aarla@aarla.in`. All ten current customer migrations were recorded as applied at 08:06 IST, and the user confirmed the Supabase project reference is unchanged. The missing account explains why this recovery path sent no email; it does not establish why the row is absent or who removed it.
 
-This environment has no production database credential or Vercel runtime-log connection. The generic recovery response alone cannot distinguish an absent/inactive account, rate limiting, a database failure or email-provider rejection. Do not infer a root cause or repeatedly send email from that response.
+A source audit found no account-table deletion, truncation or replacement in the deployed customer migration manifest. Automatic build-time migrations were introduced in PR #45 and removed in PR #49 to restore the agreed manual `/setup` workflow. The user now explicitly requires approval before production migrations or data deletion. Removing that hook does not restore data. The incident remains unresolved until account history is established and the original identity is recovered.
+
+This environment has no production database credential or Vercel runtime-log connection. Do not claim production signup, successful recovery/email delivery or live Shopify writes are signed off from local fixtures. The four separately requested `+demo-` customer fixtures do not create or replace the original `aarla@aarla.in` identity.
 
 ## Diagnostics and retry behaviour
 
