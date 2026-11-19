@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Completing disconnected sample data — 19 November 2026
+
+`/operations/demo-data/circles` completes existing demo memberships without customer passwords. The explicit operator command also corrects untouched v1 occasion relationships/recipient links using the canonical fixture context map. No migration or deletion is involved. Existing memberships, consent and account passwords are preserved; production data changes still require the operator to submit the command. See [CIRCLES.md](CIRCLES.md).
+
 ## Real Circles implementation — 19 November 2026
 
 See [CIRCLES.md](CIRCLES.md). Real circle records, navigation, creation, accepted memberships, invitations, admin-only recipients, shared occasions, per-circle profile consent, owner/admin controls and institutional verification are implemented on the Circles release branch. Production activation is held for explicit approval of additive migration `20261119000002_circles.sql`. No production migration or deletion was performed. Builds/startup never migrate. The explicit demo action adds five circles without resetting existing passwords or membership choices.

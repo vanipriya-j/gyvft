@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRef, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { demoAccounts } from "@/lib/customer/demo-accounts";
 type Result = {
@@ -19,6 +20,7 @@ type Result = {
   };
 };
 export default function DemoDataPage() {
+  const router = useRouter();
   const [busy, setBusy] = useState(false),
     [result, setResult] = useState<Result | null>(null),
     locked = useRef(false);
@@ -44,6 +46,7 @@ export default function DemoDataPage() {
       });
       const next = await response.json();
       setResult(next);
+      if (next.ok) router.refresh();
       if (next.ok) form.reset();
     } catch {
       setResult({
@@ -68,6 +71,12 @@ export default function DemoDataPage() {
         occasions, curated visuals, quotes, conversations, past gifts and sample
         receipts.
       </p>
+      <Link
+        className="app-button olive mt-4"
+        href="/operations/demo-data/circles"
+      >
+        Already have the four demo accounts? Complete their circles →
+      </Link>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {demoAccounts.map((a) => (
           <article key={a.id} className="app-panel">

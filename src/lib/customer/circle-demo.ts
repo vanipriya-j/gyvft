@@ -1,13 +1,14 @@
 import "server-only";
-import { createHash } from "node:crypto";
+import { getSql } from "@/lib/database/client";
+import {
+  demoKey as key,
+  demoScenarios as scenarios,
+  demoOccasionContexts,
+} from "./demo-fixtures";
 import type { Sql } from "postgres";
 import { demoAccounts } from "./demo-accounts";
 import { circlesReady } from "./circles";
 import { CircleError } from "./circle-model";
-const key = (s: string) => {
-  const h = createHash("sha256").update(`gyvft-demo-v1:${s}`).digest("hex");
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4000-8000-${h.slice(20, 32)}`;
-};
 export const demoCircles = [
   {
     key: "family",
@@ -130,4 +131,73 @@ export async function seedDemoCircles(tx: Sql) {
     await tx`INSERT INTO public.gyvft_circle_events(circle_id,actor_account_id,operation) VALUES(${id},${owner.id},'demo.created')`;
   }
   return inserted;
+}
+
+/** Correct only untouched v1 fictional occasion context; retain all dates/content. */
+export async function repairDemoOccasionContexts(tx: Sql) {
+  let corrected = 0;
+  for (const account of demoAccounts) {
+    const scenario = scenarios[account.kind];
+    for (const [i, title] of scenario.occasions.entries()) {
+      const context = demoOccasionContexts[account.kind][i],
+        oldPerson = i % scenario.people.length;
+      const desiredPerson =
+        context.person === null
+          ? null
+          : key(`${account.kind}:person:${context.person}`);
+      const oldRelationship = scenario.people[oldPerson][1];
+      if (
+        oldRelationship === context.relationship &&
+        desiredPerson === key(`${account.kind}:person:${oldPerson}`)
+      )
+        continue;
+      const result =
+        await tx`UPDATE public.gyvft_customer_occasions SET relationship=${context.relationship},person_id=${desiredPerson} WHERE id=${key(`${account.kind}:occasion:${i}`)} AND account_id=${account.id} AND title=${title} AND notes='A fictional upcoming occasion. Allow two days between requested delivery and the occasion.' AND relationship=${oldRelationship} AND person_id=${key(`${account.kind}:person:${oldPerson}`)}`;
+      corrected += result.count;
+    }
+  }
+  return corrected;
+}
+
+/** An explicit operator command for already-created, positively identified fixtures. */
+export async function completeDemoCircles() {
+  return getSql().begin(async (raw) => {
+    const tx = raw as unknown as Sql;
+    await tx`SET LOCAL statement_timeout='45s'`;
+    const [lock] = await tx<
+      { acquired: boolean }[]
+    >`SELECT pg_try_advisory_xact_lock(714093822) AS acquired`;
+    if (!lock.acquired)
+      throw new CircleError(
+        "CONFLICT",
+        "Another demo update is running. Wait for it to finish.",
+      );
+    const accounts =
+      await tx`SELECT a.id,a.email,p.about FROM public.gyvft_customer_accounts a LEFT JOIN public.gyvft_customer_profiles p ON p.account_id=a.id WHERE a.id IN ${tx(demoAccounts.map((a) => a.id))} OR a.email IN ${tx(demoAccounts.map((a) => a.email))}`;
+    if (
+      accounts.length !== 4 ||
+      accounts.some(
+        (row) =>
+          !demoAccounts.some((a) => a.id === row.id && a.email === row.email) ||
+          !String(row.about || "").startsWith("GYVFT-DEMO-v1"),
+      )
+    )
+      throw new CircleError(
+        "CONFLICT",
+        "The four original demo accounts could not be confirmed. No records were changed. Use the full demo tool to create missing demo accounts first.",
+      );
+    const inserted = await seedDemoCircles(tx),
+      corrected = await repairDemoOccasionContexts(tx);
+    const status = await tx<
+      { id: string; email: string; circles: number }[]
+    >`SELECT a.id,a.email,count(c.id)::int AS circles FROM public.gyvft_customer_accounts a LEFT JOIN public.gyvft_circle_members m ON m.account_id=a.id AND m.state='active' LEFT JOIN public.gyvft_circles c ON c.id=m.circle_id AND c.archived_at IS NULL WHERE a.id IN ${tx(demoAccounts.map((a) => a.id))} GROUP BY a.id,a.email ORDER BY a.id`;
+    return {
+      inserted,
+      corrected,
+      accounts: status,
+      message: inserted
+        ? `Added ${inserted} demo circles. Existing passwords and membership choices were preserved.`
+        : "Demo circles already exist. Existing membership, ownership and password choices were preserved.",
+    };
+  });
 }
