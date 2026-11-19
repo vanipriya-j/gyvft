@@ -76,3 +76,8 @@ Carousel image containers use full-frame, aspect-preserving cover crops with foc
 The public site, customer application and Operations share the root tokens in `src/app/globals.css`: cream `#f9f6ef`, paper `#fffdf8`, near-black `#191b17`, red primary action `#b8232b`, and olive `#62683d`. Component styles consume semantic variables. Customer Home must not retain its own brown buttons, and dialogs outside application wrappers must inherit the same root palette. Colour checks must inspect the rendered UI, not only the presence of a stylesheet.
 
 See [Operations dashboard](OPERATIONS-DASHBOARD.md) for the live overview, data meanings, loading behaviour and next design scope.
+
+
+## Loading and transition behaviour
+
+Customer navigation uses a shared link with progress rendered outside dropdown menus, so feedback remains visible after the menu closes. The fixed progress track and selected-navigation borders reserve their space. Every customer route has a context-shaped skeleton; loading text must not insert an extra row above the page heading. Buttons retain their measured label width while showing a busy indicator, disable repeat submission, and expose busy state. Carousel arrows keep a permanent spinner slot, and mobile gift-section changes retain scroll position. Respect reduced-motion settings for both progress and skeleton animation.

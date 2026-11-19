@@ -1,6 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Private images require the viewer's session cookie. */
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import Image from "next/image";
 import { useRef } from "react";
 import {

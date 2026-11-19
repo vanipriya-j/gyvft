@@ -1,7 +1,7 @@
 "use client";
 import { CustomerVisuals, type Mockup } from "./visual-dashboard";
 import type { AarlaProduct } from "@/lib/customer/catalogue";
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useActionState, useId, useMemo, useState } from "react";

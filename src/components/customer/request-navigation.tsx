@@ -31,6 +31,7 @@ export function RequestNavigation({
           <Link
             key={s.id}
             href={s.href}
+            scroll={false}
             aria-current={view === s.id ? "page" : undefined}
           >
             {s.label}

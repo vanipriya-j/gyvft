@@ -565,19 +565,34 @@
   background: var(--action-hover);
   border-color: var(--action-hover);
 }
+
 .gyvft-app .app-route-loading {
-  padding-top: 4px;
+  min-height: calc(100svh - 190px);
 }
-.gyvft-app .app-loading-title {
-  width: min(45%, 300px);
-  height: 28px;
-  margin: 16px 0;
+.gyvft-app .app-loading-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.gyvft-app .app-skeleton {
   background: var(--surface);
   border-radius: 6px;
+  animation: app-skeleton-pulse 1.6s ease-in-out infinite;
+}
+.gyvft-app .app-loading-title {
+  width: clamp(140px, 35vw, 360px);
+  height: 36px;
+}
+.gyvft-app .app-loading-subtitle {
+  width: clamp(170px, 45vw, 440px);
+  height: 16px;
+  margin-top: 12px;
 }
 .gyvft-app .app-loading-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   gap: 16px;
 }
 .gyvft-app .app-loading-panel {
@@ -585,9 +600,155 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--paper);
+  padding: 18px;
+}
+.gyvft-app .app-loading-list {
+  display: grid;
+  gap: 12px;
+}
+.gyvft-app .app-loading-list .app-loading-panel {
+  min-height: 96px;
+}
+.gyvft-app .app-loading-line {
+  height: 18px;
+  width: 75%;
+  margin-bottom: 12px;
+}
+.gyvft-app .app-loading-line.short {
+  height: 14px;
+  width: 50%;
+}
+.gyvft-app .app-loading-tabs {
+  height: 44px;
+  margin-bottom: 20px;
+}
+.gyvft-app .app-loading-back {
+  width: 125px;
+  height: 40px;
+  margin-bottom: 20px;
+}
+.gyvft-app .app-loading-rails {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 20px;
+}
+.gyvft-app .app-loading-rail-title {
+  height: 28px;
+  width: 75%;
+  margin-bottom: 20px;
+}
+.gyvft-app .app-loading-card {
+  min-height: 320px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--paper);
+}
+.gyvft-app .app-loading-media {
+  height: 176px;
+  border-radius: 0;
+}
+.gyvft-app .app-loading-copy {
+  padding: 18px;
+}
+.gyvft-app .app-loading-action {
+  width: 120px;
+  height: 34px;
+  margin-top: 24px;
+}
+.gyvft-app .app-loading-form {
+  display: grid;
+  gap: 24px;
+  max-width: 760px;
+}
+.gyvft-app .app-loading-field {
+  height: 64px;
+}
+.gyvft-app .app-loading-textarea {
+  height: 150px;
+}
+.gyvft-app .app-pending-button {
+  position: relative;
+  min-width: 144px;
+}
+.gyvft-app .app-button-pending {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.gyvft-app .app-pending-slot {
+  display: inline-flex;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+}
+.gyvft-app .app-section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gyvft-app .app-spinner {
+  animation: app-spinner-turn 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes app-spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes app-skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (max-width: 1023px) {
+  .gyvft-app .app-loading-home > .app-loading-heading {
+    display: none;
+  }
+  .gyvft-app .app-loading-rails {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .gyvft-app .app-loading-rail-title {
+    height: 24px;
+    margin-bottom: 12px;
+    width: 200px;
+  }
+  .gyvft-app .app-loading-card {
+    display: grid;
+    grid-template-columns: 105px minmax(0, 1fr);
+    min-height: 150px;
+  }
+  .gyvft-app .app-loading-media {
+    height: 100%;
+    min-height: 150px;
+  }
+  .gyvft-app .app-loading-copy {
+    padding: 14px;
+  }
+  .gyvft-app .app-loading-action {
+    margin-top: 18px;
+  }
 }
 @media (max-width: 760px) {
   .gyvft-app .app-loading-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gyvft-app .app-skeleton,
+  .gyvft-app .app-spinner {
+    animation: none;
   }
 }

@@ -65,7 +65,7 @@ export function AccountNavigation({ email }: { email: string | null }) {
                         ? "page"
                         : undefined
                     }
-                    className={`py-2 text-sm ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : path === "/account" && view === l.id) ? "border-b-2 border-olive-dark text-olive-dark" : "text-muted-text"}`}
+                    className={`border-b-2 py-2 text-sm ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : path === "/account" && view === l.id) ? "border-b-2 border-olive-dark text-olive-dark" : "border-transparent text-muted-text"}`}
                   >
                     {l.label}
                   </Link>
@@ -184,7 +184,7 @@ export function AccountNavigation({ email }: { email: string | null }) {
                   ? "page"
                   : undefined
               }
-              className={`flex min-h-14 flex-col items-center justify-center gap-1 px-3 text-xs ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : path === "/account" && view === l.id) ? "text-olive-dark" : "text-muted-text"}`}
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 px-3 text-xs ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : path === "/account" && view === l.id) ? "text-olive-dark" : "border-transparent text-muted-text"}`}
             >
               <l.icon size={18} />
               {l.label}

@@ -154,9 +154,17 @@ function Pager({
       <span className={styles.live} aria-live="polite">
         {name} {carousel.index + 1} of {carousel.total}
       </span>
-      {carousel.pending && (
-        <LoaderCircle size={14} className="animate-spin" aria-label="Loading" />
-      )}
+      <span
+        className="app-pending-slot"
+        role={carousel.pending ? "status" : undefined}
+        aria-label={carousel.pending ? "Loading next card" : undefined}
+      >
+        <LoaderCircle
+          size={14}
+          className="app-spinner"
+          style={{ visibility: carousel.pending ? "visible" : "hidden" }}
+        />
+      </span>
       <button
         disabled={carousel.pending}
         aria-label={`Next ${name}`}

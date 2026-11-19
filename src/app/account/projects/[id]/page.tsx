@@ -1,6 +1,6 @@
 import { MomentUploader } from "@/components/customer/moment-uploader";
 /* eslint-disable @next/next/no-img-element -- Session-protected gift media. */
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import { notFound } from "next/navigation";
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { requestForAccount } from "@/lib/customer/request";
@@ -287,6 +287,7 @@ export default async function GiftPage({
             <Link
               key={s.id}
               href={s.href}
+              scroll={false}
               aria-current={view === s.id ? "page" : undefined}
             >
               {s.label}

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { getSql } from "@/lib/database/client";
 import { stages } from "@/lib/customer/model";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/navigation-link";
 import { notFound } from "next/navigation";
 import { getCustomerAccount } from "@/lib/customer/session";
 import { invitationFor } from "@/lib/customer/journeys";
