@@ -1,5 +1,4 @@
 import "server-only";
-import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { Sql } from "postgres";
@@ -10,7 +9,12 @@ import { indiaToday } from "./dashboard-model";
 import { draftSchema } from "./gift-workspace-model";
 import { giftBriefSchema } from "./journey-model";
 import { storyRequestSchema } from "./story-request";
-import { seedDemoCircles } from "./circle-demo";
+import { seedDemoCircles, repairDemoOccasionContexts } from "./circle-demo";
+import {
+  demoKey as key,
+  demoScenarios as scenarios,
+  demoOccasionContexts,
+} from "./demo-fixtures";
 import { logger } from "@/lib/logging/logger";
 
 const marker = "GYVFT-DEMO-v1";
@@ -22,124 +26,6 @@ export class DemoSeedConflict extends Error {}
 type Value = string | number | boolean | Buffer | null;
 type Row = Record<string, Value>;
 type Table = { rows: Row[]; owner?: string; key?: string };
-const key = (s: string) => {
-  const h = createHash("sha256").update(`gyvft-demo-v1:${s}`).digest("hex");
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4000-8000-${h.slice(20, 32)}`;
-};
-const scenarios = {
-  single: {
-    people: [
-      ["Ananya", "Friend", "Coffee, reading and quiet mornings"],
-      ["Amma", "Family", "Gardening and Carnatic music"],
-    ],
-    active: [["A birthday gift for Ananya", 3, 1, 7]],
-    past: [
-      "A thank-you for a helpful friend",
-      "Amma’s birthday coffee ritual",
-      "A little Diwali warmth",
-    ],
-    occasions: [
-      "Ananya’s birthday",
-      "Amma’s birthday",
-      "A friendship anniversary",
-    ],
-  },
-  business: {
-    people: [
-      [
-        "Nila",
-        "Meridian Studio · People team",
-        "Illustration and sustainable stationery",
-      ],
-      ["Vikram", "Meridian Studio · Design team", "Coffee and architecture"],
-      ["Sana", "Meridian Studio · New joiner", "Journaling and plants"],
-      ["Rohit", "Meridian Studio · Client", "Travel and useful keepsakes"],
-      ["Priya", "Meridian Studio · Leadership", "Books and meaningful design"],
-      ["Dev", "Meridian Studio · Operations", "Practical everyday accessories"],
-    ],
-    active: [
-      ["A warm welcome for our new team", 3, 12, 12],
-      ["Thanking our client partners", 8, 25, 5],
-      ["Celebrating five years together", 6, 18, 18],
-    ],
-    past: [
-      "New joiner welcome kits",
-      "Meridian’s annual day",
-      "A thank-you to our mentors",
-      "A festive note for the team",
-      "Partner appreciation gifts",
-    ],
-    occasions: [
-      "December onboarding",
-      "Studio founding day",
-      "Team service anniversaries",
-      "Client partner gathering",
-      "New year with the team",
-    ],
-  },
-  communities: {
-    people: [
-      ["Leela", "Alumni network", "Shared memories and campus stories"],
-      ["Aditya", "Alumni network", "Cricket and travel"],
-      ["Farah", "Book club", "Literary fiction and illustrated art"],
-      ["Karthik", "Book club", "Coffee and history"],
-      ["Revathi", "Neighbourhood", "Gardening and local crafts"],
-      ["Ashwin", "Neighbourhood", "Cycling and community events"],
-      ["Maya", "Family", "Music and hand-written messages"],
-    ],
-    active: [
-      ["Keepsakes for our alumni reunion", 3, 30, 21],
-      ["A year of stories with our book club", 5, 14, 15],
-      ["A small thank-you to our neighbours", 2, 20, 28],
-    ],
-    past: [
-      "Our neighbourhood’s festive gathering",
-      "A farewell for our book-club host",
-      "Alumni volunteers, with gratitude",
-      "Community reading-day keepsakes",
-      "A thank-you to our gardening circle",
-    ],
-    occasions: [
-      "Alumni reunion",
-      "Book club anniversary",
-      "Neighbourhood gathering",
-      "Community reading day",
-      "Volunteer appreciation",
-      "Maya’s birthday",
-    ],
-  },
-  family: {
-    people: [
-      ["Appa", "Family · Father", "Filter coffee and old film music"],
-      ["Amma", "Family · Mother", "Gardening and devotional music"],
-      ["Tara", "Family · Daughter", "Space, drawing and bright colours"],
-      ["Arjun", "Family · Brother", "Cycling and travel"],
-      ["Isha", "Friends", "Books and pottery"],
-      ["Ravi", "Friends", "Coffee and cricket"],
-      ["Paati", "Family · Grandmother", "Family photographs and flowers"],
-    ],
-    active: [
-      ["Appa’s sixtieth, with all our love", 4, 10, 14],
-      ["Little keepsakes for Tara’s birthday friends", 1, 24, 25],
-    ],
-    past: [
-      "Amma’s garden-inspired birthday",
-      "Our anniversary, in little memories",
-      "A welcome for a new home",
-      "Tara’s last birthday return gifts",
-      "Diwali with our extended family",
-      "Paati’s favourite family moments",
-    ],
-    occasions: [
-      "Appa’s sixtieth birthday",
-      "Tara’s birthday",
-      "Amma’s birthday",
-      "Our wedding anniversary",
-      "Arjun’s birthday",
-      "Paati’s birthday",
-    ],
-  },
-} as const;
 
 /** Explicit data-only command. No schema commands, deletion, notifications or integrations.
  * Circle context is attached only to exact known fictional gifts, when empty. */
@@ -191,7 +77,7 @@ export async function seedCustomerDemos(password: string, now = new Date()) {
       {
         account_id: a.id,
         name: a.shortName,
-        about: `${marker}. ${a.scenario}. Fictional demonstration profile; organisation and community names are context labels, not verified memberships.`,
+        about: `${marker}. ${a.scenario}. Fictional demonstration profile. Circle membership is managed separately; fictional organisation claims remain unverified.`,
         interests:
           "Thoughtful everyday gifts, coffee, illustrated keepsakes and personal notes",
         avoid: "Disposable plastic and generic branding",
@@ -220,7 +106,8 @@ export async function seedCustomerDemos(password: string, now = new Date()) {
       return id;
     });
     const occasionIds = scenario.occasions.map((title, i) => {
-      const id = key(`${a.kind}:occasion:${i}`);
+      const id = key(`${a.kind}:occasion:${i}`),
+        context = demoOccasionContexts[a.kind][i];
       add(
         "gyvft_customer_occasions",
         {
@@ -229,8 +116,8 @@ export async function seedCustomerDemos(password: string, now = new Date()) {
           title,
           occasion_date: day(7 + i * 9),
           repeats_annually: i % 2 === 0,
-          person_id: personIds[i % personIds.length],
-          relationship: scenario.people[i % personIds.length][1],
+          person_id: context.person === null ? null : personIds[context.person],
+          relationship: context.relationship,
           notes:
             "A fictional upcoming occasion. Allow two days between requested delivery and the occasion.",
           photo_data: i === 0 ? images[aIndex % 2] : null,
@@ -792,6 +679,7 @@ export async function seedCustomerDemos(password: string, now = new Date()) {
       }
     }
     inserted += await seedDemoCircles(tx);
+    await repairDemoOccasionContexts(tx);
   });
   return {
     inserted,

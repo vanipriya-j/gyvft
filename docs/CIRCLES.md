@@ -40,6 +40,16 @@ Operations → **Circles & organisations** lists institutional claims and record
 
 Invitation links are returned only to their authenticated creator. Email is optional and only sent when the operator of the circle chooses “Also email the invitation”; copy-link works without email configuration. Tokens are stored as hashes. No live invitation emails were sent during local verification.
 
+## Completing earlier demo accounts
+
+An empty Circles page alongside “Alumni network” occasions means those private sample labels have not created accepted memberships. The earlier data generator also assigned occasion relationships by cycling through people; this incorrectly labelled some book-club and neighbourhood occasions.
+
+`/operations/demo-data/circles` now provides **Complete demo circles** for the four existing fictional accounts. It needs only the operator secret and explicit confirmation, with no customer password. The command verifies the exact four account IDs/emails and demo provenance, uses the existing seed transaction lock, creates missing fictional circles, and reports actual active-circle counts for each account. It does not run a migration or create/reset accounts, and cannot use a customer cookie as operator authority.
+
+A canonical occasion context map now fixes future fixture generation. The completion command also corrects old relationships/recipient links only when ID, owner, title, original note and original relationship/person pair still match the known faulty fixture. Dates, notes and user edits remain intact; unrelated records are excluded. Existing circle ownership, membership, consent and archive changes are preserved. Private calendar labels do not automatically share an event or grant membership.
+
+The PostgreSQL repair test reproduces the old state (20 personal occasions, zero circles), adds five circles and corrects 14 untouched contexts while retaining passwords/dates and unrelated customer records. Browser coverage exercises the password-free operator action, stable pending controls, Meera’s actual circle membership and corrected occasion labels. The dedicated local repair database is prepared empty before that retained-fixture test; it performs no cleanup/deletion. No production repair was executed during code verification.
+
 ## Explicit fictional workspaces
 
 The existing `/operations/demo-data` action now adds five actual fictional circles, eleven accepted memberships, sixteen recipients and seven shared occasions alongside the four previously requested demo accounts:

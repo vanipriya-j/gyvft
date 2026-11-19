@@ -1,5 +1,6 @@
 import { CircleError } from "@/lib/customer/circle-model";
 import { randomUUID } from "node:crypto";
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { validSetupSecret } from "@/lib/security/setup-secret";
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
   }
   try {
     const result = await seedCustomerDemos(data.password);
+    revalidatePath("/account", "layout");
     logger.info("Operator added fictional customer demos", {
       inserted: result.inserted,
       accounts: result.accounts.length,

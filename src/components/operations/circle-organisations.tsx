@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "@/components/ui/navigation-link";
 import type { circleOrganisationDirectory } from "@/lib/customer/circles";
 import { OperationsPageHeader } from "./page-header";
 type Entry = Awaited<ReturnType<typeof circleOrganisationDirectory>>[number];
@@ -21,6 +22,11 @@ export function CircleOrganisations({
       <OperationsPageHeader
         title="Circles & organisations"
         description="Check institutional details before marking an organisation verified."
+        meta={
+          <Link className="app-button" href="/operations/demo-data/circles">
+            Complete demo circles
+          </Link>
+        }
       />
       <section className="app-panel">
         {!entries ? (
