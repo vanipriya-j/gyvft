@@ -18,7 +18,7 @@ The Revision 4 customer and Operations flow is now implemented in the applicatio
 
 The release adds private brief drafts/history, people/invitations/profiles, linked recurring occasions, version-specific changes, private operator approval drafts/notes/tasks, and independently revocable feedback/photo publication. Customer quote approval unlocks the 50% advance; the balance is due before dispatch. Production and official-order locks are enforced on the server. Named dialogs and 44px mobile targets carry into the real screens.
 
-Apply the explicit customer manifest through the production release build or `/setup`. The build migrates only on `VERCEL_ENV=production`, after successful compilation; previews never migrate the shared DB. Application authentication remains DB-owned, and Shopify requires its own deployment credential. AI curation and institutional circles remain future work.
+Apply the explicit customer manifest manually through the secret-protected `/setup` workflow. Builds and deployments do not run migrations. The automatic production-build hook from PR #45 was removed on 19 November 2026; do not reintroduce migration execution into build, deployment or startup hooks. The user requires explicit approval before each production migration or data-deletion operation. Approval to build/deploy or add demo records does not authorize either action. Removing the hook does not roll back applied SQL or restore missing records. Application authentication remains DB-owned, and Shopify requires its own deployment credential. AI curation and institutional circles remain future work.
 
 ## Working customer and Operations gifting flow — 17 November 2026
 
