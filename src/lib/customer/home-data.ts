@@ -14,6 +14,7 @@ import {
   type GiftCard,
 } from "./home-model";
 import { stages } from "./model";
+import { isDemoAccount } from "./demo-accounts";
 import { storyRequestSchema } from "./story-request";
 type GiftRow = {
   id: string;
@@ -150,11 +151,12 @@ export async function homePayments(
   limit: number,
 ) {
   const period = financialYear(today),
+    demo = isDemoAccount(accountId),
     sql = getSql();
   const [summary, receipts] = await Promise.all([
     sql`SELECT
       (SELECT COALESCE(sum(s.amount_paise),0)::text FROM customer_payment_submissions s JOIN customer_projects p ON p.id=s.project_id
-        WHERE p.customer_account_id=${accountId}::uuid AND p.kind='project' AND COALESCE(p.submission_key NOT LIKE 'gyvft-demo-%',true)
+        WHERE p.customer_account_id=${accountId}::uuid AND p.kind='project' AND (${demo} OR COALESCE(p.submission_key NOT LIKE 'gyvft-demo-%',true))
         AND s.status='verified' AND s.verified_at>=(${period.start}::date::timestamp AT TIME ZONE 'Asia/Kolkata')
         AND s.verified_at<(${period.endExclusive}::date::timestamp AT TIME ZONE 'Asia/Kolkata')) AS fy_paid,
       count(*) FILTER(WHERE p.stage>=10)::int AS completed_gifts,
@@ -163,11 +165,11 @@ export async function homePayments(
         AND NOT EXISTS(SELECT 1 FROM customer_payment_submissions s WHERE s.project_id=p.id AND s.status='pending'))::int AS due_count,
       count(*) FILTER(WHERE EXISTS(SELECT 1 FROM customer_payment_submissions s WHERE s.project_id=p.id AND s.status='pending'))::int AS pending_count,
       (SELECT count(*)::int FROM customer_payment_submissions s JOIN customer_projects q ON q.id=s.project_id
-        WHERE q.customer_account_id=${accountId}::uuid AND q.kind='project' AND COALESCE(q.submission_key NOT LIKE 'gyvft-demo-%',true) AND s.status='verified') AS receipt_count
-      FROM customer_projects p WHERE p.customer_account_id=${accountId}::uuid AND p.kind='project' AND COALESCE(p.submission_key NOT LIKE 'gyvft-demo-%',true)`,
+        WHERE q.customer_account_id=${accountId}::uuid AND q.kind='project' AND (${demo} OR COALESCE(q.submission_key NOT LIKE 'gyvft-demo-%',true)) AND s.status='verified') AS receipt_count
+      FROM customer_projects p WHERE p.customer_account_id=${accountId}::uuid AND p.kind='project' AND (${demo} OR COALESCE(p.submission_key NOT LIKE 'gyvft-demo-%',true))`,
     sql`SELECT s.id,p.id AS project_id,p.title,s.amount_paise::text,s.verified_at::text
       FROM customer_payment_submissions s JOIN customer_projects p ON p.id=s.project_id
-      WHERE p.customer_account_id=${accountId}::uuid AND p.kind='project' AND COALESCE(p.submission_key NOT LIKE 'gyvft-demo-%',true) AND s.status='verified'
+      WHERE p.customer_account_id=${accountId}::uuid AND p.kind='project' AND (${demo} OR COALESCE(p.submission_key NOT LIKE 'gyvft-demo-%',true)) AND s.status='verified'
       ORDER BY s.verified_at DESC NULLS LAST,s.id LIMIT ${limit} OFFSET ${offset}`,
   ]);
   const s = summary[0];

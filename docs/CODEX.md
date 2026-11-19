@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Explicit customer demo workspaces — 19 November 2026
+
+`/operations/demo-data` is an insert-only operator command for four fictional accounts with rich history. It uses the existing schema, preserves existing passwords and records, and does not run migrations or external writes. See the four-workspace section in [CUSTOMER-PORTAL.md](CUSTOMER-PORTAL.md). Organisation/community labels do not implement circles or memberships. Demo customer money is labelled and scoped to those four identities; live Operations totals exclude it.
+
 ## Customer authentication verification — 19 November 2026
 
 See [CUSTOMER-AUTH-VERIFICATION.md](CUSTOMER-AUTH-VERIFICATION.md) for actual browser/database coverage and unresolved live recovery. Reset throttling now shows the retry wait; classified auth diagnostics record operation and failure stage without input or raw errors. Local/captured-mail success does not establish production signup or reset delivery. Do not describe the application as fully browser-verified.

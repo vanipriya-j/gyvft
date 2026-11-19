@@ -8,6 +8,7 @@ import {
   provinceCode,
   createOrSyncShopifyOrder,
 } from "@/lib/customer/shopify";
+import { demoAccounts } from "@/lib/customer/demo-accounts";
 const owner = "11111111-1111-4111-8111-111111111111";
 describe("Shopify customer identity and retry boundaries", () => {
   beforeEach(() => {
@@ -17,6 +18,14 @@ describe("Shopify customer identity and retry boundaries", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
+  });
+  it("never sends fictional demo customers to Shopify", async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    for (const a of demoAccounts)
+      expect(await syncShopifyCustomer(a.id)).toBeNull();
+    expect(mocks.sql).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
   it("reuses the stored customer without external calls", async () => {
     const fetch = vi.fn();

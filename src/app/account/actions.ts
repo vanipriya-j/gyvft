@@ -1,6 +1,7 @@
 "use server";
 import type { Sql } from "postgres";
 import { validImage } from "@/lib/customer/images";
+import { isDemoAccount } from "@/lib/customer/demo-accounts";
 import { deliverySchema } from "@/lib/customer/pilot-model";
 import {
   queueNotification,
@@ -58,8 +59,17 @@ export async function sendMessage(id: string, data: FormData) {
 }
 export async function submitPayment(id: string, data: FormData) {
   const account = await requireCustomerAccount();
-  if (!(await ownedProject(id, account.id)))
-    throw new Error("Project unavailable");
+  const project = await ownedProject(id, account.id);
+  if (!project) throw new Error("Project unavailable");
+  if (
+    isDemoAccount(account.id) ||
+    String(project.submission_key || "").startsWith("gyvft-demo-")
+  )
+    return {
+      ok: false,
+      message:
+        "Fictional sample gifts do not accept payments or payment proof.",
+    };
   assertPublicFormRateLimit({
     ip: account.id,
     formKey: "customer-write",

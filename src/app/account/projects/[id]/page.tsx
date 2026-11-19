@@ -68,6 +68,7 @@ export default async function GiftPage({
     changes,
   } = request;
   const q = latestApproval(approvals, "proposal"),
+    sample = String(p.submission_key || "").startsWith("gyvft-demo-"),
     art = latestApproval(approvals, "design"),
     chosen = giftSelections[0],
     locked = giftLocked(p),
@@ -190,6 +191,16 @@ export default async function GiftPage({
     "messages",
   ];
   function renderDecision(a: NonNullable<typeof q>) {
+    if (sample)
+      return (
+        <p className="app-note">
+          Fictional sample ·{" "}
+          {a.status === "approved"
+            ? "approved in this example"
+            : "shown for review"}
+          . No live approval or payment is requested.
+        </p>
+      );
     return (
       <div className="app-actions">
         {!locked && a.status === "pending" && (
@@ -536,6 +547,7 @@ export default async function GiftPage({
               </section>
             )}
             {currentQuote?.status === "approved" &&
+              !sample &&
               p.kind === "project" &&
               paid < total && (
                 <section className="app-panel">
