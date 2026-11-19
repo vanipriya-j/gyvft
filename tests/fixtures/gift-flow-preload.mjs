@@ -1,5 +1,6 @@
 // Disposable local integration fixture. Never preload this into a deployed app.
 import postgres from "postgres";
+import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 const database = new URL(process.env.DATABASE_URL || "");
 if (
@@ -9,7 +10,8 @@ if (
   throw Error("Local test database required");
 process.env.SHOPIFY_SHOP_DOMAIN = "gyvft-fixture.myshopify.com";
 process.env.SHOPIFY_ADMIN_ACCESS_TOKEN = "local-fixture-token";
-process.env.RESEND_API_KEY = "";
+const captureAuthMail = process.env.GYVFT_AUTH_MAIL_FIXTURE === "1";
+process.env.RESEND_API_KEY = captureAuthMail ? "re_local_auth_fixture" : "";
 mkdirSync("work", { recursive: true });
 if (process.argv.some((arg) => /next[\\/]dist[\\/]bin[\\/]next$/.test(arg)))
   writeFileSync(
@@ -30,6 +32,23 @@ const orders = new Map(),
 let created = 0;
 globalThis.fetch = async (input, init) => {
   const url = String(input);
+  if (url.startsWith("https://api.resend.com/")) {
+    if (!captureAuthMail)
+      throw Error("Live mail access blocked in local fixture");
+    const message = JSON.parse(init.body);
+    if (message.subject === "Reset your GYVFT password") {
+      const to = Array.isArray(message.to) ? message.to[0] : message.to;
+      if (!to.endsWith("@example.test"))
+        throw Error("Local auth mail must use an example.test address");
+      mkdirSync("work/auth-mail-fixture", { recursive: true });
+      writeFileSync(
+        `work/auth-mail-fixture/${createHash("sha256").update(to).digest("hex")}.json`,
+        JSON.stringify(message),
+        { mode: 0o600 },
+      );
+    }
+    return Response.json({ id: "local-mail-accepted" });
+  }
   if (url.startsWith("https://gyvft-fixture.myshopify.com/admin/api/")) {
     const { query, variables: v } = JSON.parse(init.body);
     let data;

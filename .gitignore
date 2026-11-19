@@ -44,3 +44,8 @@ next-env.d.ts
 
 # local tooling
 .cursor/
+
+# Disposable browser fixtures may contain local session/reset tokens.
+/work/
+/test-results/
+/playwright-report/
