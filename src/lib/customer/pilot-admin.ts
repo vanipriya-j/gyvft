@@ -13,6 +13,7 @@ import {
   secureLink,
 } from "./pilot-model";
 import { queueNotification } from "./notifications";
+import { notificationRows } from "./notification-status";
 export class PilotError extends Error {}
 export async function pilotList(query = "") {
   const q = `%${query.slice(0, 120)}%`;
@@ -40,7 +41,7 @@ export async function pilotDetail(id: string) {
     sql`SELECT id,title,body,created_at FROM customer_project_events WHERE project_id=${id}::uuid ORDER BY created_at DESC LIMIT 100`,
     sql`SELECT name,quantity,unit_paise,item_type,personalisation FROM customer_order_items WHERE project_id=${id}::uuid`,
     sql`SELECT recipient_name,phone,address,city,state,postal_code FROM customer_delivery_addresses WHERE project_id=${id}::uuid`,
-    sql`SELECT id,destination,state,attempts,created_at FROM gyvft_customer_notifications WHERE project_id=${id}::uuid ORDER BY created_at DESC LIMIT 20`,
+    notificationRows(id),
     sql`SELECT operation,created_at FROM gyvft_customer_admin_events WHERE project_id=${id}::uuid ORDER BY created_at DESC LIMIT 20`,
   ]);
   return {

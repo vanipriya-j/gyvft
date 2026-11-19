@@ -33,6 +33,11 @@ import {
   scheduleNotifications,
 } from "@/lib/customer/notifications";
 import { getSql } from "@/lib/database/client";
+import { notificationStatus } from "@/lib/customer/notification-status";
+import {
+  NotificationTransportError,
+  sendNotificationEmail,
+} from "@/services/notifications/transports";
 import {
   publishGiftOption,
   setGiftVisibility,
@@ -86,6 +91,37 @@ export async function POST(request: Request) {
       string,
       unknown
     >;
+    if (raw.op === "notification_status")
+      return reply({ ok: true, notifications: await notificationStatus() });
+    if (raw.op === "test_notification_email") {
+      assertPublicFormRateLimit({
+        ip: "operator-notification-test",
+        formKey: "email-test",
+        limit: 3,
+        windowMs: 3600000,
+      });
+      await sendNotificationEmail({
+        id: z.string().uuid().parse(raw.request_id),
+        to:
+          process.env.GYVFT_LEADS_EMAIL ||
+          process.env.RESEND_FROM_EMAIL ||
+          "aarla@aarla.in",
+        subject: "GYVFT notification delivery test",
+        text: "This is a notification test requested from GYVFT Operations. If you received it, email delivery to the team inbox is working. This does not test delivery to every customer.",
+      });
+      return reply({
+        ok: true,
+        message:
+          "Test accepted by email provider. Check the team inbox to confirm receipt.",
+      });
+    }
+    if (raw.op === "retry_all_notifications") {
+      const result = await deliverNotifications();
+      return reply({
+        ok: true,
+        message: `Processed ${result.candidates} due notifications; ${result.accepted} accepted by provider. Check notification status for failures.`,
+      });
+    }
     if (raw.op === "snapshot")
       return reply({
         ok: true,
@@ -206,8 +242,11 @@ export async function POST(request: Request) {
     if (raw.op === "detail")
       return reply({ ok: true, ...(await pilotDetail(id)) });
     if (raw.op === "retry_notifications") {
-      await deliverNotifications(id);
-      return reply({ ok: true, message: "Notification retry completed." });
+      const result = await deliverNotifications(id);
+      return reply({
+        ok: true,
+        message: `Processed ${result.candidates} due notifications; ${result.accepted} accepted by provider. Future retries and uncertain sends are not resent by this action.`,
+      });
     }
     if (raw.op === "publish_gift_option")
       await publishGiftOption(id, z.string().uuid().parse(raw.request_id), raw);
@@ -228,6 +267,14 @@ export async function POST(request: Request) {
       message: "Saved. Customer-visible details are updated.",
     });
   } catch (error) {
+    if (error instanceof NotificationTransportError)
+      return reply(
+        {
+          ok: false,
+          message: `Email was not confirmed (${error.code}). Check the verified sender and email provider logs before retrying.`,
+        },
+        502,
+      );
     if (error instanceof AppError)
       return reply({ ok: false, message: error.message }, error.status);
     if (

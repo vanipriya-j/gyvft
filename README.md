@@ -18,6 +18,9 @@ Customer signup/sign-in uses GYVFT-owned database accounts and secure session co
 
 ## Customer portal guides
 
+- [Customer email notifications and recovery](docs/CUSTOMER-NOTIFICATIONS.md)
+- [Pilot review prompt](docs/CUSTOMER-PILOT-REVIEW.md)
+
 - [Approved individual gifting release and Operations workflow](docs/APPROVED-GIFTING-RELEASE.md)
 
 - [Approved Home architecture and API contracts](docs/CUSTOMER-HOME-ARCHITECTURE.md)
