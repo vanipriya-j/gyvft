@@ -10,7 +10,7 @@ GYVFT is a Next.js application for story-led gifting: customers create briefs, c
 
 Set `DATABASE_URL` and a separate random `SETUP_SECRET` (at least 11 characters) in Vercel and redeploy. Open `/setup`, enter the secret and click **Start setup**. No Studio login is required. Setup creates the customer tables and requested DEMO enquiries. Customer accounts use app-owned password hashes and database sessions. Keep the secret for the operator reports at `/operations`; removing it disables both operator entrypoints.
 
-Production builds also apply pending customer-only migrations after successful compilation. Preview builds do not migrate the shared database. See the [release guide](docs/APPROVED-GIFTING-RELEASE.md) for workflow, merchant configuration and verification.
+Builds and deployments do not run database migrations. Apply pending customer-only migrations explicitly through the secret-protected `/setup` workflow. See the [release guide](docs/APPROVED-GIFTING-RELEASE.md) for workflow, merchant configuration and verification.
 
 ## Customer access and app reporting
 

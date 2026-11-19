@@ -71,7 +71,9 @@ The request aggregate remains `customer_projects` plus owned related records. `r
 
 The release adds `20261119000001_gifting_journeys.sql` to the explicit customer-only migration manifest. It adds customer tables/columns and backfills production locks for records already in production. It does not install or reshape the legacy Studio/Aarla schema.
 
-`npm run build` runs the schema release only after a successful Next build and only when `VERCEL_ENV=production`. It uses `DATABASE_URL`, one transaction, the existing advisory lock and migration tracking. A migration failure fails the deployment; previews/local builds do not migrate the shared database. `/setup` remains available for operator diagnostics and manual customer-scope migration runs.
+`npm run build` compiles the application only. Production, preview and local builds do not run database migrations. Apply customer-scope migrations explicitly through `/setup`, using the separate `SETUP_SECRET`. Setup retains its status check, deliberate run action, one transaction, advisory lock and migration tracking. Do not add migration execution to build, deployment or application startup hooks.
+
+The build-time migration hook introduced in PR #45 was removed on 19 November 2026 to restore the agreed manual setup workflow. Removing that hook does not roll back applied SQL or restore missing data. Missing-account incidents require database history and connection checks; a migration ledger alone cannot establish why a record is absent.
 
 Required runtime configuration remains `DATABASE_URL` and `SETUP_SECRET`; notification email and Shopify require their existing service credentials. Customer authentication uses GYVFT password hashes/sessions, independent of Supabase Auth. Infrastructure monitoring stays in Vercel; application reports and safe diagnostics stay in Operations.
 
