@@ -1,5 +1,7 @@
 # First-time GYVFT flow review
 
+For the current Operations dashboard and stable navigation frame, use [the Operations review pack](https://www.gyvft.com/operations-review) and [its review brief](OPERATIONS-REVIEW-BRIEF.md). Those captures show the working application with fictional local data. The Revision 4 prototype below remains the broader gifting-flow reference.
+
 Review artifact: https://www.gyvft.com/design-review.html — Revision 4, 18 November 2026. This is a fictional-data prototype, not a live payment or Shopify integration. Automated checks do not establish that customers understand the flow; the sessions below have not been run yet.
 
 ## Confirmed commercial policy
@@ -29,7 +31,6 @@ Switch to Operations and ask:
 ## Evidence for sign-off
 
 Record task completion, whether help was needed, the participant’s own explanation of the commitment and any mismatch with the screen. The customer should identify the exact approved gift/version, ₹6,650 advance, ₹6,650 balance before dispatch, pending versus verified proof and the delivery status without prompting. The operator should identify the next task and explain its customer-visible result. Resolve observed blockers in the mock-up before application development.
-
 
 ## Development acceptance criteria
 

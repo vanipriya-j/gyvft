@@ -2,6 +2,7 @@
 
 :root {
   color-scheme: light;
+  scrollbar-gutter: stable;
   /* Shared GYVFT / Aarla UI palette, from the approved design review. */
   --background: #f9f6ef;
   --paper: #fffdf8;

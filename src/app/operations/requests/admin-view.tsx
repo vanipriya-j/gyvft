@@ -16,6 +16,7 @@ import {
   RefreshCw,
   LockKeyhole,
 } from "lucide-react";
+import { OperationsPageHeader } from "@/components/operations/page-header";
 import { useHydrated } from "@/hooks/use-hydrated";
 /* eslint-disable @next/next/no-img-element -- Operator previews use authenticated blob URLs. */
 import Link from "next/link";
@@ -130,6 +131,15 @@ async function picture(file: FormDataEntryValue | null) {
   let binary = "";
   for (const b of bytes) binary += String.fromCharCode(b);
   return { mime: file.type, data: btoa(binary) };
+}
+function DirectoryLoading() {
+  return (
+    <div className="ops-directory-loading" aria-hidden="true">
+      <span />
+      <span />
+      <span />
+    </div>
+  );
 }
 export function B2CAdmin({
   initialId,
@@ -494,6 +504,8 @@ export function B2CAdmin({
                 readSequence.current++;
                 secret.current = "";
                 setUnlocked(false);
+                setBusy(false);
+                setActionLocked(false);
                 setDetail(null);
                 setRows([]);
                 setSnapshot(null);
@@ -505,13 +517,15 @@ export function B2CAdmin({
             </button>
           </div>
         )}
-        {busy && unlocked && (
-          <span role="status" className="ops-header-status">
-            <RefreshCw size={14} className="animate-spin" aria-hidden="true" />
-            Working… please wait.
-          </span>
-        )}
+        <span
+          className="ops-progress"
+          data-active={busy && unlocked}
+          aria-hidden="true"
+        />
       </header>
+      <span role="status" className="sr-only">
+        {busy && unlocked ? "Working… please wait." : ""}
+      </span>
       {!unlocked ? (
         <form
           className="app-panel mx-auto max-w-md"
@@ -611,13 +625,13 @@ export function B2CAdmin({
             )}
             {area === "worklist" && !detail && (
               <>
-                <div className="app-title">
-                  <div>
-                    <h2>Requests & orders</h2>
-                    <p>See the next task, who owns it and what’s due.</p>
-                  </div>
-                  <span className="app-badge">{rows.length} requests</span>
-                </div>
+                <OperationsPageHeader
+                  title="Requests & orders"
+                  description="See the next task, who owns it and what’s due."
+                  meta={
+                    <span className="app-badge">{rows.length} requests</span>
+                  }
+                />
                 <div className="app-toolbar">
                   <label>
                     Find a request
@@ -1923,8 +1937,20 @@ export function B2CAdmin({
               </>
             )}
             {area === "customers" && (
-              <section className="app-panel">
-                <h2>Customers</h2>
+              <OperationsPageHeader
+                title="Customers"
+                description="People you’re creating thoughtful gifts for."
+              />
+            )}
+            {area === "customers" && (
+              <section className="app-panel" aria-busy={busy}>
+                {busy && !directory ? (
+                  <DirectoryLoading />
+                ) : !directory?.customers.length ? (
+                  <p className="app-muted">
+                    Customer accounts appear here when people join GYVFT.
+                  </p>
+                ) : null}
                 {directory?.customers.map((c) => (
                   <article className="app-row" key={c.id}>
                     <div>
@@ -1949,11 +1975,20 @@ export function B2CAdmin({
               </section>
             )}
             {area === "occasions" && (
-              <section className="app-panel">
-                <h2>Occasions linked to requests</h2>
-                <p className="app-muted">
-                  Only context the customer attached to a gift is shown.
-                </p>
+              <OperationsPageHeader
+                title="Occasions"
+                description="Only dates and context customers have attached to their gifts."
+              />
+            )}
+            {area === "occasions" && (
+              <section className="app-panel" aria-busy={busy}>
+                {busy && !directory ? (
+                  <DirectoryLoading />
+                ) : !directory?.occasions.length ? (
+                  <p className="app-muted">
+                    No occasions have been linked to customer gifts yet.
+                  </p>
+                ) : null}
                 {directory?.occasions.map((o) => (
                   <article className="app-row" key={o.id}>
                     <div>
@@ -1977,8 +2012,20 @@ export function B2CAdmin({
               </section>
             )}
             {area === "stories" && (
-              <section className="app-panel">
-                <h2>Feedback & photos</h2>
+              <OperationsPageHeader
+                title="Feedback & photos"
+                description="Review permission before anything is shared publicly."
+              />
+            )}
+            {area === "stories" && (
+              <section className="app-panel" aria-busy={busy}>
+                {busy && !directory ? (
+                  <DirectoryLoading />
+                ) : !directory?.submissions.length ? (
+                  <p className="app-muted">
+                    Customer feedback and gift moments appear after delivery.
+                  </p>
+                ) : null}
                 {directory?.submissions.map((s) => (
                   <article className="app-row" key={s.id}>
                     <div>
@@ -1998,6 +2045,12 @@ export function B2CAdmin({
                   </article>
                 ))}
               </section>
+            )}
+            {area === "reports" && (
+              <OperationsPageHeader
+                title="Reports & health"
+                description="Verified money, gifting activity and application diagnostics."
+              />
             )}
             {area === "reports" && (
               <div className="app-stack">
@@ -2063,6 +2116,12 @@ export function B2CAdmin({
                   </p>
                 </section>
               </div>
+            )}
+            {area === "settings" && (
+              <OperationsPageHeader
+                title="Settings & connections"
+                description="Receiving account, Shopify and workspace configuration."
+              />
             )}
             {area === "settings" && (
               <div className="app-grid">

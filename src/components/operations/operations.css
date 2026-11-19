@@ -25,13 +25,7 @@
 .ops-header .app-actions {
   margin: 0;
 }
-.ops-header-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted-text);
-  font-size: 12px;
-}
+
 .gyvft-app .ops-side button {
   display: flex;
   align-items: center;
@@ -39,27 +33,12 @@
   min-height: 44px;
   font-size: 13px;
 }
+.ops-side {
+  align-self: start;
+}
 .gyvft-app .ops-side [aria-current="page"] {
   background: var(--surface);
   color: var(--olive);
-}
-.ops-dashboard-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-.ops-kicker {
-  color: var(--olive);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  margin-bottom: 6px;
-}
-.ops-dashboard-title > div > p:last-child {
-  color: var(--muted-text);
-  font-size: 13px;
-  margin-top: 5px;
 }
 .ops-updated {
   font-size: 11px;
@@ -475,12 +454,7 @@
     padding: 8px;
     font-size: 12px;
   }
-  .ops-dashboard-title {
-    align-items: start;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
+
   .ops-metrics > button {
     padding: 12px;
   }
@@ -548,5 +522,95 @@
   .gyvft-app .ops-dashboard button {
     min-height: 44px;
     min-width: 44px;
+  }
+}
+
+/* Loading paints outside the toolbar layout; it never displaces controls. */
+.ops-progress {
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 2px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.ops-progress[data-active="true"] {
+  opacity: 1;
+  background: color-mix(in srgb, var(--action) 12%, transparent);
+}
+.ops-progress::after {
+  content: "";
+  display: block;
+  width: 35%;
+  height: 100%;
+  background: var(--action);
+}
+.ops-progress[data-active="true"]::after {
+  animation: ops-progress-slide 1.2s ease-in-out infinite;
+}
+@keyframes ops-progress-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(350%);
+  }
+}
+.ops-page-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 76px;
+  margin: 0 0 16px;
+}
+.ops-page-heading {
+  min-width: 0;
+}
+.gyvft-app .ops-page-heading h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 36px;
+}
+.ops-page-heading p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--muted-text);
+}
+.ops-page-meta {
+  flex-shrink: 0;
+  padding-top: 7px;
+}
+.ops-directory-loading {
+  display: grid;
+  gap: 16px;
+  padding: 8px 0;
+}
+.ops-directory-loading span {
+  height: 36px;
+  width: 100%;
+  background: var(--surface);
+  border-radius: 5px;
+}
+@media (max-width: 760px) {
+  .ops-page-header {
+    min-height: 82px;
+  }
+  .gyvft-app .ops-page-heading h1 {
+    font-size: 25px;
+    line-height: 32px;
+  }
+  .ops-page-heading p {
+    min-height: 40px;
+  }
+  .ops-page-meta {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ops-progress[data-active="true"]::after {
+    animation: none;
+    width: 100%;
   }
 }
