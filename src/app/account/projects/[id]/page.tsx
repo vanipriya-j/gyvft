@@ -1,4 +1,6 @@
 import { MomentUploader } from "@/components/customer/moment-uploader";
+import { shipmentsForProject } from "@/lib/customer/shipping";
+import { CustomerShipments } from "@/components/customer/shipments";
 /* eslint-disable @next/next/no-img-element -- Session-protected gift media. */
 import Link from "@/components/ui/navigation-link";
 import { notFound } from "next/navigation";
@@ -92,6 +94,8 @@ export default async function GiftPage({
   });
   const requested = (await searchParams).view || "overview",
     view = requested === "details" ? "brief" : requested;
+  const shipping =
+    view === "delivery" ? await shipmentsForProject(id, account.id) : null;
   const sections = [
     ["overview", "Overview"],
     ["brief", "Brief"],
@@ -822,6 +826,9 @@ export default async function GiftPage({
       )}
       {view === "delivery" && (
         <div className="app-grid">
+          {shipping?.plan && (
+            <CustomerShipments projectId={id} initial={shipping} />
+          )}
           <section className="app-panel">
             <h2>{stages[p.stage]}</h2>
             <p className="app-muted">{p.next_action}</p>
@@ -838,77 +845,82 @@ export default async function GiftPage({
                 <dt>Official order</dt>
                 <dd>{p.shopify_order_reference || "Not yet created"}</dd>
               </div>
-              {p.tracking_reference && (
+              {!shipping?.plan && p.tracking_reference && (
                 <div>
                   <dt>Tracking reference</dt>
                   <dd>{p.tracking_reference}</dd>
                 </div>
               )}
             </dl>
-            {p.tracking_url && /^https:\/\//.test(p.tracking_url) && (
-              <a
-                className="app-button primary"
-                href={p.tracking_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Track delivery →
-              </a>
-            )}
+            {!shipping?.plan &&
+              p.tracking_url &&
+              /^https:\/\//.test(p.tracking_url) && (
+                <a
+                  className="app-button primary"
+                  href={p.tracking_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Track delivery →
+                </a>
+              )}
             <p className="app-note">
-              Requested dates are preferences until the team confirms them.
-              Dispatch needs the full verified payment, delivery address and
-              tracking.
+              Requested dates are preferences until the team confirms them. Full
+              verified payment is due before dispatch or collection.
             </p>
           </section>
-          <section className="app-panel">
-            <h2>Delivery address</h2>
-            {p.stage >= 9 || !!p.shopify_order_reference ? (
-              <p className="whitespace-pre-wrap">
-                {address
-                  ? [
-                      address.recipient_name,
-                      address.address,
-                      address.city,
-                      address.state,
-                      address.postal_code,
-                      address.phone,
-                    ].join("\n")
-                  : "Contact the team for delivery details."}
-              </p>
-            ) : (
-              <ActionForm
-                action={saveDeliveryAddress.bind(null, id)}
-                label="Save delivery address"
-              >
-                <div className="app-fields">
-                  {[
-                    ["recipient_name", "Recipient name"],
-                    ["phone", "Phone"],
-                    ["address", "Address"],
-                    ["city", "City"],
-                    ["state", "State"],
-                    ["postal_code", "PIN code"],
-                  ].map(([key, label]) => (
-                    <label
-                      className={`app-label ${key === "address" ? "full" : ""}`}
-                      key={key}
-                    >
-                      {label}
-                      <input
-                        className="app-input"
-                        name={key}
-                        defaultValue={address?.[key] || ""}
-                        required
-                        maxLength={key === "address" ? 1500 : 120}
-                        pattern={key === "postal_code" ? "[0-9]{6}" : undefined}
-                      />
-                    </label>
-                  ))}
-                </div>
-              </ActionForm>
-            )}
-          </section>
+          {!shipping?.plan && (
+            <section className="app-panel">
+              <h2>Delivery address</h2>
+              {p.stage >= 9 || !!p.shopify_order_reference ? (
+                <p className="whitespace-pre-wrap">
+                  {address
+                    ? [
+                        address.recipient_name,
+                        address.address,
+                        address.city,
+                        address.state,
+                        address.postal_code,
+                        address.phone,
+                      ].join("\n")
+                    : "Contact the team for delivery details."}
+                </p>
+              ) : (
+                <ActionForm
+                  action={saveDeliveryAddress.bind(null, id)}
+                  label="Save delivery address"
+                >
+                  <div className="app-fields">
+                    {[
+                      ["recipient_name", "Recipient name"],
+                      ["phone", "Phone"],
+                      ["address", "Address"],
+                      ["city", "City"],
+                      ["state", "State"],
+                      ["postal_code", "PIN code"],
+                    ].map(([key, label]) => (
+                      <label
+                        className={`app-label ${key === "address" ? "full" : ""}`}
+                        key={key}
+                      >
+                        {label}
+                        <input
+                          className="app-input"
+                          name={key}
+                          defaultValue={address?.[key] || ""}
+                          required
+                          maxLength={key === "address" ? 1500 : 120}
+                          pattern={
+                            key === "postal_code" ? "[0-9]{6}" : undefined
+                          }
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </ActionForm>
+              )}
+            </section>
+          )}
         </div>
       )}
       {view === "moments" &&

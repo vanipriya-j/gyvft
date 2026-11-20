@@ -20,11 +20,19 @@ import {
 } from "lucide-react";
 import { OperationsPageHeader } from "@/components/operations/page-header";
 import { OperationsNotifications } from "@/components/operations/notifications";
+import { ShippingSettings } from "@/components/operations/shipping-settings";
+import { OperationsShipments } from "@/components/operations/shipments";
 import { deliveryLabel } from "@/lib/customer/notification-model";
 import { useHydrated } from "@/hooks/use-hydrated";
 /* eslint-disable @next/next/no-img-element -- Operator previews use authenticated blob URLs. */
 import Link from "next/link";
-import { useState, useRef, useEffect, type FormEvent } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type FormEvent,
+} from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { GiftOptionsAdmin } from "@/components/customer/gift-options-admin";
 import { GiftSnapshot } from "@/components/customer/gift-workspace";
@@ -217,7 +225,7 @@ export function B2CAdmin({
     },
     [image],
   );
-  async function post(
+  const post = useCallback(async function post(
     payload: Record<string, unknown>,
     candidate = secret.current,
     signal?: AbortSignal,
@@ -241,7 +249,7 @@ export function B2CAdmin({
           "The operation could not be confirmed. Refresh before retrying.",
       );
     return data;
-  }
+  }, []);
   async function loadList(search = query, signal?: AbortSignal) {
     const data = await post(
       { op: "list", query: search },
@@ -1492,6 +1500,16 @@ export function B2CAdmin({
                 )}
                 {tab === "fulfilment" && (
                   <div className="app-grid">
+                    <OperationsShipments
+                      projectId={p.id}
+                      post={post}
+                      onUpdated={async () => {
+                        const updated = await post({ op: "detail", id: p.id });
+                        setDetail((current) =>
+                          current?.project.id === p.id ? updated : current,
+                        );
+                      }}
+                    />
                     <section className="app-panel">
                       <h2>Official Shopify order</h2>
                       {p.shopify_order_reference ? (
@@ -2160,6 +2178,7 @@ export function B2CAdmin({
               />
             )}
             {area === "settings" && <OperationsNotifications post={post} />}
+            {area === "settings" && <ShippingSettings post={post} />}
             {area === "settings" && (
               <div className="app-grid">
                 <section className="app-panel">

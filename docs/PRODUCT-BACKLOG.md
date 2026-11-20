@@ -2,6 +2,10 @@
 
 Updated: 20 November 2026. The current priorities below supersede the retained 14 November launch notes. This is the working scope and priority list, not a commitment to build every future item now.
 
+## Approved shipping implementation — 20 November 2026
+
+[Parcel shipping](SHIPPING.md) now implements Delhivery key settings, one explicit booking per physical parcel, batch pickup, read-only tracking/reconciliation and manual Porter/other-courier/store collection. Gift-set allocations and partial delivery are shared with customer Delivery. Activation is gated by separate approval of additive SQL and entry/testing of the merchant's credentials. No production SQL, live booking, Shopify auto-fulfilment or broader B2B billing work was performed. The E3/E5 entity/commercial work below remains proposed; these parcel controls do not grant business purchasing authority or create GST invoices.
+
 ## Current scope — business identity and delivery
 
 The individual gifting application, real Circles and email recovery have progressed beyond the original enquiry-only plan below. Manual Operations and manual official-order handoff are accepted for the pilot. Missing automation alone is not a customer-launch blocker; truthful prices, billing, delivery promises, ownership and notifications still matter. Local/captured-mail evidence is separate from production delivery evidence.

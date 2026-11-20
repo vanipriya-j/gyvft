@@ -55,6 +55,9 @@
   gap: 16px;
   align-items: start;
 }
+.gyvft-app .app-grid > .full {
+  grid-column: 1 / -1;
+}
 .gyvft-app .app-stack {
   display: grid;
   gap: 16px;
