@@ -1,6 +1,8 @@
 # Function storage and public asset tracing
 
-20 November 2026. The Vercel screenshot shows 8.9 GB of Function Storage with **All Projects** selected. That is not evidence of 8.9 GB of GYVFT customer data or traffic. Vercel retains function output from deployments; development previews and production deployments can therefore consume storage before customer launch. Per-project attribution and the team's current retention policy still need the Vercel dashboard.
+20 November 2026. The initial Vercel screenshot showed 8.9 GB of Function Storage, which the user attributed to GYVFT. A later Functions Storage project view shows GYVFT at 7.86 GB; a separate Deployment Storage view shows 7.44 GB total. These are distinct metrics and views, not proof of that much customer data or traffic. Functions Storage covers stored regional function bundles; Deployment Storage covers build outputs/static assets. Retained releases can affect both. Exact per-deployment attribution and the current retention policy still need authenticated Vercel inspection. Open GYVFT → Deployments → a successful deployment → Resources (Functions and Static Assets); compare a release before the fix with the new one.
+
+Vercel records each project's daily maximum for both metrics. Deleting a deployment stops its future contribution, but does not erase earlier usage; a billing-period total need not fall immediately. See [Vercel's definitions and measurement rules](https://vercel.com/docs/deployment-storage).
 
 ## Confirmed local packaging issue and correction
 

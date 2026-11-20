@@ -14,6 +14,7 @@ import {
 } from "./pilot-model";
 import { queueNotification } from "./notifications";
 import { notificationRows } from "./notification-status";
+import { assertShippingProgress } from "./shipping";
 export class PilotError extends Error {}
 export async function pilotList(query = "") {
   const q = `%${query.slice(0, 120)}%`;
@@ -387,9 +388,13 @@ export async function mutatePilot(raw: Record<string, unknown>) {
             "Production requires the verified 50% advance and latest design approval.",
           );
         if (stage >= 9) {
+          const hasShippingPlan = await assertShippingProgress(tx, id, stage);
+          if (hasShippingPlan && Number(p.paid_paise) < Number(p.total_paise))
+            throw new PilotError("Dispatch requires full verified payment.");
           const [address] =
             await tx`SELECT project_id FROM customer_delivery_addresses WHERE project_id=${id}::uuid`;
           if (
+            !hasShippingPlan &&
             !dispatchAllowed(
               Number(p.paid_paise),
               Number(p.total_paise),

@@ -33,6 +33,8 @@ import {
   scheduleNotifications,
 } from "@/lib/customer/notifications";
 import { getSql } from "@/lib/database/client";
+import { shippingCommand } from "@/lib/customer/shipping-commands";
+import { DelhiveryError } from "@/services/shipping/delhivery";
 import { notificationStatus } from "@/lib/customer/notification-status";
 import {
   NotificationTransportError,
@@ -91,6 +93,14 @@ export async function POST(request: Request) {
       string,
       unknown
     >;
+    if (typeof raw.op === "string" && raw.op.startsWith("shipping_")) {
+      const result = await shippingCommand(raw);
+      if (typeof raw.project_id === "string") {
+        revalidatePath(`/account/projects/${raw.project_id}`);
+        scheduleNotifications(raw.project_id);
+      }
+      return reply(result);
+    }
     if (raw.op === "notification_status")
       return reply({ ok: true, notifications: await notificationStatus() });
     if (raw.op === "test_notification_email") {
@@ -267,6 +277,14 @@ export async function POST(request: Request) {
       message: "Saved. Customer-visible details are updated.",
     });
   } catch (error) {
+    if (error instanceof DelhiveryError)
+      return reply(
+        {
+          ok: false,
+          message: `Delhivery did not confirm this operation (${error.code}). Check the connection or reconcile the booking before retrying.`,
+        },
+        502,
+      );
     if (error instanceof NotificationTransportError)
       return reply(
         {
