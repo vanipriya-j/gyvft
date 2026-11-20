@@ -1,0 +1,238 @@
+{
+  "/business-review.html": {},
+  "/circles-review.html": {},
+  "/design-review.html": {},
+  "/file.svg": {},
+  "/globe.svg": {},
+  "/images/aarla-source/optimized/celebrate-gathering.jpg": {},
+  "/images/aarla-source/optimized/gift-tumbler-bowl.jpg": {},
+  "/images/aarla-source/optimized/honour-performance.jpg": {},
+  "/images/aarla-source/optimized/merch-nourish-kit.jpg": {},
+  "/images/aarla-source/optimized/remember-drawing.jpg": {},
+  "/images/aarla-source/optimized/street-madras-coffee.jpg": {},
+  "/images/aarla-source/originals/celebrate-gathering.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/aarla-source/originals/gift-tumbler-bowl.png": {
+    "width": 985,
+    "height": 1597
+  },
+  "/images/aarla-source/originals/honour-performance.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/aarla-source/originals/merch-nourish-kit.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/aarla-source/originals/remember-drawing.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/aarla-source/originals/street-madras-coffee.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/brand/GYVFT_3x.png": {
+    "width": 1500,
+    "height": 1500
+  },
+  "/images/brand/gyvft-logo.png": {
+    "width": 1299,
+    "height": 336
+  },
+  "/images/brand/gyvft-mark.png": {
+    "width": 512,
+    "height": 512
+  },
+  "/images/gyvft/.gitkeep": {},
+  "/images/gyvft/case-studies/.gitkeep": {},
+  "/images/gyvft/case-studies/bits-2001-reunion/.gitkeep": {},
+  "/images/gyvft/case-studies/bits-2001-reunion/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/cardiologist-visual-communication/.gitkeep": {},
+  "/images/gyvft/case-studies/cardiologist-visual-communication/hero.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/gyvft/case-studies/chinmay-brand-identity/.gitkeep": {},
+  "/images/gyvft/case-studies/chinmay-brand-identity/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/diwali-gifting/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/jannal-oram/.gitkeep": {},
+  "/images/gyvft/case-studies/jannal-oram/hero.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/gyvft/case-studies/kumon-delegate-gifting/.gitkeep": {},
+  "/images/gyvft/case-studies/kumon-delegate-gifting/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/kumon-winner-gifts/.gitkeep": {},
+  "/images/gyvft/case-studies/natwest-team-event-badges/.gitkeep": {},
+  "/images/gyvft/case-studies/natwest-team-event-badges/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/photo-gauge-summer-care-pack/.gitkeep": {},
+  "/images/gyvft/case-studies/photo-gauge-summer-care-pack/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/private-diwali-hampers/.gitkeep": {},
+  "/images/gyvft/case-studies/pycon-2025-happyfox/.gitkeep": {},
+  "/images/gyvft/case-studies/pycon-2025-happyfox/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/root360/.gitkeep": {},
+  "/images/gyvft/case-studies/root360/hero.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/gyvft/case-studies/sruti-40/.gitkeep": {},
+  "/images/gyvft/case-studies/sruti-40/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/thambi-100/.gitkeep": {},
+  "/images/gyvft/case-studies/thambi-100/hero.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/gyvft/case-studies/tm-karthik-crew-gifting/.gitkeep": {},
+  "/images/gyvft/case-studies/tm-karthik-crew-gifting/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/various-dance-schools/.gitkeep": {},
+  "/images/gyvft/case-studies/various-dance-schools/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/various-music-schools/.gitkeep": {},
+  "/images/gyvft/case-studies/various-music-schools/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/case-studies/veeramakaliamman-temple-colouring-book/.gitkeep": {},
+  "/images/gyvft/case-studies/veeramakaliamman-temple-colouring-book/hero.png": {
+    "width": 1448,
+    "height": 1086
+  },
+  "/images/gyvft/homepage/.gitkeep": {},
+  "/images/gyvft/homepage/01-home-hero_01.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/gyvft/homepage/01-home-hero.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/gyvft/homepage/02-gifts-keepsakes.png": {
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/gyvft/homepage/03-books-publications.png": {
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/gyvft/homepage/04-merchandise-kits.png": {
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/gyvft/homepage/05-celebrate.png": {
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/gyvft/homepage/06-remember.png": {
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/gyvft/homepage/07-honour.png": {
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/gyvft/homepage/08-belong.png": {
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/gyvft/homepage/09-build-together.png": {
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/gyvft/homepage/10-performance-to-keepsake.png": {
+    "width": 1536,
+    "height": 1024
+  },
+  "/images/gyvft/homepage/14-for-organisations.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/gyvft/homepage/for-organisations.png": {
+    "width": 1672,
+    "height": 941
+  },
+  "/images/gyvft/README.md": {},
+  "/images/review/circles/desktop-circle.png": {
+    "width": 1440,
+    "height": 1000
+  },
+  "/images/review/circles/desktop-circles.png": {
+    "width": 1440,
+    "height": 1000
+  },
+  "/images/review/circles/desktop-occasions.png": {
+    "width": 1280,
+    "height": 1130
+  },
+  "/images/review/circles/desktop-people.png": {
+    "width": 1440,
+    "height": 1513
+  },
+  "/images/review/circles/desktop-settings.png": {
+    "width": 1440,
+    "height": 1000
+  },
+  "/images/review/circles/mobile-circle.png": {
+    "width": 390,
+    "height": 1178
+  },
+  "/images/review/circles/mobile-create-company.png": {
+    "width": 390,
+    "height": 1275
+  },
+  "/images/review/circles/operations-organisations.png": {
+    "width": 1440,
+    "height": 1145
+  },
+  "/next.svg": {},
+  "/operations-review/dashboard-desktop.png": {
+    "width": 1440,
+    "height": 1475
+  },
+  "/operations-review/dashboard-mobile.png": {
+    "width": 390,
+    "height": 2751
+  },
+  "/operations-review/frame-evidence.json": {},
+  "/operations-review/loading-desktop.png": {
+    "width": 1440,
+    "height": 1000
+  },
+  "/operations-review/loading-mobile.png": {
+    "width": 390,
+    "height": 1000
+  },
+  "/vercel.svg": {},
+  "/window.svg": {}
+}

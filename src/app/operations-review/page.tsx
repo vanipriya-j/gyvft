@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- Full-resolution review captures must remain directly inspectable. */
 import Link from "next/link";
-import { readFileSync } from "node:fs";
-import path from "node:path";
+import { publicAssetDimensions } from "@/lib/public-asset";
 import { BrandLogo } from "@/components/public/BrandLogo";
 export const metadata = {
   title: "Operations · review desk pack",
@@ -32,9 +31,7 @@ function Capture({
   description: string;
   mobile?: boolean;
 }) {
-  const png = readFileSync(path.join(process.cwd(), "public", src));
-  const width = png.readUInt32BE(16),
-    height = png.readUInt32BE(20);
+  const dimensions = publicAssetDimensions(src);
   return (
     <figure className="mt-5">
       <a
@@ -45,8 +42,8 @@ function Capture({
       >
         <img
           src={src}
-          width={width}
-          height={height}
+          width={dimensions?.width}
+          height={dimensions?.height}
           alt={description}
           loading="lazy"
           className={`h-auto w-full rounded-lg border border-border ${mobile ? "max-w-[390px]" : ""}`}
