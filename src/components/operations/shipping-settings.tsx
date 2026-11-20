@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LoaderCircle } from "lucide-react";
 import type { ShippingSettingsStatus } from "@/lib/customer/shipping-settings";
@@ -127,8 +128,10 @@ export function ShippingSettings({ post }: { post: Post }) {
       )}
       {data && !data.available && (
         <p className="app-alert">
-          Shipping is awaiting its approved database update. No setup or
-          migration runs when you open this page.
+          Shipping needs its database update. Opening this page does not run it.
+          <Link className="ml-1 underline" href="/setup/shipping">
+            Open shipping-only setup →
+          </Link>
         </p>
       )}
       {data?.available && !data.encryptionReady && (

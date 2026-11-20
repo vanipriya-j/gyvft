@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { LoaderCircle } from "lucide-react";
 import {
@@ -191,8 +192,11 @@ export function OperationsShipments({
       {!view && !message && <p role="status">Loading delivery plan…</p>}
       {view && !view.available && (
         <p className="app-alert">
-          Shipping awaits its approved database update. Existing order controls
-          remain available.
+          Shipping needs its database update. Existing order controls remain
+          available.
+          <Link className="ml-1 underline" href="/setup/shipping">
+            Open shipping-only setup →
+          </Link>
         </p>
       )}
       {view?.available && (
@@ -464,7 +468,7 @@ export function OperationsShipments({
                               Prepaid parcel service. Use actual packed
                               dimensions, weight and invoice particulars. This
                               records one parcel, not a multi-piece freight
-                              consignment; confirm your account's limits. Full
+                              consignment; confirm your account’s limits. Full
                               payment and packing must be complete.
                             </p>
                             <label className="app-check">

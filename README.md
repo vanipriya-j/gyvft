@@ -18,6 +18,8 @@ Customer signup/sign-in uses GYVFT-owned database accounts and secure session co
 
 ## Customer portal guides
 
+- [Live pilot verification checklist](docs/PRODUCTION-VERIFICATION.md) · approved shipping-only setup: `/setup/shipping`
+
 - [Shipping: Delhivery connection, manual couriers, split parcels and activation](docs/SHIPPING.md)
 
 - [Business identity, billing and delivery plan](docs/BUSINESS-ENTITIES-AND-DELIVERY.md) · [interactive design review](https://www.gyvft.com/business-review.html) (fictional proposal, not the live B2B flow)

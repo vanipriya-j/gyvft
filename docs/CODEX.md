@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Shipping-only setup and live verification — 20 November 2026
+
+The user approved the exact shipping SQL, with no deletions or existing-record changes. `/setup/shipping` uses the existing operator secret to read status first, then run only that checksum-verified file. The server blocks if an earlier customer migration is missing. Generic `/setup` still applies all pending customer migrations; direct the owner to the shipping-only page for this approval. No build/startup migrations were added. Production database access remains unconnected in this workspace; do not claim the SQL has run without live evidence. See [PRODUCTION-VERIFICATION.md](PRODUCTION-VERIFICATION.md) for the owner/developer acceptance gates and unresolved original-account lookup.
+
 ## Parcel shipping — 20 November 2026
 
 See [SHIPPING.md](SHIPPING.md). Operations has encrypted Delhivery staging/live key settings, per-parcel manifests and batch pickup requests, safe reference reconciliation, tracking refresh/recovery and manual Porter/other-courier/store collection. Customer Delivery reads the same owned parcel records. Whole-order progress cannot bypass a partial allocation. Shopify's single batch line is not auto-fulfilled. Production activation requires separately approved additive SQL `20261120000001_shipping.sql`; opening pages/builds never applies it. No live carrier booking or production data write occurred during development. B2B entities/GST/bill-to implementation remains outside this shipping release.
