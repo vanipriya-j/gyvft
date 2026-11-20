@@ -79,4 +79,4 @@ Required runtime configuration remains `DATABASE_URL` and `SETUP_SECRET`; notifi
 
 Validation is recorded with the release PR. The real database/browser checks include cross-customer isolation, version approval, production lock, pending versus verified money, single-line Shopify fixtures, invitations/profile withdrawal and individual public-photo revocation. A human first-time usability session is still a useful separate check; automated success does not prove human comprehension.
 
-Company circles, corporate administration and AI-assisted curation/RAG are separate later work. This release implements individual gifting and optional planning, not those later systems.
+This individual release is complemented by [real Circles](CIRCLES.md). Commercial legal entities, corporate purchasing and multi-destination delivery are specified separately in [BUSINESS-ENTITIES-AND-DELIVERY.md](BUSINESS-ENTITIES-AND-DELIVERY.md) and remain implementation work. AI-assisted curation/RAG is also separate. Circle membership alone does not change individual gift ownership or implement company billing.

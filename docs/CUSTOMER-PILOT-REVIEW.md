@@ -4,6 +4,8 @@ Review https://www.gyvft.com as a first-time gift buyer and as a GYVFT operator.
 
 The pilot deliberately accepts manual Operations, payment verification and Shopify handoffs. Judge whether the customer receives a clear, reliable service while the team works manually. Do not classify an agreed manual process or a deferred feature as a launch-blocking defect.
 
+For business gifting, also review `/business-review.html` against `docs/BUSINESS-ENTITIES-AND-DELIVERY.md`. This is a separate proposal, not production billing functionality. Check the individual/circle/legal-entity distinction, explicit purchasing authority, GST registrations, registered versus billing/office addresses, immutable historical billing and delivery independent of bill-to. Office bulk delivery must not require employee home addresses. Split and individual deliveries need quantity allocation and truthful partial delivery. Do not assume the existing B2C Shopify adapter supports company billing or multiple destinations.
+
 Our benchmark is a small application with the clarity, reliability and accessibility expected of a mature product. Every element needs a purpose. The design should feel warm and energetic: cream backgrounds, near-black text, red/olive actions, compact spacing, a clear primary action, cohesive page headers, stable layouts and deliberate mobile compositions. Identify redundancy, visual hierarchy problems, awkward empty states and dead-end journeys. Do not propose an unrelated visual redesign.
 
 Walk these journeys on desktop and a narrow mobile viewport:

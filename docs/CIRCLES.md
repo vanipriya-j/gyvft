@@ -1,5 +1,9 @@
 # Circles implementation · 19 November 2026
 
+## Business-entity clarification · 20 November 2026
+
+Circles currently distinguish institutional claims from personal/community groups. A claim is not a legal billing entity. The [business identity and delivery plan](BUSINESS-ENTITIES-AND-DELIVERY.md) adds a proposed commercial layer: legal/trading names, GST registrations, distinct registered/office/billing addresses, explicit purchasing/finance authority, immutable order billing snapshots and independent delivery allocations. A person can act for several entities using their existing login; a company can buy without first creating a circle. Circle admins and matching domains do not automatically become authorised buyers. The interactive `/business-review.html` is a fictional proposal, not proof that these new capabilities are implemented. Bulk office delivery does not require employee home addresses.
+
 Status: implemented on `codex/real-circles`; production activation requires the owner’s explicit migration approval. This document distinguishes implemented code/local verification from a live release.
 
 ## Customer experience
@@ -32,7 +36,7 @@ Owners remain active admins and must transfer ownership before leaving. Removal/
 | `gyvft_circle_occasions` | Explicitly published shared occasion date and annual recurrence |
 | `gyvft_circle_events` | Append-only operation/actor/subject audit, without invitation tokens or note contents |
 
-Two nullable columns attach a customer-owned gift to a circle/occasion; a composite foreign key prevents mismatched event/circle context. Existing gift ownership checks remain authoritative. The institutional circle itself represents the organisation; there is no second organisation login.
+Two nullable columns attach a customer-owned gift to a circle/occasion; a composite foreign key prevents mismatched event/circle context. Existing gift ownership checks remain authoritative. The institutional circle currently holds the organisation claim; the proposed separate commercial legal entity adds billing/purchasing semantics without a second organisation login.
 
 Server actions and HTTP APIs call the same commands in `src/lib/customer/circles.ts`. APIs authenticate the customer, apply rate limits, deny cross-origin writes, validate strict command shapes and return private/no-store responses. The collection creates circles; per-circle commands manage records, roles and sharing; invitation creation and acceptance have dedicated commands. Client-provided account IDs never replace the authenticated actor.
 
