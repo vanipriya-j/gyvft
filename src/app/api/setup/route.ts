@@ -6,6 +6,7 @@ import { getSql } from "@/lib/database/client";
 import {
   listMigrations,
   MigrationBusyError,
+  MigrationPreconditionError,
   runPendingMigrations,
 } from "@/lib/database/migrations";
 import { migrationDiagnostic } from "@/lib/database/migration-diagnostic";
@@ -76,12 +77,19 @@ export async function POST(request: Request) {
       },
       503,
     );
-  if (body.action !== "status" && body.action !== "migrate")
+  if (
+    body.action !== "status" &&
+    body.action !== "migrate" &&
+    body.action !== "shipping-migrate"
+  )
     return reply(
       { ok: false, message: "Choose check status or run migrations." },
       400,
     );
-  if (body.action === "migrate" && body.confirm !== true)
+  if (
+    (body.action === "migrate" || body.action === "shipping-migrate") &&
+    body.confirm !== true
+  )
     return reply(
       {
         ok: false,
@@ -93,10 +101,14 @@ export async function POST(request: Request) {
     try {
       const sql = getSql();
       const applied =
-        body.action === "migrate"
-          ? await runPendingMigrations(sql, onProgress, "customer")
+        body.action === "migrate" || body.action === "shipping-migrate"
+          ? await runPendingMigrations(
+              sql,
+              onProgress,
+              body.action === "shipping-migrate" ? "shipping" : "customer",
+            )
           : [];
-      if (body.action === "migrate") {
+      if (body.action === "migrate" || body.action === "shipping-migrate") {
         logger.info("Secret-protected setup migrations completed", {
           migrations: applied,
         });
@@ -122,7 +134,8 @@ export async function POST(request: Request) {
         };
       } catch (error) {
         // A committed migration batch must never be described as rolled back.
-        if (body.action !== "migrate") throw error;
+        if (body.action !== "migrate" && body.action !== "shipping-migrate")
+          throw error;
         return {
           status: 200,
           result: {
@@ -134,7 +147,10 @@ export async function POST(request: Request) {
         };
       }
     } catch (error) {
-      if (error instanceof MigrationBusyError)
+      if (
+        error instanceof MigrationBusyError ||
+        error instanceof MigrationPreconditionError
+      )
         return { status: 409, result: { ok: false, message: error.message } };
       const diagnostic = migrationDiagnostic(error);
       await recordCustomerEvent("setup.failed", {

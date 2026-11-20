@@ -155,6 +155,11 @@ export default function SetupPage() {
         Enter your setup secret once. We’ll prepare the customer portal so
         customers can sign in and see their enquiries.
       </p>
+      <p className="mt-4 text-sm">
+        <Link className="underline" href="/setup/shipping">
+          Applying only the approved shipping update? Open shipping-only setup →
+        </Link>
+      </p>
       <section className="mt-8 rounded-3xl border border-border bg-paper p-6 shadow-sm md:p-8">
         <div className="grid gap-3 border-b border-border pb-6 sm:grid-cols-2">
           {[

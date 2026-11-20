@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { readdir, readFile } from "fs/promises";
 import path from "path";
 import type { Sql } from "postgres";
@@ -14,7 +15,12 @@ export class MigrationExecutionError extends Error {
 const migrationDirectory = path.join(process.cwd(), "supabase", "migrations");
 // Transaction-scoped: safe with connection pooling, shared by web and CLI runners.
 const migrationLock = 714093821;
-export type MigrationScope = "all" | "customer";
+export type MigrationScope = "all" | "customer" | "shipping";
+const shippingFile = "20261120000001_shipping.sql";
+// Exact SQL approved on 20 November. A changed file needs a fresh review.
+const shippingChecksum =
+  "8cb367a2a2d1f440aac5f04d0bcf38161094a33d3e44b3000d15dbfd6733a07c";
+export class MigrationPreconditionError extends Error {}
 // Explicit server-owned manifest: the public setup endpoint must never install
 // the legacy Studio CRM schema into the existing business database.
 const customerMigrations = [
@@ -48,6 +54,7 @@ export async function migrationFiles(scope: MigrationScope = "all") {
     if (!files.includes(required))
       throw new Error(`Packaged customer migration missing: ${required}`);
   }
+  if (scope === "shipping") return [shippingFile];
   return files.filter((file) =>
     customerMigrations.some((required) => required === file),
   );
@@ -94,6 +101,18 @@ export async function runPendingMigrations(
       contents: await readFile(path.join(migrationDirectory, id), "utf8"),
     })),
   );
+  const prerequisites =
+    scope === "shipping"
+      ? (await migrationFiles("customer")).filter((id) => id < shippingFile)
+      : [];
+  if (
+    scope === "shipping" &&
+    createHash("sha256").update(migrations[0].contents).digest("hex") !==
+      shippingChecksum
+  )
+    throw new MigrationPreconditionError(
+      "The shipping SQL differs from the approved version. Nothing was applied; ask for a new review.",
+    );
   const applied: string[] = [];
   await sql.begin(async (tx) => {
     await tx`SET LOCAL statement_timeout = '45s'`;
@@ -115,6 +134,12 @@ export async function runPendingMigrations(
         >`SELECT filename AS id FROM public.schema_migrations`
       : await tx<{ id: string }[]>`SELECT id FROM public.schema_migrations`;
     const seen = new Set(recorded.map((row) => row.id));
+    const missing = prerequisites.filter((id) => !seen.has(id));
+    if (missing.length)
+      throw new MigrationPreconditionError(
+        "Shipping was not applied. Earlier updates need separate review: " +
+          missing.join(", "),
+      );
     const pending = migrations.filter((m) => !seen.has(m.id));
     for (const migration of pending) {
       onProgress?.({
