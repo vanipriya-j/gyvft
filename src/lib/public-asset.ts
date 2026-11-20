@@ -1,17 +1,25 @@
-import fs from "node:fs";
-import path from "node:path";
+import manifest from "@/config/public-assets.generated.json";
+const assets: Record<string, { width?: number; height?: number }> = manifest;
 
-/** True when a file exists under /public for a site-absolute path like `/images/...`. */
+/** Build-generated metadata avoids tracing /public into every server function. */
 export function publicAssetExists(publicPath: string): boolean {
-  if (!publicPath.startsWith("/")) return false;
-  const absolute = path.join(process.cwd(), "public", publicPath.slice(1));
-  try {
-    return fs.existsSync(absolute) && fs.statSync(absolute).isFile();
-  } catch {
-    return false;
-  }
+  return (
+    publicPath.startsWith("/") &&
+    Object.prototype.hasOwnProperty.call(assets, publicPath)
+  );
+}
+
+export function publicAssetDimensions(publicPath: string) {
+  const value = publicAssetExists(publicPath) ? assets[publicPath] : null;
+  return value?.width && value.height
+    ? { width: value.width, height: value.height }
+    : null;
 }
 
 export function isProductionRuntime(): boolean {
-  return process.env.NODE_ENV === "production" || process.env.IS_PRODUCTION === "true" || process.env.IS_PRODUCTION === "1";
+  return (
+    process.env.NODE_ENV === "production" ||
+    process.env.IS_PRODUCTION === "true" ||
+    process.env.IS_PRODUCTION === "1"
+  );
 }

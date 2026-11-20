@@ -39,22 +39,20 @@ export async function seedCustomerDemos(password: string, now = new Date()) {
   const hashes = await Promise.all(
     demoAccounts.map(() => hashCustomerPassword(password)),
   );
-  const images = await Promise.all(
-    demoImagePaths.map((p) =>
-      readFile(
-        path.join(
-          process.cwd(),
-          "public",
-          "images",
-          "gyvft",
-          "case-studies",
-          p.endsWith("bits-2001-reunion/hero.png")
-            ? "bits-2001-reunion/hero.png"
-            : "various-dance-schools/hero.png",
-        ),
+  const images = await Promise.all([
+    readFile(
+      path.join(
+        process.cwd(),
+        "public/images/gyvft/case-studies/bits-2001-reunion/hero.png",
       ),
     ),
-  );
+    readFile(
+      path.join(
+        process.cwd(),
+        "public/images/gyvft/case-studies/various-dance-schools/hero.png",
+      ),
+    ),
+  ]);
   const tables = new Map<string, Table>();
   function add(table: string, row: Row, owner?: string, primaryKey = "id") {
     if (!tables.has(table))
