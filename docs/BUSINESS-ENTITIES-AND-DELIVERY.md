@@ -94,7 +94,7 @@ For mixed office and home delivery, use the same allocations (for example office
 
 Occasion date and requested delivery date remain separate. Allow a requested/confirmed date per allocation when needed; do not infer occasion dates from shipping targets. Arrival promises require an Operations confirmation. Failed attempts, rescheduling or missing contact information must not be labelled delivered. Delivery exceptions are support/fulfilment events, not permission to change gifts after production.
 
-Use explicit shipment/allocation states and quantity checks. A partial dispatch or one delivered destination does not complete the whole order. The customer sees **60/100 sets dispatched**, destination-level progress and the next action. The full order becomes delivered only when all committed sets are actually delivered or a separately authorised cancellation/exception is resolved. Dispatch still requires the agreed full verified payment.
+Use explicit shipment/allocation states and quantity checks. A partial dispatch or one delivered destination does not complete the whole order. The customer sees **60/100 sets dispatched**, destination-level progress and the next action. The full order becomes delivered only when all committed sets are actually delivered. A delivery exception remains an exception; it must not be counted as successful delivery. No cancellation/refund policy or right to change a gift after production is introduced here. Dispatch still requires the agreed full verified payment.
 
 ## Customer UX
 
