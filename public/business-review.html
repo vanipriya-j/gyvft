@@ -1,0 +1,1105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>GYVFT · Business gifting review</title>
+    <style>
+      :root {
+        --cream: #f9f6ef;
+        --paper: #fffdf8;
+        --ink: #191b17;
+        --muted: #66685e;
+        --line: #dedbd0;
+        --olive: #62683d;
+        --soft: #eef0df;
+        --red: #b8232b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--cream);
+        color: var(--ink);
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+      header {
+        max-width: 1320px;
+        margin: auto;
+        padding: 16px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      header img {
+        width: 110px;
+        height: 28px;
+        object-fit: cover;
+        object-position: center;
+      }
+      header p {
+        margin: 0;
+      }
+      header small {
+        margin-left: auto;
+        color: var(--muted);
+      }
+      main {
+        max-width: 1320px;
+        margin: auto;
+        padding: 24px;
+        display: grid;
+        grid-template-columns: 190px minmax(0, 1fr);
+        gap: 24px;
+      }
+      nav {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+      button,
+      .button {
+        min-height: 44px;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--paper);
+        color: var(--ink);
+        cursor: pointer;
+        text-decoration: none;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.55;
+      }
+      nav button {
+        text-align: left;
+        background: transparent;
+        border-color: transparent;
+      }
+      nav button[aria-current="page"] {
+        background: var(--soft);
+        color: var(--olive);
+        font-weight: 600;
+      }
+      button.primary {
+        background: var(--red);
+        color: white;
+        border-color: var(--red);
+      }
+      button.olive {
+        background: var(--olive);
+        color: white;
+        border-color: var(--olive);
+      }
+      button:hover:not(:disabled) {
+        filter: brightness(0.96);
+      }
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible,
+      summary:focus-visible {
+        outline: 3px solid var(--red);
+        outline-offset: 3px;
+      }
+      h1,
+      h2 {
+        font-family: Georgia, serif;
+        font-weight: 400;
+        line-height: 1.2;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 8px;
+      }
+      h2 {
+        font-size: 21px;
+        margin: 0 0 12px;
+      }
+      h3 {
+        font-size: 14px;
+        margin: 0 0 8px;
+      }
+      p {
+        margin: 0 0 12px;
+      }
+      .muted,
+      small {
+        color: var(--muted);
+      }
+      .heading {
+        min-height: 84px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .panel {
+        padding: 16px;
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        margin-bottom: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .full {
+        grid-column: 1/-1;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 0;
+        border-top: 1px solid var(--line);
+      }
+      .row p {
+        margin: 0;
+      }
+      .row > strong {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .badge {
+        white-space: nowrap;
+        flex-shrink: 0;
+        display: inline-flex;
+        padding: 3px 8px;
+        background: var(--soft);
+        color: #484d2a;
+        border-radius: 5px;
+        font-size: 12px;
+      }
+      .note {
+        padding: 12px;
+        background: var(--soft);
+        border-radius: 7px;
+        color: #434832;
+      }
+      .alert {
+        padding: 12px;
+        border-left: 3px solid var(--red);
+        background: #fff1ed;
+      }
+      .actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+      }
+      label.field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      input:not([type="radio"]):not([type="checkbox"]),
+      select,
+      textarea {
+        width: 100%;
+        min-height: 44px;
+        padding: 9px 11px;
+        border: 1px solid #cbc8bc;
+        background: var(--paper);
+        color: var(--ink);
+        border-radius: 6px;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 70px;
+      }
+      .choices {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin: 12px 0;
+      }
+      .choice {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        cursor: pointer;
+        min-height: 70px;
+      }
+      .choice:has(input:checked) {
+        border-color: var(--olive);
+        background: var(--soft);
+      }
+      .choice span {
+        display: block;
+      }
+      .choice small {
+        display: block;
+        margin-top: 4px;
+      }
+      .choice input {
+        margin-top: 4px;
+        accent-color: var(--olive);
+      }
+      fieldset {
+        padding: 0;
+        border: 0;
+        min-width: 0;
+      }
+      legend {
+        font-weight: 600;
+      }
+      dl {
+        margin: 0;
+      }
+      dt {
+        color: var(--muted);
+      }
+      dd {
+        margin: 2px 0 12px;
+      }
+      address {
+        font-style: normal;
+        white-space: pre-line;
+        color: var(--muted);
+      }
+      .allocation {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        margin: 10px 0;
+      }
+      .allocation-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 100px auto;
+        gap: 10px;
+        align-items: end;
+      }
+      .allocation-head .field {
+        margin: 0;
+      }
+      .allocation summary {
+        padding: 10px 0;
+        cursor: pointer;
+        color: var(--olive);
+      }
+      .allocation .grid {
+        margin-top: 8px;
+      }
+      .counter {
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+      }
+      .status {
+        min-height: 22px;
+        margin: 8px 0;
+        color: var(--olive);
+      }
+      [hidden] {
+        display: none !important;
+      }
+      dialog {
+        width: min(620px, calc(100% - 32px));
+        max-height: 85vh;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 24px;
+        background: var(--paper);
+        color: var(--ink);
+      }
+      dialog::backdrop {
+        background: #191b1766;
+      }
+      dialog h2 {
+        margin-bottom: 16px;
+      }
+      dialog .row {
+        align-items: flex-start;
+      }
+      .tiny {
+        font-size: 12px;
+      }
+      #snapshot-message {
+        white-space: pre-line;
+      }
+      footer {
+        max-width: 1320px;
+        margin: auto;
+        padding: 8px 24px 24px;
+        color: var(--muted);
+      }
+      a {
+        color: var(--olive);
+      }
+      @media (max-width: 760px) {
+        header {
+          padding: 12px 16px;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        header img {
+          width: 90px;
+          height: 24px;
+        }
+        header small {
+          flex-basis: 100%;
+          margin: 0;
+        }
+        main {
+          display: block;
+          padding: 16px;
+        }
+        nav {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 4px;
+          margin-bottom: 20px;
+        }
+        nav button {
+          text-align: center;
+          padding: 8px;
+          font-size: 13px;
+        }
+        h1 {
+          font-size: 24px;
+        }
+        .heading {
+          min-height: 76px;
+        }
+        .heading .badge {
+          display: none;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .full {
+          grid-column: auto;
+        }
+        .choices {
+          grid-template-columns: 1fr;
+        }
+        .choice {
+          min-height: 60px;
+          padding: 10px;
+        }
+        .panel {
+          padding: 14px;
+        }
+        .row {
+          align-items: flex-start;
+        }
+        .allocation-head {
+          grid-template-columns: minmax(0, 1fr) 80px;
+        }
+        .allocation-head button {
+          grid-column: 1/-1;
+          justify-self: start;
+        }
+        .actions button {
+          flex: 1;
+        }
+        .actions {
+          align-items: stretch;
+        }
+        .counter {
+          font-size: 15px;
+        }
+        footer {
+          padding: 8px 16px 20px;
+        }
+        input,
+        select,
+        textarea {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="/images/brand/GYVFT_3x.png" alt="GYVFT" />
+      <p>Business gifting</p>
+      <small
+        >Interactive design review · fictional data · no app records or orders
+        are created</small
+      >
+    </header>
+    <main>
+      <nav aria-label="Business review screens">
+        <button type="button" data-view="business" aria-current="page">
+          Business details
+        </button>
+        <button type="button" data-view="access">People & access</button>
+        <button type="button" data-view="order">Gift billing & delivery</button>
+        <button type="button" data-view="operations">Operations handoff</button>
+      </nav>
+      <div>
+        <section id="business" class="screen">
+          <div class="heading">
+            <div>
+              <h1 tabindex="-1">Meridian Studio</h1>
+              <p class="muted">
+                One business identity. Reuse it whenever you buy for work.
+              </p>
+            </div>
+            <span class="badge">Example entity</span>
+          </div>
+          <form id="entity-form">
+            <div class="panel">
+              <h2>Legal & billing identity</h2>
+              <div class="grid">
+                <label class="field"
+                  >Legal name<input
+                    name="legalName"
+                    value="Meridian Design Studio Private Limited"
+                    required
+                    maxlength="160"
+                /></label>
+                <label class="field"
+                  ><span>Trading name <small>(optional)</small></span
+                  ><input
+                    name="tradingName"
+                    value="Meridian Studio"
+                    maxlength="160"
+                /></label>
+                <label class="field"
+                  >Billing email<input
+                    name="billingEmail"
+                    type="email"
+                    value="accounts@meridian.example"
+                    required
+                /></label>
+                <label class="field"
+                  >GST registration<select id="gst-status" name="gstStatus">
+                    <option value="unregistered">Not GST-registered</option>
+                    <option value="registered">Add a GST registration</option>
+                  </select></label
+                >
+                <label class="field full" id="gst-field" hidden
+                  >GSTIN<input
+                    name="gstin"
+                    id="gstin"
+                    disabled
+                    maxlength="15"
+                    pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]"
+                    placeholder="15-character GSTIN"
+                  /><small
+                    >Format entry only in this prototype. Operations must verify
+                    the registration before using it for a real order.</small
+                  ></label
+                >
+              </div>
+              <p class="note">
+                Arun is the person signing in. Meridian is the entity on the
+                bill. Adding this email does not create another login or grant
+                access.
+              </p>
+            </div>
+            <div class="grid">
+              <section class="panel">
+                <h2>Registered office</h2>
+                <label class="field"
+                  >Registered office address<textarea
+                    name="registeredAddress"
+                    required
+                  >
+12 Example Garden Road, Chennai
+Tamil Nadu · 600020 · India</textarea></label
+                ><small
+                  >This is the legal address. It does not automatically become
+                  the delivery address.</small
+                >
+              </section>
+              <section class="panel">
+                <h2>Office locations</h2>
+                <div class="row">
+                  <div>
+                    <strong>Chennai office</strong>
+                    <address>
+                      24 Example Studio Road, Chennai Tamil Nadu · 600034 ·
+                      India
+                    </address>
+                  </div>
+                  <span class="badge">Office</span>
+                </div>
+                <div class="row">
+                  <div>
+                    <strong>Bengaluru office</strong>
+                    <address>
+                      8 Example Work Avenue, Bengaluru Karnataka · 560001 ·
+                      India
+                    </address>
+                  </div>
+                </div>
+                <small
+                  >Saved places can be used for bulk delivery. No employee home
+                  addresses are needed.</small
+                >
+              </section>
+            </div>
+            <p class="muted">
+              A real entity may have several GST registrations and billing
+              profiles. This compact review demonstrates one selected profile.
+            </p>
+            <div class="actions">
+              <button class="primary" type="submit">
+                Save details for review</button
+              ><button type="button" data-go="order">
+                Continue to gift setup →
+              </button>
+            </div>
+            <p class="status" role="status" id="entity-status"></p>
+          </form>
+        </section>
+        <section id="access" class="screen" hidden>
+          <div class="heading">
+            <div>
+              <h1 tabindex="-1">People & business access</h1>
+              <p class="muted">
+                Being in the circle and buying for the business are different
+                permissions.
+              </p>
+            </div>
+          </div>
+          <section class="panel">
+            <h2>Meridian Studio · entity access</h2>
+            <div class="row">
+              <div>
+                <strong>Arun</strong>
+                <p class="muted">Account holder · organisation administrator</p>
+              </div>
+              <span class="badge">Admin + buyer</span>
+            </div>
+            <div class="row">
+              <div>
+                <strong>Meera</strong>
+                <p class="muted">Can buy for assigned company requests</p>
+              </div>
+              <span class="badge">Buyer</span>
+            </div>
+            <div class="row">
+              <div>
+                <strong>Finance contact</strong>
+                <p class="muted">
+                  Company quotes, invoices and payment reconciliation
+                </p>
+              </div>
+              <span class="badge">Finance</span>
+            </div>
+            <p class="note">
+              Finance does not automatically see recipient home addresses or
+              private circle profiles. A billing email alone does not grant the
+              Finance role.
+            </p>
+          </section>
+          <section class="panel">
+            <h2>Meridian Studio · circle</h2>
+            <p>
+              Employees can join the circle, share occasions and choose whether
+              to share their profile.
+            </p>
+            <div class="row">
+              <div>
+                <strong>Kavya</strong>
+                <p class="muted">
+                  Circle member · no business purchasing access
+                </p>
+              </div>
+              <span class="badge">Circle only</span>
+            </div>
+            <p class="muted">
+              A matching company email or circle-admin role does not grant
+              buying authority. First business access needs an explicit review
+              and subsequent role invitations need acceptance.
+            </p>
+          </section>
+          <div class="actions">
+            <button class="primary" data-go="order">
+              Set up a company gift →
+            </button>
+          </div>
+        </section>
+        <section id="order" class="screen" hidden>
+          <div class="heading">
+            <div>
+              <h1 tabindex="-1">A warm welcome for the team</h1>
+              <p class="muted">
+                Confirm who is buying, who is billed and where the gifts should
+                go.
+              </p>
+            </div>
+            <span class="badge">Order setup · review</span>
+          </div>
+          <form id="order-form">
+            <section class="panel">
+              <h2>Buying & billing</h2>
+              <div class="grid">
+                <label class="field"
+                  >Buying for<select id="purchase-context">
+                    <option value="organisation">
+                      Meridian Studio · authorised buyer
+                    </option>
+                    <option value="personal">Myself · personal purchase</option>
+                  </select></label
+                >
+                <label class="field"
+                  >Number of gift sets<input
+                    id="sets"
+                    type="number"
+                    min="1"
+                    max="100000"
+                    step="1"
+                    value="100"
+                    required
+                  /><small
+                    >Count hampers/sets, not products inside them.</small
+                  ></label
+                >
+                <label class="field" id="billing-field"
+                  >Bill to<select id="bill-to">
+                    <option value="registered">Registered office</option>
+                    <option value="chennai">
+                      Chennai office billing profile
+                    </option>
+                  </select></label
+                >
+                <label class="field" id="po-field"
+                  ><span
+                    >Purchase-order reference <small>(optional)</small></span
+                  ><input
+                    id="po-reference"
+                    maxlength="100"
+                    placeholder="Add only if your business needs one"
+                /></label>
+              </div>
+              <div id="billing-summary" class="note"></div>
+              <p class="tiny muted">
+                Billing-profile changes do not alter a review snapshot already
+                taken. Real orders retain the confirmed legal name, GST
+                registration and address version.
+              </p>
+            </section>
+            <section class="panel">
+              <fieldset>
+                <legend>How should we deliver?</legend>
+                <div class="choices">
+                  <label class="choice"
+                    ><input
+                      type="radio"
+                      name="delivery-mode"
+                      value="one"
+                      checked
+                    /><span
+                      >One location<small
+                        >Office, home or an event venue</small
+                      ></span
+                    ></label
+                  >
+                  <label class="choice"
+                    ><input
+                      type="radio"
+                      name="delivery-mode"
+                      value="several"
+                    /><span
+                      >Several locations<small
+                        >Split quantities across destinations</small
+                      ></span
+                    ></label
+                  >
+                  <label class="choice"
+                    ><input
+                      type="radio"
+                      name="delivery-mode"
+                      value="individual"
+                    /><span
+                      >Individual deliveries<small
+                        >Add each delivery contact and address</small
+                      ></span
+                    ></label
+                  >
+                </div>
+              </fieldset>
+              <p class="tiny muted">
+                Each arrangement keeps its own fictional draft here. Check
+                quantities when switching; nothing is redistributed
+                automatically.
+              </p>
+              <div id="allocations"></div>
+              <div class="actions">
+                <button id="add-destination" type="button">
+                  + Add a destination</button
+                ><span
+                  id="allocation-total"
+                  class="counter"
+                  aria-live="polite"
+                ></span>
+              </div>
+              <p class="muted" style="margin-top: 12px">
+                You can submit a real enquiry before addresses are ready.
+                Confirm allocations and address-dependent delivery charges
+                before the final order. Recipient signup is optional.
+              </p>
+            </section>
+            <section class="panel">
+              <h2>Before you commit</h2>
+              <p>
+                Products and included printing are quoted with taxes. Packaging
+                and delivery are additional, with delivery at actuals. The final
+                quote needs your approval.
+              </p>
+              <p class="note">
+                50% advance · remaining 50% before dispatch. Payment proof is
+                checked manually, allowing up to 24 hours. Changes close once
+                production begins.
+              </p>
+              <div id="order-errors" role="alert"></div>
+              <div class="actions">
+                <button class="primary" type="submit">
+                  Review billing & delivery →
+                </button>
+              </div>
+              <p class="tiny muted">
+                This button captures a local design-review snapshot only. It
+                cannot place an order, approve a quote or take a payment.
+              </p>
+            </section>
+          </form>
+        </section>
+        <section id="operations" class="screen" hidden>
+          <div class="heading">
+            <div>
+              <h1 tabindex="-1">Operations handoff</h1>
+              <p class="muted">
+                Keep the official order accurate while the team handles the
+                pilot manually.
+              </p>
+            </div>
+          </div>
+          <div class="panel" id="ops-summary">
+            <h2>No review snapshot yet</h2>
+            <p>
+              Choose the buyer, billing profile and delivery arrangement first.
+            </p>
+            <button class="primary" data-go="order">
+              Review the gift setup →
+            </button>
+          </div>
+          <section class="panel">
+            <h2>Shopify record</h2>
+            <div class="row">
+              <div>
+                <strong>One custom batch line</strong>
+                <p class="muted">
+                  Attached to the ordering customer's account. Business bill-to
+                  is separate.
+                </p>
+              </div>
+              <span class="badge">Order policy</span>
+            </div>
+            <p>
+              For one location, map the selected billing address and the actual
+              shipping address independently. Do not overwrite the person's
+              default address.
+            </p>
+            <p class="alert">
+              For split or individual deliveries, agree a restricted
+              delivery-manifest arrangement before handoff. One Shopify shipping
+              address and one batch line cannot stand in for every destination.
+              Partial delivery must not mark the whole order fulfilled.
+            </p>
+            <p class="muted">
+              The current app's B2C-only adapter is unchanged. Business billing,
+              GST invoice output and split-destination handoff still require
+              implementation and verification. This screen makes no Shopify
+              call.
+            </p>
+          </section>
+          <section class="panel">
+            <h2>Next Operations checks</h2>
+            <ol>
+              <li>
+                Confirm legal identity, purchasing authority and supplied GST
+                details.
+              </li>
+              <li>
+                Confirm exact quote version, charges, addresses and quantities.
+              </li>
+              <li>
+                Verify the advance, artwork and handoff readiness under the
+                existing rules.
+              </li>
+              <li>
+                Create or link the official Shopify order once; reconcile its
+                billing and total.
+              </li>
+              <li>
+                Record actual shipment quantities/tracking. Collect the balance
+                before dispatch.
+              </li>
+            </ol>
+          </section>
+        </section>
+      </div>
+    </main>
+    <footer>
+      Review the flow, not production data.
+      <a href="/circles-review.html">Circles reference</a> ·
+      <a
+        href="https://github.com/vanipriya-j/gyvft/blob/main/docs/BUSINESS-ENTITIES-AND-DELIVERY.md"
+        >Architecture & acceptance criteria</a
+      >
+    </footer>
+    <dialog
+      id="review-dialog"
+      aria-labelledby="review-title"
+      aria-describedby="review-description"
+    >
+      <h2 id="review-title">Your billing & delivery</h2>
+      <p id="review-description" class="muted">
+        A fictional review snapshot. No order is placed.
+      </p>
+      <div id="review-content"></div>
+      <div class="actions">
+        <button class="primary" id="keep-snapshot">Keep review snapshot</button
+        ><button id="close-review">Back to edit</button>
+      </div>
+    </dialog>
+    <script>
+      "use strict";
+      const $ = (id) => document.getElementById(id),
+        esc = (v) =>
+          String(v).replace(
+            /[&<>"']/g,
+            (c) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[c],
+          );
+      let entity = {
+          legalName: "Meridian Design Studio Private Limited",
+          tradingName: "Meridian Studio",
+          billingEmail: "accounts@meridian.example",
+          registeredAddress:
+            "12 Example Garden Road, Chennai\nTamil Nadu · 600020 · India",
+          gstStatus: "unregistered",
+          gstin: "",
+        },
+        mode = "one",
+        snapshot = null,
+        pendingSnapshot = null,
+        opener = null;
+      const address = {
+        chennai: "24 Example Studio Road, Chennai, Tamil Nadu, 600034, India",
+        bengaluru: "8 Example Work Avenue, Bengaluru, Karnataka, 560001, India",
+      };
+      let serial = 10;
+      const allocation = (label, quantity, destination, contact) => ({
+        id: String(++serial),
+        label,
+        quantity,
+        address: destination,
+        contact,
+      });
+      const drafts = {
+        one: [
+          allocation(
+            "Chennai office",
+            100,
+            address.chennai,
+            "Office reception",
+          ),
+        ],
+        several: [
+          allocation("Chennai office", 60, address.chennai, "Office reception"),
+          allocation(
+            "Bengaluru office",
+            40,
+            address.bengaluru,
+            "Office coordinator",
+          ),
+        ],
+        individual: ["Ananya", "Dev", "Kavya", "Rohan"].map((name) =>
+          allocation(name, 1, "", name),
+        ),
+      };
+      function show(view) {
+        document
+          .querySelectorAll(".screen")
+          .forEach((s) => (s.hidden = s.id !== view));
+        document.querySelectorAll("[data-view]").forEach((b) => {
+          if (b.dataset.view === view) b.setAttribute("aria-current", "page");
+          else b.removeAttribute("aria-current");
+        });
+        $(view).querySelector("h1").focus({ preventScroll: true });
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+      document
+        .querySelectorAll("[data-view],[data-go]")
+        .forEach((b) =>
+          b.addEventListener("click", () =>
+            show(b.dataset.view || b.dataset.go),
+          ),
+        );
+      function billing() {
+        const personal = $("purchase-context").value === "personal";
+        $("billing-field").hidden = personal;
+        $("po-field").hidden = personal;
+        const loc =
+          $("bill-to").value === "registered"
+            ? entity.registeredAddress
+            : address.chennai;
+        $("billing-summary").textContent = personal
+          ? "Arun · personal purchase. Add personal billing details in the real confirmation flow."
+          : `${entity.legalName}\n${loc}\n${entity.gstStatus === "registered" ? "GSTIN " + entity.gstin + " · Operations check pending" : "Not GST-registered"}\n${entity.billingEmail}`;
+        $("billing-summary").style.whiteSpace = "pre-line";
+      }
+      $("gst-status").addEventListener("change", () => {
+        $("gst-field").hidden = $("gst-status").value !== "registered";
+        $("gstin").required = !$("gst-field").hidden;
+        $("gstin").disabled = $("gst-field").hidden;
+      });
+      $("entity-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const f = new FormData(event.currentTarget);
+        entity = Object.fromEntries(f);
+        if (entity.gstStatus !== "registered") entity.gstin = "";
+        $("entity-status").textContent =
+          "Business details updated for this review only. Existing review snapshots stay unchanged.";
+        billing();
+      });
+      $("purchase-context").addEventListener("change", billing);
+      $("bill-to").addEventListener("change", billing);
+      function total() {
+        const expected = Number($("sets").value),
+          allocated = drafts[mode].reduce(
+            (n, a) => n + Number(a.quantity || 0),
+            0,
+          );
+        $("allocation-total").textContent =
+          `${allocated} / ${expected || 0} sets allocated${allocated < expected ? " · " + (expected - allocated) + " still to allocate" : allocated > expected ? " · reduce by " + (allocated - expected) : " · complete"}`;
+        $("allocation-total").style.color =
+          allocated === expected ? "var(--olive)" : "var(--red)";
+      }
+      function renderAllocations() {
+        const one = mode === "one";
+        $("add-destination").hidden = one;
+        $("allocations").innerHTML = drafts[mode]
+          .map(
+            (a) =>
+              `<article class="allocation" data-id="${a.id}"><div class="allocation-head"><label class="field">${mode === "individual" ? "Delivery for" : "Destination"}<input data-field="label" value="${esc(a.label)}" maxlength="120" required></label><label class="field">Gift sets<input data-field="quantity" type="number" min="1" max="100000" step="1" value="${a.quantity}" required></label>${one ? "" : `<button type="button" data-remove="${a.id}" aria-label="Remove ${esc(a.label || "destination")}">Remove</button>`}</div><details ${a.address ? "" : "open"}><summary>${a.address ? "Contact & address" : "Add contact & delivery address"}</summary><label class="field">Delivery contact<input data-field="contact" value="${esc(a.contact)}" maxlength="120" required></label><label class="field">Complete delivery address<textarea data-field="address" aria-label="Complete delivery address" required maxlength="1500" placeholder="Street, city, state, PIN and country">${esc(a.address)}</textarea></label><small>This simplified prototype uses one address field. The real app validates structured address and contact fields.</small></details></article>`,
+          )
+          .join("");
+        total();
+      }
+      $("allocations").addEventListener("input", (event) => {
+        const field = event.target.dataset.field,
+          article = event.target.closest("[data-id]");
+        if (!field || !article) return;
+        const a = drafts[mode].find((x) => x.id === article.dataset.id);
+        a[field] =
+          field === "quantity"
+            ? Number(event.target.value)
+            : event.target.value;
+        total();
+      });
+      $("allocations").addEventListener("click", (event) => {
+        const b = event.target.closest("[data-remove]");
+        if (!b) return;
+        drafts[mode] = drafts[mode].filter((a) => a.id !== b.dataset.remove);
+        renderAllocations();
+      });
+      document.querySelectorAll("[name=delivery-mode]").forEach((r) =>
+        r.addEventListener("change", () => {
+          mode = r.value;
+          $("order-errors").textContent = "";
+          renderAllocations();
+        }),
+      );
+      $("sets").addEventListener("input", total);
+      $("add-destination").addEventListener("click", () => {
+        drafts[mode].push(allocation("", 1, "", ""));
+        renderAllocations();
+        $("allocations").lastElementChild.querySelector("input").focus();
+      });
+      function summary(s) {
+        return `<dl><dt>Ordered by</dt><dd>Arun</dd><dt>Buying for</dt><dd>${esc(s.context === "personal" ? "Personal purchase" : s.entity.legalName)}</dd><dt>Bill to</dt><dd>${esc(s.context === "personal" ? "Personal billing details to confirm" : s.billingAddress).replace(/\n/g, "<br>")}</dd>${s.context === "organisation" ? `<dt>GST registration</dt><dd>${esc(s.entity.gstStatus === "registered" ? s.entity.gstin + " · Operations check pending" : "Not GST-registered")}</dd>` : ""}<dt>Invoice email</dt><dd>${esc(s.entity.billingEmail)}</dd>${s.po ? `<dt>PO reference</dt><dd>${esc(s.po)}</dd>` : ""}<dt>Delivery arrangement</dt><dd>${esc({ one: "One location", several: "Several locations", individual: "Individual deliveries" }[s.mode])} · ${s.sets} sets · ${s.allocations.length} destination${s.allocations.length === 1 ? "" : "s"}</dd></dl>${s.allocations.map((a) => `<div class="row"><div><strong>${esc(a.label)}</strong><address>${esc(a.address)}</address></div><strong>${a.quantity} sets</strong></div>`).join("")}<p class="note">Final pricing remains subject to the approved quote, taxes, packaging and delivery charges. 50% advance, balance before dispatch.</p>`;
+      }
+      $("order-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const sets = Number($("sets").value),
+          allocations = drafts[mode];
+        if (
+          !allocations.length ||
+          allocations.some(
+            (a) =>
+              !Number.isInteger(a.quantity) ||
+              a.quantity < 1 ||
+              !a.address.trim() ||
+              !a.contact.trim() ||
+              !a.label.trim(),
+          ) ||
+          allocations.reduce((n, a) => n + a.quantity, 0) !== sets
+        ) {
+          $("order-errors").innerHTML =
+            '<p class="alert">Check every contact, address and positive quantity. Allocations must add up to the number of gift sets.</p>';
+          return;
+        }
+        if ($("purchase-context").value === "personal") {
+          $("order-errors").innerHTML =
+            '<p class="alert">This business review does not collect personal billing details. Select Meridian to review this flow; the existing personal application remains separate.</p>';
+          return;
+        }
+        opener = document.activeElement;
+        pendingSnapshot = structuredClone({
+          context: $("purchase-context").value,
+          entity,
+          billingAddress:
+            $("bill-to").value === "registered"
+              ? entity.registeredAddress
+              : address.chennai,
+          mode,
+          sets,
+          allocations,
+          po: $("po-reference").value,
+        });
+        $("review-content").innerHTML = summary(pendingSnapshot);
+        $("review-dialog").showModal();
+      });
+      $("close-review").addEventListener("click", () =>
+        $("review-dialog").close(),
+      );
+      $("review-dialog").addEventListener("close", () => opener?.focus());
+      $("keep-snapshot").addEventListener("click", () => {
+        snapshot = structuredClone(pendingSnapshot);
+        $("ops-summary").innerHTML =
+          "<h2>Saved review snapshot</h2>" +
+          summary(snapshot) +
+          '<p class="tiny muted" id="snapshot-message">Local review only. Later edits to business details do not change this snapshot. Business API, tax invoice and delivery handoff checks remain required.</p>';
+        $("review-dialog").close();
+        show("operations");
+      });
+      billing();
+      renderAllocations();
+    </script>
+  </body>
+</html>

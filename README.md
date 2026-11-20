@@ -18,6 +18,8 @@ Customer signup/sign-in uses GYVFT-owned database accounts and secure session co
 
 ## Customer portal guides
 
+- [Business identity, billing and delivery plan](docs/BUSINESS-ENTITIES-AND-DELIVERY.md) · [interactive design review](https://www.gyvft.com/business-review.html) (fictional proposal, not the live B2B flow)
+
 - [Customer email notifications and recovery](docs/CUSTOMER-NOTIFICATIONS.md)
 - [Pilot review prompt](docs/CUSTOMER-PILOT-REVIEW.md)
 

@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## B2B entity, billing and delivery decisions — 20 November 2026
+
+Read [BUSINESS-ENTITIES-AND-DELIVERY.md](BUSINESS-ENTITIES-AND-DELIVERY.md) before expanding B2B. An individual can buy personally or for an explicitly authorised legal entity; circles are community/access-to-occasions context, not bill-to records or purchasing authority. The plan covers legal/trading names, several GST registrations, registered/office/billing addresses, versioned billing snapshots and one/multiple/individual delivery allocations. `/business-review.html` is an interactive fictional-data review, **not a working B2B application**. The existing Shopify adapter is B2C-only, with one address and one custom batch line; the new handoff must not simply remove its guard or imply multi-address fulfilment works. Production entity persistence/APIs, GST invoicing and split delivery remain implementation work after UX review and separate approval of any exact production SQL. No migration, backfill or deletion accompanies this plan.
+
 ## Customer email recovery — 19 November 2026
 
 Email-first notifications reuse the existing outbox with no migration. Immediate attempts have bounded transient retry; a dedicated customer cron and Operations controls recover due batches independently of legacy Studio tables. Operations shows configuration, attempts and queue counts; provider acceptance is not labelled inbox delivery. Demo identities and sample requests never send. WhatsApp is deferred at the user's request. See [CUSTOMER-NOTIFICATIONS.md](CUSTOMER-NOTIFICATIONS.md) for coverage, deployment checks and daily recovery limits, and [CUSTOMER-PILOT-REVIEW.md](CUSTOMER-PILOT-REVIEW.md) for the copyable review brief. No production migration or data deletion is part of this release.
