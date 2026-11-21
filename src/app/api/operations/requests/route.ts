@@ -17,6 +17,7 @@ import {
   createOrSyncShopifyOrder,
 } from "@/lib/customer/shopify";
 import { logger } from "@/lib/logging/logger";
+import { aarlaCouponConnectionStatus } from "@/lib/customer/aarla-shop";
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -101,6 +102,8 @@ export async function POST(request: Request) {
       }
       return reply(result);
     }
+    if (raw.op === "aarla_savings_status")
+      return reply({ ok: true, ...(await aarlaCouponConnectionStatus()) });
     if (raw.op === "notification_status")
       return reply({ ok: true, notifications: await notificationStatus() });
     if (raw.op === "test_notification_email") {

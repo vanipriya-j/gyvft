@@ -1,4 +1,5 @@
 "use client";
+import { aarlaShopHref } from "@/lib/customer/aarla-shop-model";
 import { CustomerVisuals, type Mockup } from "./visual-dashboard";
 import type { AarlaProduct } from "@/lib/customer/catalogue";
 import Link from "@/components/ui/navigation-link";
@@ -57,6 +58,7 @@ const fullDate = (value: string) =>
 type View = "overview" | "requests" | "occasions" | "ideas";
 type Props = {
   initialView?: View;
+  couponAvailable?: boolean;
   initialAddOpen?: boolean;
   showNavigation?: boolean;
   products: AarlaProduct[];
@@ -513,7 +515,11 @@ function RequestList({
     </div>
   );
 }
-function MoreToDiscover() {
+function MoreToDiscover({
+  couponAvailable = false,
+}: {
+  couponAvailable?: boolean;
+}) {
   return (
     <section className="rounded-2xl border border-border bg-surface/50 p-5 md:p-6">
       <div className="mb-4 flex items-center gap-2">
@@ -540,7 +546,10 @@ function MoreToDiscover() {
         ].map((item) => (
           <a
             key={item.path}
-            href={`https://aarla.in/collections/${item.path}?utm_source=gyvft&utm_medium=customer_dashboard&utm_campaign=discovery`}
+            href={aarlaShopHref(
+              `https://aarla.in/collections/${item.path}?utm_source=gyvft&utm_medium=customer_dashboard&utm_campaign=discovery`,
+              couponAvailable,
+            )}
             target="_blank"
             rel="noopener noreferrer"
             className="group min-w-0 rounded-xl p-2 transition hover:bg-paper"
@@ -562,6 +571,7 @@ function MoreToDiscover() {
 
 export function GiftingDashboard({
   initialView = "overview",
+  couponAvailable = false,
   initialAddOpen = false,
   showNavigation = true,
   requests,
@@ -899,7 +909,7 @@ export function GiftingDashboard({
             </div>
             {ideaCards(3)}
           </section>
-          <MoreToDiscover />
+          <MoreToDiscover couponAvailable={couponAvailable} />
           <section>
             <div className="mb-4 flex items-center justify-between gap-3">
               <h2 className="font-serif text-2xl">Your recent requests</h2>
@@ -1120,7 +1130,7 @@ export function GiftingDashboard({
           </div>
           {ideaCards()}
           <div className="mt-6">
-            <MoreToDiscover />
+            <MoreToDiscover couponAvailable={couponAvailable} />
           </div>
         </section>
       )}

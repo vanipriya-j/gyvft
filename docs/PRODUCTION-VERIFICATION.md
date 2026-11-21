@@ -33,6 +33,10 @@ Use a small genuine internal gifting order with a known customer and operator, s
 
 A single genuine shipment can verify the first courier path. Simulated split tests remain useful evidence for quantity/status rules; they do not establish that a merchant's live courier account accepts all delivery modes. Porter and store collection can remain manual for the pilot. Delhivery live validation waits for the entered merchant credentials and an authorised parcel.
 
+## Aarla shopping benefit
+
+After **Check Aarla savings connection** passes in Operations, use one real signed-in customer to select an Aarla product. Confirm one customer-only 5% code with a 24-hour lifetime in Shopify, a repeated click reusing that code, and the selected product opening through its discount URL. Confirm checkout identifies the linked customer, applies the saving and allows only one redemption. Use a second account to confirm separate eligibility. Local simulated redirects and GraphQL validation do not verify the merchant's live checkout. Coupon state lives in Shopify; this feature adds no database migration.
+
 ## Sign off and share
 
 For each gate record the live date/time (IST), request/order reference, result, screenshot/log reference, and any defect. Keep passwords, keys, reset links, bank screenshots and private addresses out of shared review material. Mark **passed**, **blocked**, **failed**, or **not in this pilot**; do not mark a skipped check passed.

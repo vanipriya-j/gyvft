@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Personal Aarla shopping saving — 21 November 2026
+
+Read [AARLA-SHOPPING-SAVING.md](AARLA-SHOPPING-SAVING.md). Signed-in retail links open a private handoff, reuse a live 5% coupon or create a 24-hour single-redemption code restricted to the linked Shopify customer, then use Shopify's discount redirect URL. Shopify stores coupon state; no migration is added. Canonical customer-specific codes protect concurrent/uncertain creation. Operations has a read-only deployed-credential scope check. Demo users never mint real coupons. The API rejects arbitrary redirects/identities and fails closed on changed native eligibility. Actual merchant checkout remains a live verification step; local fixture results do not establish redemption/inbox/order behaviour in production.
+
 ## Shipping-only setup and live verification — 20 November 2026
 
 The user approved the exact shipping SQL, with no deletions or existing-record changes. `/setup/shipping` uses the existing operator secret to read status first, then run only that checksum-verified file. The server blocks if an earlier customer migration is missing. Generic `/setup` still applies all pending customer migrations; direct the owner to the shipping-only page for this approval. No build/startup migrations were added. Production database access remains unconnected in this workspace; do not claim the SQL has run without live evidence. See [PRODUCTION-VERIFICATION.md](PRODUCTION-VERIFICATION.md) for the owner/developer acceptance gates and unresolved original-account lookup.

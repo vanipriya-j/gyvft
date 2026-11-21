@@ -1,3 +1,5 @@
+import { aarlaShopHref } from "@/lib/customer/aarla-shop-model";
+import { aarlaSavingAvailable } from "@/lib/customer/aarla-shop";
 import { redirect } from "next/navigation";
 import {
   HomeDashboard,
@@ -78,6 +80,7 @@ export default async function AccountPage({
       image: s!.hero.src,
       alt: s!.hero.alt,
     }));
+  const couponAvailable = aarlaSavingAvailable(account.id);
   return (
     <GiftingDashboard
       key={`${view}-${add || ""}`}
@@ -90,8 +93,15 @@ export default async function AccountPage({
             : "occasions"
       }
       showNavigation={false}
-      products={catalogue.products}
-      offers={catalogue.offers}
+      couponAvailable={couponAvailable}
+      products={catalogue.products.map((p) => ({
+        ...p,
+        href: aarlaShopHref(p.href, couponAvailable),
+      }))}
+      offers={catalogue.offers.map((p) => ({
+        ...p,
+        href: aarlaShopHref(p.href, couponAvailable),
+      }))}
       requests={summarizeRequests(projects)}
       {...extras}
       ideas={ideas}

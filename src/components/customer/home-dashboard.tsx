@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element -- Private previews require session cookies; feed images are already validated. */
+import { aarlaShopHref } from "@/lib/customer/aarla-shop-model";
 import Link from "@/components/ui/navigation-link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -702,7 +703,9 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Explore at Aarla →
+                    {data.shopping?.couponAvailable
+                      ? "Shop at Aarla · 5% for you →"
+                      : "Explore at Aarla →"}
                     <span className="sr-only"> (new tab)</span>
                   </a>
                 </div>
@@ -721,8 +724,15 @@ export function HomeDashboard({ data }: { data: CustomerHome }) {
                 section={products.source}
                 media="aarla"
                 empty="A little more inspiration awaits."
-                href="https://aarla.in"
-                label="Explore Aarla"
+                href={aarlaShopHref(
+                  "https://aarla.in",
+                  !!data.shopping?.couponAvailable,
+                )}
+                label={
+                  data.shopping?.couponAvailable
+                    ? "Shop at Aarla · 5% for you"
+                    : "Explore Aarla"
+                }
               />
             )}
             <Pager name="Aarla find" carousel={products} />
