@@ -90,6 +90,7 @@ describe("operator authorization", () => {
   it("protects notification status, retry and test sends with operator authorization", async () => {
     for (const op of [
       "notification_status",
+      "aarla_savings_status",
       "retry_all_notifications",
       "test_notification_email",
     ])

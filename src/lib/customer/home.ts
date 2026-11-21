@@ -8,6 +8,8 @@ import { homeGifts, homeOccasions, homePayments } from "./home-data";
 import { homeInspiration } from "./home-content";
 import { savedIdeasFor } from "./saved-ideas";
 import { aarlaCatalogue } from "./catalogue";
+import { aarlaSavingAvailable } from "./aarla-shop";
+import { aarlaShopHref } from "./aarla-shop-model";
 import { recordCustomerEvent } from "./observability";
 export const homeQuery = z
   .object({
@@ -60,12 +62,13 @@ export async function customerHome(
   now = new Date(),
   options: { deferExternalCatalogue?: boolean } = {},
 ) {
+  const couponAvailable = aarlaSavingAvailable(account.id);
   const today = indiaToday(now),
     { offset, limit } = query;
   const loaders = {
     gifts: () => homeGifts(account.id, offset, limit),
     occasions: () => homeOccasions(account.id, today, offset, limit),
-    saved: () => savedIdeasFor(account.id, offset, limit),
+    saved: () => savedIdeasFor(account.id, offset, limit, couponAvailable),
     payments: () => homePayments(account.id, today, offset, limit),
     inspiration: async () => {
       const idea = homeInspiration();
@@ -96,7 +99,11 @@ export async function customerHome(
       const savedIds = new Set(saved.map((s) => s.product_id));
       const available = catalogue.allProducts
         .filter((p) => p.available)
-        .map((p) => ({ ...p, saved: savedIds.has(p.id) }));
+        .map((p) => ({
+          ...p,
+          href: aarlaShopHref(p.href, couponAvailable),
+          saved: savedIds.has(p.id),
+        }));
       return {
         ...pageOf(available, offset, limit),
         savingAvailable,
@@ -122,6 +129,7 @@ export async function customerHome(
     ]);
   return {
     version: 1 as const,
+    shopping: { couponAvailable },
     generatedAt: now.toISOString(),
     today,
     timeZone: "Asia/Kolkata" as const,

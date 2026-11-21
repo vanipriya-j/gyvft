@@ -1,4 +1,5 @@
 "use client";
+import { AarlaSavingsConnection } from "@/components/operations/aarla-savings";
 import { CircleOrganisations } from "@/components/operations/circle-organisations";
 import type { circleOrganisationDirectory } from "@/lib/customer/circles";
 import {
@@ -2225,6 +2226,7 @@ export function B2CAdmin({
                 </section>
                 <section className="app-panel">
                   <h2>Connections & access</h2>
+                  <AarlaSavingsConnection post={post} />
                   <p>
                     Shopify server credential:{" "}
                     {shopify ? "Configured" : "Not configured"}

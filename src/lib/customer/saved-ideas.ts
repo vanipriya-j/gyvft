@@ -1,4 +1,5 @@
 import "server-only";
+import { aarlaShopHref } from "./aarla-shop-model";
 import { z } from "zod";
 import { getSql } from "@/lib/database/client";
 import { AppError } from "@/lib/errors/app-error";
@@ -62,6 +63,7 @@ export async function savedIdeasFor(
   accountId: string,
   offset: number,
   limit: number,
+  couponAvailable = false,
 ) {
   const sql = getSql();
   const [savedStories, products] = await Promise.all([
@@ -97,6 +99,7 @@ export async function savedIdeasFor(
         kind: "product",
         id: row.product_id,
         ...parsed.data,
+        href: aarlaShopHref(parsed.data.href, couponAvailable),
         savedAt: row.created_at,
         availability: "unknown",
       });
