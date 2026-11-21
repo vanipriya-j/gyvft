@@ -52,7 +52,8 @@ export async function aarlaCouponConnectionStatus() {
   if (!shopifyConfigured())
     return {
       ready: false,
-      message: "Configure GYVFT’s Shopify server credential in Vercel first.",
+      message:
+        "Set SHOPIFY_CLIENT_ID and SHOPIFY_CLIENT_SECRET in Vercel, then redeploy. An existing Admin API access token is also supported.",
     };
   const allowed = checkCouponConnection(
     await shopifyRequest<CouponConnection>(COUPON_CONNECTION, {}),

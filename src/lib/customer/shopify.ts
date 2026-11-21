@@ -3,6 +3,14 @@ import { getSql } from "@/lib/database/client";
 import { after } from "next/server";
 import { demoAccountIds, isDemoAccount } from "./demo-accounts";
 import { quoteTotal, type OrderItem } from "./pilot-model";
+import {
+  ShopifyError,
+  shopifyServerConfigured,
+  shopifyStoreDomain,
+  shopifyAdminToken,
+  invalidateShopifyAdminToken,
+} from "@/services/shopify/admin-auth";
+export { ShopifyError } from "@/services/shopify/admin-auth";
 export const CUSTOMER_LOOKUP = `query GYVFTCustomer($query:String!){customers(first:20,query:$query){nodes{id email}}}`;
 export const CUSTOMER_CREATE = `mutation GYVFTCustomerCreate($input:CustomerInput!){customerCreate(input:$input){customer{id email} userErrors{field message}}}`;
 export const ORDER_LOOKUP = `query GYVFTOrder($query:String!){orders(first:2,query:$query){nodes{id name customer{id} totalPriceSet{shopMoney{amount currencyCode}} totalReceivedSet{shopMoney{amount currencyCode}}}}}`;
@@ -10,7 +18,6 @@ export const ORDER_CREATE = `mutation GYVFTOrderCreate($order:OrderCreateOrderIn
 // A specified partial amount is Shopify Plus-only. Omit it to record the full
 // outstanding balance, and call only when GYVFT has verified the whole total.
 export const RECORD_PAYMENT = `mutation GYVFTRecordPayment($id:ID!){orderCreateManualPayment(id:$id,paymentMethodName:"GYVFT verified direct UPI"){order{id name} userErrors{field message}}}`;
-export class ShopifyError extends Error {}
 type Customer = { id: string; email: string | null };
 type ShopOrder = {
   id: string;
@@ -20,20 +27,14 @@ type ShopOrder = {
   totalReceivedSet: { shopMoney: { amount: string; currencyCode: string } };
 };
 export function shopifyConfigured() {
-  return Boolean(process.env.SHOPIFY_ADMIN_ACCESS_TOKEN);
+  return shopifyServerConfigured();
 }
 export async function shopifyRequest<T>(
   query: string,
   variables: Record<string, unknown>,
 ): Promise<T> {
-  const domain = process.env.SHOPIFY_SHOP_DOMAIN || "aarla-merch.myshopify.com";
-  const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
-  if (!token)
-    throw new ShopifyError(
-      "Configure the Shopify server connection before syncing.",
-    );
-  if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(domain))
-    throw new ShopifyError("Use the store’s myshopify.com domain.");
+  const domain = shopifyStoreDomain();
+  const token = await shopifyAdminToken();
   const response = await fetch(
     `https://${domain}/admin/api/2026-10/graphql.json`,
     {
@@ -44,9 +45,13 @@ export async function shopifyRequest<T>(
       },
       body: JSON.stringify({ query, variables }),
       cache: "no-store",
+      redirect: "error",
       signal: AbortSignal.timeout(10000),
     },
   );
+  // Clear a revoked cached token for the next explicit attempt. Never replay
+  // a customer/order/discount mutation automatically after an uncertain reply.
+  if (response.status === 401) invalidateShopifyAdminToken(token);
   if (!response.ok)
     throw new ShopifyError(
       "Shopify did not confirm the request. Check the connection and access scopes.",

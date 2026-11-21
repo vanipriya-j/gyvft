@@ -45,7 +45,8 @@ In Settings, enter the verified receiving UPI ID/payee and optionally upload the
 The connected store is Aarla, `aarla-merch.myshopify.com`, using INR. The deployed app requires its own server credential, independent of the Shopify connector in chat:
 
 - `SHOPIFY_SHOP_DOMAIN=aarla-merch.myshopify.com`
-- `SHOPIFY_ADMIN_ACCESS_TOKEN`, with the customer/order permissions required by the existing integration.
+- `SHOPIFY_CLIENT_ID` and `SHOPIFY_CLIENT_SECRET` from the installed Aarla OS app in the same Shopify organization; the server acquires/renews its access token automatically. An existing `SHOPIFY_ADMIN_ACCESS_TOKEN` remains an alternative when neither client credential is set.
+- Customer/order read-write permissions and approved customer-data access; `write_discounts` also enables the personal Aarla shopping benefit. Use server-only Production variables and redeploy after saving them. See [shopping connection setup](AARLA-SHOPPING-SAVING.md).
 
 Account creation schedules matching/creation of the Shopify customer. Operations can retry pending customer links. Confirm the final approved quote, verified advance, artwork and delivery details before **Create Shopify order**. It creates one custom batch line for the entire gift order, attached to that customer, then retains the official order reference.
 

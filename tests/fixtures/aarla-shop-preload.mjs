@@ -8,7 +8,9 @@ if (
 )
   throw Error("Dedicated local coupon fixture required");
 process.env.SHOPIFY_SHOP_DOMAIN = "aarla-coupon-fixture.myshopify.com";
-process.env.SHOPIFY_ADMIN_ACCESS_TOKEN = "local-coupon-fixture-token";
+process.env.SHOPIFY_ADMIN_ACCESS_TOKEN = "";
+process.env.SHOPIFY_CLIENT_ID = "local-coupon-client";
+process.env.SHOPIFY_CLIENT_SECRET = "local-coupon-secret";
 process.env.RESEND_API_KEY = "";
 globalThis.__gyvftSql = postgres(process.env.DATABASE_URL, {
   max: 5,
@@ -19,7 +21,7 @@ const original = globalThis.fetch,
 mkdirSync("work", { recursive: true });
 function record(operation, data = {}) {
   appendFileSync(
-    "work/aarla-coupon-calls.jsonl",
+    process.env.AARLA_COUPON_FIXTURE_LOG || "work/aarla-coupon-calls.jsonl",
     JSON.stringify({ operation, ...data }) + "\n",
   );
 }
@@ -32,6 +34,23 @@ globalThis.fetch = async (input, init) => {
     typeof input === "string" ? input : input.url || String(input),
   );
   if (u.hostname === "aarla-coupon-fixture.myshopify.com") {
+    if (u.pathname === "/admin/oauth/access_token") {
+      const form = new URLSearchParams(init.body);
+      if (
+        form.get("grant_type") !== "client_credentials" ||
+        form.get("client_id") !== "local-coupon-client" ||
+        form.get("client_secret") !== "local-coupon-secret"
+      )
+        throw Error("Wrong fixture client credentials");
+      record("authenticate");
+      return Response.json({
+        access_token: "local-coupon-fixture-token",
+        expires_in: 86399,
+        scope: "write_discounts",
+      });
+    }
+    if (init.headers["X-Shopify-Access-Token"] !== "local-coupon-fixture-token")
+      throw Error("Admin call must use the exchanged token");
     const { query, variables: v } = JSON.parse(init.body);
     let data;
     if (query.includes("GYVFTCouponConnection")) {

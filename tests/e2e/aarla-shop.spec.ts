@@ -13,7 +13,10 @@ let sql: Sql, owner: string, other: string;
 const customerId = "gid://shopify/Customer/123";
 const calls = () => {
   try {
-    return readFileSync("work/aarla-coupon-calls.jsonl", "utf8")
+    return readFileSync(
+      process.env.AARLA_COUPON_FIXTURE_LOG || "work/aarla-coupon-calls.jsonl",
+      "utf8",
+    )
       .trim()
       .split("\n")
       .filter(Boolean)
@@ -99,6 +102,7 @@ test("Shop at Aarla reuses a customer-only 24-hour code and redirects to the sel
     new URL(first.searchParams.get("redirect")!, "https://aarla.in").pathname,
   ).toBe("/products/fixture-gift");
   const created = calls().filter((c) => c.operation === "created");
+  expect(calls().some((c) => c.operation === "authenticate")).toBe(true);
   expect(created).toHaveLength(1);
   expect(created[0].customerId).toBe(customerId);
   expect(Date.parse(created[0].endsAt) - Date.parse(created[0].startsAt)).toBe(
