@@ -23,7 +23,19 @@ GYVFT's quoted custom gifting orders and direct-UPI payment workflow are unchang
 
 ## Merchant connection
 
-The deployed app needs its own `SHOPIFY_ADMIN_ACCESS_TOKEN`, for `SHOPIFY_SHOP_DOMAIN` (the existing default is `aarla-merch.myshopify.com`). The chat connector does not supply that deployed credential. Enable **Discounts read/write (`write_discounts`)** on the app; existing customer read/write access is still needed when creating/matching the linked customer. No manual coupon creation is required.
+Use the already-installed Aarla OS app. In Vercel's GYVFT project, set these server-only Production variables and redeploy:
+
+- `SHOPIFY_CLIENT_ID`: the app's Client ID.
+- `SHOPIFY_CLIENT_SECRET`: the app's Client secret.
+- `SHOPIFY_SHOP_DOMAIN`: Aarla's full `*.myshopify.com` domain, without `https://` or a path (existing default: `aarla-merch.myshopify.com`).
+
+The app and store must belong to the same Shopify organization for the client-credentials grant. Release/approve **Discounts read/write (`write_discounts`)** on the existing app installation; existing customer read/write and customer-data access remain necessary for customer matching. Reuse the credentials without rotating, uninstalling or replacing the Aarla OS app. No manual coupon creation is required. The chat connector does not supply runtime credentials.
+
+The server exchanges the ID/secret with `POST /admin/oauth/access_token`, `grant_type=client_credentials`; it uses the returned token for Admin API requests. Tokens stay in server memory, are shared by concurrent calls within that instance, and are renewed before the returned `expires_in` elapses. Each Vercel instance can authenticate independently; no database, cron, build-time token request or manual daily replacement is required. Credential/store changes cannot reuse a different configuration's cached token. Credentials are never sent through query parameters, returned to the browser or included in error messages. Token and Admin requests disable caching and redirect following.
+
+An existing `SHOPIFY_ADMIN_ACCESS_TOKEN` remains supported when neither client credential is supplied. A complete client pair takes precedence; an incomplete pair is reported as unconfigured. Do not store the client secret under the access-token variable or use `NEXT_PUBLIC_` names. A rejected cached token is invalidated for the next explicit attempt; the app does not automatically replay an order/customer/discount mutation.
+
+Reference: [Shopify client-credentials authentication](https://shopify.dev/docs/apps/build/authentication-authorization/client-credentials-grant?lang=node).
 
 Use **Operations → Settings & connections → Connections & access → Check Aarla savings connection**. This read-only check uses the deployed credential, confirms Aarla's domain and reports discount-creation permission. It creates no coupon. A configured token alone is not a successful connection test. Ordinary browsing remains available when the server connection is not configured; sample accounts use ordinary links without the benefit. Provider errors preserve the handoff screen with Retry and Back; the app does not redirect while falsely claiming a saving.
 

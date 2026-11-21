@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Aarla OS client credentials — 21 November 2026
+
+GYVFT reuses the owner's installed Aarla OS Shopify app through server-only `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET` and `SHOPIFY_SHOP_DOMAIN`. See [AARLA-SHOPPING-SAVING.md](AARLA-SHOPPING-SAVING.md). The app/store must share a Shopify organization. Runtime authentication caches tokens by credential/store hash, coalesces concurrent exchange and renews from the returned expiry. Legacy static tokens remain supported when no client pair is set. Never request secrets in chat, put them in public env vars, rotate/uninstall the shared app or replay financial mutations automatically. Builds never authenticate/migrate; no schema change accompanies this support.
+
 ## Personal Aarla shopping saving — 21 November 2026
 
 Read [AARLA-SHOPPING-SAVING.md](AARLA-SHOPPING-SAVING.md). Signed-in retail links open a private handoff, reuse a live 5% coupon or create a 24-hour single-redemption code restricted to the linked Shopify customer, then use Shopify's discount redirect URL. Shopify stores coupon state; no migration is added. Canonical customer-specific codes protect concurrent/uncertain creation. Operations has a read-only deployed-credential scope check. Demo users never mint real coupons. The API rejects arbitrary redirects/identities and fails closed on changed native eligibility. Actual merchant checkout remains a live verification step; local fixture results do not establish redemption/inbox/order behaviour in production.

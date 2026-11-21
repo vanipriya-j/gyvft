@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash } from "crypto";
 import { shopifyRequest, ShopifyError } from "@/lib/customer/shopify";
+import { shopifyStoreDomain } from "./admin-auth";
 
 export const COUPON_FIELDS = `fragment GYVFTCouponFields on DiscountCodeBasic {
   title tags startsAt endsAt status asyncUsageCount usageLimit appliesOncePerCustomer
@@ -80,7 +81,7 @@ export function couponIdentity(accountId: string, customerId: string) {
     !/^gid:\/\/shopify\/Customer\/\d+$/.test(customerId)
   )
     throw new ShopifyError("Customer connection needs review.");
-  const shop = process.env.SHOPIFY_SHOP_DOMAIN || "aarla-merch.myshopify.com";
+  const shop = shopifyStoreDomain();
   const key = createHash("sha256")
     .update(`${shop.toLowerCase()}\0${accountId.toLowerCase()}\0${customerId}`)
     .digest("hex")
