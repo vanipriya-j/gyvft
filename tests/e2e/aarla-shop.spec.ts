@@ -46,7 +46,7 @@ test.beforeAll(async () => {
       if (shopify === customerId) owner = existing.id;
       else other = existing.id;
     } else
-      await sql`INSERT INTO gyvft_customer_accounts(id,email,password_hash,shopify_customer_id,shopify_sync_state) VALUES(${id},${id + "@example.test"},'local-only',${shopify === customerId ? null : shopify},${shopify === customerId ? "pending" : "synced"})`;
+      await sql`INSERT INTO gyvft_customer_accounts(id,email,password_hash,shopify_sync_state) VALUES(${id},${id + "@example.test"},'local-only','pending')`;
   }
 });
 test.afterAll(async () => {
@@ -104,6 +104,9 @@ test("Shop at Aarla reuses a customer-only 24-hour code and redirects to the sel
   const created = calls().filter((c) => c.operation === "created");
   expect(calls().some((c) => c.operation === "authenticate")).toBe(true);
   expect(calls().some((c) => c.operation === "customer_lookup")).toBe(true);
+  expect(calls().filter((c) => c.operation === "customer_create")).toHaveLength(
+    0,
+  );
   expect(created).toHaveLength(1);
   expect(created[0].customerId).toBe(customerId);
   expect(Date.parse(created[0].endsAt) - Date.parse(created[0].startsAt)).toBe(
@@ -129,6 +132,30 @@ test("Shop at Aarla reuses a customer-only 24-hour code and redirects to the sel
   expect(response.ok()).toBe(true);
   expect(new URL((await response.json()).redirectUrl).pathname).not.toBe(
     first.pathname,
+  );
+  expect(calls().filter((c) => c.operation === "created")).toHaveLength(2);
+  expect(calls().filter((c) => c.operation === "customer_create")).toEqual([
+    { operation: "customer_create", customerId: "gid://shopify/Customer/456" },
+  ]);
+  const [linked] =
+    await sql`SELECT shopify_customer_id,shopify_sync_state FROM gyvft_customer_accounts WHERE id=${other}`;
+  expect(linked).toMatchObject({
+    shopify_customer_id: "gid://shopify/Customer/456",
+    shopify_sync_state: "synced",
+  });
+  expect(calls().filter((c) => c.operation === "created")[1].customerId).toBe(
+    linked.shopify_customer_id,
+  );
+  const repeat = await second.request.post(
+    baseURL + "/api/customer/aarla-shop",
+    {
+      headers: { Origin: baseURL! },
+      data: { destination: "/products/fixture-gift" },
+    },
+  );
+  expect(repeat.ok()).toBe(true);
+  expect(calls().filter((c) => c.operation === "customer_create")).toHaveLength(
+    1,
   );
   expect(calls().filter((c) => c.operation === "created")).toHaveLength(2);
   await second.close();

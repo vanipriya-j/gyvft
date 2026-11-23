@@ -80,6 +80,39 @@ describe("Shopify customer identity and retry boundaries", () => {
     expect(await syncShopifyCustomer(owner)).toBeNull();
     expect(fetch).not.toHaveBeenCalled();
   });
+  it("creates a Shopify customer when no exact match exists and stores the returned customer ID", async () => {
+    mocks.sql
+      .mockResolvedValueOnce([{ id: owner, email: "new@example.test" }])
+      .mockResolvedValueOnce([{ id: owner }])
+      .mockResolvedValue([]);
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ data: { customers: { nodes: [] } } }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          data: {
+            customerCreate: {
+              customer: { id: "gid://shopify/Customer/456" },
+              userErrors: [],
+            },
+          },
+        }),
+      );
+    vi.stubGlobal("fetch", fetch);
+    expect(await syncShopifyCustomer(owner)).toBe("gid://shopify/Customer/456");
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const creation = JSON.parse(fetch.mock.calls[1][1].body);
+    expect(creation.query).toContain("customerCreate");
+    expect(creation.variables).toEqual({
+      input: { email: "new@example.test", tags: ["GYVFT"] },
+    });
+    expect(mocks.sql.mock.calls[2].slice(1)).toEqual([
+      "gid://shopify/Customer/456",
+      owner,
+    ]);
+  });
   it("blocks duplicate order creation after an ambiguous response", async () => {
     mocks.sql.mockResolvedValueOnce([
       {
