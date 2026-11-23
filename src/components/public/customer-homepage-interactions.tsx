@@ -19,13 +19,23 @@ const films = {
   solution: {
     title: "GYVFT — for you, your people and your organisation",
     description:
-      "See how a thoughtful intention becomes a personal gift, with Aarla’s help.",
+      "See how a thoughtful intention becomes a personal gift, with Aarla’s help, in 59 seconds. The on-screen text is also available below.",
     file: "/website-review/gyvft-how-it-works.mp4",
     source:
-      "https://docs.google.com/videos/d/1QoGE-DeP817FJ1AayzLX4dHAY4pb3yqYUI1W-DW-7jU/play",
+      "https://drive.google.com/file/d/1FY8cmOr7bZ30O14xW_-uD8UIVYFUA6cy/view",
     poster: "/website-review/solution-poster.jpg",
   },
 };
+
+const solutionText = [
+  "The most thoughtful gifts say, ‘I see you.’ Make yours personal.",
+  "For one. Or a whole team. Personal gifts. Event merchandise. Team kits. Office supplies. Shaped around your people.",
+  "From your idea to their doorstep. Tell us who, budget and date. Approve your design. Aarla makes, packs and delivers.",
+  "Build your circles. Invite family and friends. Keep people and occasions together.",
+  "Your organisation. Your shared circle. Keep your team’s merchandise needs together.",
+  "Your membership benefits: 5% off eligible regular Aarla merchandise through GYVFT. Priority reservations for out-of-stock items. For you and everyone who joins. 5% cannot be combined with other offers. Custom/bulk orders quoted separately. Reservations depend on replenishment; availability and delivery confirmed separately.",
+  "Bring your people. Bring your next idea. Create your first circle. Sign up at gyvft.com. Your story. Our telling. Aarla.",
+];
 
 export function FilmButton({
   film = "story",
@@ -77,16 +87,24 @@ export function FilmButton({
               <source src={selected.file} type="video/mp4" />
               {film === "solution" && (
                 <track
-                  kind="captions"
+                  kind="descriptions"
                   src="/website-review/solution.en.vtt"
                   srcLang="en"
-                  label="English"
+                  label="English on-screen text"
                   default
                 />
               )}
               Your browser does not support this video. Use the original film
               link below.
             </video>
+          )}
+          {film === "solution" && (
+            <details className={styles.filmTranscript}>
+              <summary>Read the on-screen text</summary>
+              {solutionText.map((text) => (
+                <p key={text}>{text}</p>
+              ))}
+            </details>
           )}
           <p
             className={styles.filmFallback}
