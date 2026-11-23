@@ -27,7 +27,7 @@ test("circle creation shows a stable disabled loader while the request is in fli
     expect(new URL(baseURL!).hostname).toBe("127.0.0.1");
     await page.goto(baseURL + "/account/login");
     await page
-      .getByLabel("Email used for your enquiry")
+      .getByLabel("Email address")
       .fill(demoAccounts[0].email);
     await page
       .getByLabel("Password", { exact: true })
@@ -86,7 +86,7 @@ test("real circle creation, invitation, membership, recipients, shared occasions
   other.on("pageerror", (e) => errors.push(e.message));
   async function login(p: typeof page, email: string) {
     await p.goto(baseURL + "/account/login");
-    await p.getByLabel("Email used for your enquiry").fill(email);
+    await p.getByLabel("Email address").fill(email);
     await p.getByLabel("Password", { exact: true }).fill(password);
     await p.getByRole("button", { name: "Sign in to My GYVFT" }).click();
     await p.waitForURL((url) => url.pathname === "/account");

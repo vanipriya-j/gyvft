@@ -18,30 +18,44 @@ export function ConsentBanner() {
   };
 
   return (
-    <div className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-4xl rounded-[1.5rem] border border-ink/15 bg-paper/95 p-5 shadow-2xl backdrop-blur md:bottom-6">
+    <div
+      className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-5xl rounded-xl border border-ink/15 bg-paper/95 p-4 shadow-xl backdrop-blur md:bottom-5"
+      role="region"
+      aria-label="Privacy choices"
+    >
       {showPreferences ? (
         <ConsentPreferences
           onClose={() => setShowPreferences(false)}
           onSaved={() => setDismissed(true)}
         />
       ) : (
-        <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-end">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper-deep">
-              Privacy choices
-            </p>
-            <h2 className="mt-2 font-display text-2xl text-ink">We use careful measurement.</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-ink/70">
-              Necessary cookies keep the site working. Analytics and advertising tags load only
-              with consent, and public form events avoid personal information.
+            <p className="text-sm font-semibold text-ink">Privacy choices</p>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-ink/70">
+              Necessary cookies keep GYVFT working. Optional analytics and
+              advertising load only with your permission.
             </p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
-            <Button onClick={() => choose({ analytics: true, advertising: true })}>Accept all</Button>
-            <Button onClick={() => choose({ analytics: false, advertising: false })} variant="secondary">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button
+              className="px-3"
+              onClick={() => choose({ analytics: true, advertising: true })}
+            >
+              Accept all
+            </Button>
+            <Button
+              className="px-3"
+              onClick={() => choose({ analytics: false, advertising: false })}
+              variant="secondary"
+            >
               Reject optional
             </Button>
-            <Button onClick={() => setShowPreferences(true)} variant="ghost">
+            <Button
+              className="px-3"
+              onClick={() => setShowPreferences(true)}
+              variant="ghost"
+            >
               Manage
             </Button>
           </div>

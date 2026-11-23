@@ -33,7 +33,7 @@ test("delayed customer navigation, menu transitions, form actions and carousels 
   try {
     await page.goto(baseURL + "/account/login");
     await page
-      .getByLabel("Email used for your enquiry", { exact: true })
+      .getByLabel("Email address", { exact: true })
       .fill("aarla+demo-business@aarla.in");
     await page
       .getByLabel("Password", { exact: true })

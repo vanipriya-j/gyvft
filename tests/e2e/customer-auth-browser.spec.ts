@@ -31,7 +31,7 @@ test("browser signup, duplicate protection, sign-in/out, reset email, new passwo
   const stale = await other.newPage();
   async function fill(p: typeof page, pw: string) {
     await p
-      .getByLabel("Email used for your enquiry", { exact: true })
+      .getByLabel("Email address", { exact: true })
       .fill(email);
     await p.getByLabel("Password", { exact: true }).fill(pw);
   }
@@ -69,7 +69,7 @@ test("browser signup, duplicate protection, sign-in/out, reset email, new passwo
       .getByRole("button", { name: "Forgot password?", exact: true })
       .click();
     await page
-      .getByLabel("Email used for your enquiry", { exact: true })
+      .getByLabel("Email address", { exact: true })
       .fill(email);
     await page
       .getByRole("button", { name: "Send password reset link", exact: true })
@@ -161,7 +161,7 @@ test("recovery rate limit gives a visible retry wait before account lookup", asy
     .getByRole("button", { name: "Forgot password?", exact: true })
     .click();
   await page
-    .getByLabel("Email used for your enquiry", { exact: true })
+    .getByLabel("Email address", { exact: true })
     .fill(`unknown-${randomUUID()}@example.test`);
   const send = page.getByRole("button", {
     name: "Send password reset link",

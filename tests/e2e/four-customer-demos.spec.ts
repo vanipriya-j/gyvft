@@ -111,7 +111,7 @@ test("operator adds four rich demo accounts, preserves existing data/passwords a
       p.on("pageerror", (e) => errors.push(e.message));
       await p.goto(baseURL + "/account/login");
       await p
-        .getByLabel("Email used for your enquiry", { exact: true })
+        .getByLabel("Email address", { exact: true })
         .fill(a.email);
       await p.getByLabel("Password", { exact: true }).fill(pw);
       await p
