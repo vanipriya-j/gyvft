@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Live Aarla handoff investigation — 23 November 2026
+
+The owner hit a generic handoff error. A read-only store audit found one exact existing customer and no GYVFT coupons; that does not identify the deployed credential's failure or verify a live handoff. Matching now uses current `defaultEmailAddress.emailAddress` instead of deprecated `Customer.email`; creation reads only the new ID. Operations' read-only connection check also probes protected email access and requires customer-write capability, rather than checking discounts alone. Failures carry a support reference correlated with a safe runtime log (phase, operation, classified code/status/provider enum). Raw provider messages, input values, credentials and coupon strings are not logged. The event allowlist retains this route/operation. Same-code reconciliation still runs before surfacing coupon-create rejection; no retries create another generation. No production DB access/log access, migration, credential rotation, coupon or order write was performed by the agent. The owner's live Operations result/retry remains required; do not call the incident resolved from simulated tests.
+
 ## Aarla OS client credentials — 21 November 2026
 
 GYVFT reuses the owner's installed Aarla OS Shopify app through server-only `SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET` and `SHOPIFY_SHOP_DOMAIN`. See [AARLA-SHOPPING-SAVING.md](AARLA-SHOPPING-SAVING.md). The app/store must share a Shopify organization. Runtime authentication caches tokens by credential/store hash, coalesces concurrent exchange and renews from the returned expiry. Legacy static tokens remain supported when no client pair is set. Never request secrets in chat, put them in public env vars, rotate/uninstall the shared app or replay financial mutations automatically. Builds never authenticate/migrate; no schema change accompanies this support.

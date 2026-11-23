@@ -17,7 +17,9 @@ globalThis.__gyvftSql = postgres(process.env.DATABASE_URL, {
   prepare: false,
 });
 const original = globalThis.fetch,
+  customers = new Map(),
   coupons = new Map();
+let existingFixtureEmail;
 mkdirSync("work", { recursive: true });
 function record(operation, data = {}) {
   appendFileSync(
@@ -27,7 +29,12 @@ function record(operation, data = {}) {
 }
 const connection = {
   shop: { primaryDomain: { host: "aarla.in" } },
-  currentAppInstallation: { accessScopes: [{ handle: "write_discounts" }] },
+  currentAppInstallation: {
+    accessScopes: [
+      { handle: "write_discounts" },
+      { handle: "write_customers" },
+    ],
+  },
 };
 globalThis.fetch = async (input, init) => {
   const u = new URL(
@@ -53,7 +60,41 @@ globalThis.fetch = async (input, init) => {
       throw Error("Admin call must use the exchanged token");
     const { query, variables: v } = JSON.parse(init.body);
     let data;
-    if (query.includes("GYVFTCouponConnection")) {
+    if (query.includes("GYVFTCustomer(")) {
+      const email = JSON.parse(v.query.slice(6));
+      if (!email.endsWith("@example.test"))
+        throw Error("Local fixture customers only");
+      if (!query.includes("defaultEmailAddress"))
+        throw Error("Use the current customer email field");
+      record("customer_lookup");
+      // The first account already shops at Aarla; the second is new to the store.
+      if (!existingFixtureEmail) {
+        existingFixtureEmail = email;
+        customers.set(email, {
+          id: "gid://shopify/Customer/123",
+          defaultEmailAddress: { emailAddress: email },
+        });
+      }
+      data = {
+        customers: {
+          nodes: customers.has(email) ? [customers.get(email)] : [],
+        },
+      };
+    } else if (query.includes("GYVFTCustomerCreate")) {
+      if (!v.input.email.endsWith("@example.test"))
+        throw Error("Local fixture customers only");
+      if (customers.has(v.input.email))
+        throw Error("Must reuse the existing customer");
+      const created = {
+        id: "gid://shopify/Customer/456",
+        defaultEmailAddress: { emailAddress: v.input.email },
+      };
+      customers.set(v.input.email, created);
+      record("customer_create", { customerId: created.id });
+      data = {
+        customerCreate: { customer: { id: created.id }, userErrors: [] },
+      };
+    } else if (query.includes("GYVFTCouponConnection")) {
       record("connection");
       data = connection;
     } else if (query.includes("GYVFTLatestCoupon")) {

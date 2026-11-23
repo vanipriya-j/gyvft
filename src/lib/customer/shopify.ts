@@ -9,16 +9,20 @@ import {
   shopifyStoreDomain,
   shopifyAdminToken,
   invalidateShopifyAdminToken,
+  shopifyProviderCode,
 } from "@/services/shopify/admin-auth";
 export { ShopifyError } from "@/services/shopify/admin-auth";
-export const CUSTOMER_LOOKUP = `query GYVFTCustomer($query:String!){customers(first:20,query:$query){nodes{id email}}}`;
-export const CUSTOMER_CREATE = `mutation GYVFTCustomerCreate($input:CustomerInput!){customerCreate(input:$input){customer{id email} userErrors{field message}}}`;
+export const CUSTOMER_LOOKUP = `query GYVFTCustomer($query:String!){customers(first:20,query:$query){nodes{id defaultEmailAddress{emailAddress}}}}`;
+export const CUSTOMER_CREATE = `mutation GYVFTCustomerCreate($input:CustomerInput!){customerCreate(input:$input){customer{id} userErrors{field message}}}`;
 export const ORDER_LOOKUP = `query GYVFTOrder($query:String!){orders(first:2,query:$query){nodes{id name customer{id} totalPriceSet{shopMoney{amount currencyCode}} totalReceivedSet{shopMoney{amount currencyCode}}}}}`;
 export const ORDER_CREATE = `mutation GYVFTOrderCreate($order:OrderCreateOrderInput!,$options:OrderCreateOptionsInput){orderCreate(order:$order,options:$options){order{id name} userErrors{field message}}}`;
 // A specified partial amount is Shopify Plus-only. Omit it to record the full
 // outstanding balance, and call only when GYVFT has verified the whole total.
 export const RECORD_PAYMENT = `mutation GYVFTRecordPayment($id:ID!){orderCreateManualPayment(id:$id,paymentMethodName:"GYVFT verified direct UPI"){order{id name} userErrors{field message}}}`;
-type Customer = { id: string; email: string | null };
+type Customer = {
+  id: string;
+  defaultEmailAddress?: { emailAddress: string } | null;
+};
 type ShopOrder = {
   id: string;
   name: string;
@@ -35,9 +39,12 @@ export async function shopifyRequest<T>(
 ): Promise<T> {
   const domain = shopifyStoreDomain();
   const token = await shopifyAdminToken();
-  const response = await fetch(
-    `https://${domain}/admin/api/2026-10/graphql.json`,
-    {
+  const operation = query.match(
+    /\b(?:query|mutation)\s+(GYVFT[A-Za-z0-9]{1,50})\b/,
+  )?.[1];
+  let response: Response;
+  try {
+    response = await fetch(`https://${domain}/admin/api/2026-10/graphql.json`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,19 +54,41 @@ export async function shopifyRequest<T>(
       cache: "no-store",
       redirect: "error",
       signal: AbortSignal.timeout(10000),
-    },
-  );
+    });
+  } catch {
+    throw new ShopifyError("Shopify did not confirm the network request.", {
+      code: "SHOPIFY_NETWORK_FAILED",
+      operation,
+    });
+  }
   // Clear a revoked cached token for the next explicit attempt. Never replay
   // a customer/order/discount mutation automatically after an uncertain reply.
   if (response.status === 401) invalidateShopifyAdminToken(token);
   if (!response.ok)
     throw new ShopifyError(
       "Shopify did not confirm the request. Check the connection and access scopes.",
+      {
+        code: "SHOPIFY_HTTP_FAILED",
+        operation,
+        upstreamStatus: response.status,
+      },
     );
-  const result = await response.json();
-  if (result.errors?.length || !result.data)
+  const result = await response.json().catch(() => null);
+  if (result?.errors?.length || !result?.data)
     throw new ShopifyError(
       "Shopify could not complete this operation. Check app permissions and customer-data access.",
+      {
+        code: result?.errors?.some(
+          (e: { extensions?: { code?: string } }) =>
+            e.extensions?.code === "ACCESS_DENIED",
+        )
+          ? "SHOPIFY_ACCESS_DENIED"
+          : "SHOPIFY_GRAPHQL_FAILED",
+        operation,
+        providerCode: shopifyProviderCode(
+          result?.errors?.[0]?.extensions?.code,
+        ),
+      },
     );
   return result.data as T;
 }
@@ -69,7 +98,9 @@ async function findCustomer(email: string): Promise<Customer | null> {
     { query: `email:${JSON.stringify(email)}` },
   );
   const found = data.customers.nodes.filter(
-    (c) => c.email?.toLowerCase() === email.toLowerCase(),
+    (c) =>
+      c.defaultEmailAddress?.emailAddress?.toLowerCase() ===
+      email.toLowerCase(),
   );
   if (found.length > 1)
     throw new ShopifyError(
@@ -99,7 +130,10 @@ export async function syncShopifyCustomer(accountId: string) {
       customer = created.customerCreate.customer;
       if (!customer) customer = await findCustomer(existing.email);
       if (!customer)
-        throw new ShopifyError("Shopify customer creation needs review.");
+        throw new ShopifyError("Shopify customer creation needs review.", {
+          code: "SHOPIFY_CUSTOMER_REJECTED",
+          operation: "GYVFTCustomerCreate",
+        });
     }
     await sql`UPDATE gyvft_customer_accounts SET shopify_customer_id=${customer.id},shopify_sync_state='synced' WHERE id=${accountId}::uuid`;
     return customer.id;

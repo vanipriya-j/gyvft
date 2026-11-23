@@ -7,6 +7,7 @@ import {
   shopifyRequest,
   provinceCode,
   createOrSyncShopifyOrder,
+  ShopifyError,
 } from "@/lib/customer/shopify";
 import { demoAccounts } from "@/lib/customer/demo-accounts";
 const owner = "11111111-1111-4111-8111-111111111111";
@@ -50,8 +51,14 @@ describe("Shopify customer identity and retry boundaries", () => {
         data: {
           customers: {
             nodes: [
-              { id: "gid://shopify/Customer/2", email: "OWNER@example.test" },
-              { id: "wrong", email: "other@example.test" },
+              {
+                id: "gid://shopify/Customer/2",
+                defaultEmailAddress: { emailAddress: "OWNER@example.test" },
+              },
+              {
+                id: "wrong",
+                defaultEmailAddress: { emailAddress: "other@example.test" },
+              },
             ],
           },
         },
@@ -72,6 +79,39 @@ describe("Shopify customer identity and retry boundaries", () => {
     vi.stubGlobal("fetch", fetch);
     expect(await syncShopifyCustomer(owner)).toBeNull();
     expect(fetch).not.toHaveBeenCalled();
+  });
+  it("creates a Shopify customer when no exact match exists and stores the returned customer ID", async () => {
+    mocks.sql
+      .mockResolvedValueOnce([{ id: owner, email: "new@example.test" }])
+      .mockResolvedValueOnce([{ id: owner }])
+      .mockResolvedValue([]);
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ data: { customers: { nodes: [] } } }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          data: {
+            customerCreate: {
+              customer: { id: "gid://shopify/Customer/456" },
+              userErrors: [],
+            },
+          },
+        }),
+      );
+    vi.stubGlobal("fetch", fetch);
+    expect(await syncShopifyCustomer(owner)).toBe("gid://shopify/Customer/456");
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const creation = JSON.parse(fetch.mock.calls[1][1].body);
+    expect(creation.query).toContain("customerCreate");
+    expect(creation.variables).toEqual({
+      input: { email: "new@example.test", tags: ["GYVFT"] },
+    });
+    expect(mocks.sql.mock.calls[2].slice(1)).toEqual([
+      "gid://shopify/Customer/456",
+      owner,
+    ]);
   });
   it("blocks duplicate order creation after an ambiguous response", async () => {
     mocks.sql.mockResolvedValueOnce([
@@ -105,6 +145,33 @@ describe("Shopify customer identity and retry boundaries", () => {
       "myshopify.com",
     );
     expect(fetch).not.toHaveBeenCalled();
+  });
+  it("classifies protected-data/permission errors without exposing the provider response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(
+        Response.json({
+          errors: [
+            {
+              message: "private provider body",
+              extensions: { code: "ACCESS_DENIED" },
+            },
+          ],
+        }),
+      ),
+    );
+    const failure = await shopifyRequest(
+      "query GYVFTCustomer { fixture }",
+      {},
+    ).catch((e) => e);
+    if (!(failure instanceof ShopifyError))
+      throw Error("Expected a classified Shopify failure");
+    expect(failure.details).toMatchObject({
+      code: "SHOPIFY_ACCESS_DENIED",
+      operation: "GYVFTCustomer",
+      providerCode: "ACCESS_DENIED",
+    });
+    expect(failure.message).not.toContain("private provider body");
   });
   it("records only a fully verified outstanding balance without the Plus-only amount field", async () => {
     mocks.sql

@@ -10,6 +10,7 @@ export function AarlaShop({
   email: string;
 }) {
   const [attempt, setAttempt] = useState(0),
+    [reference, setReference] = useState(""),
     [error, setError] = useState("");
   useEffect(() => {
     const controller = new AbortController();
@@ -27,6 +28,11 @@ export function AarlaShop({
           ]),
         });
         const body = await response.json();
+        if (
+          typeof body.error?.reference === "string" &&
+          /^[0-9a-f-]{36}$/i.test(body.error.reference)
+        )
+          setReference(body.error.reference);
         if (!response.ok || !body.ok)
           throw Error(
             body.error?.message ||
@@ -72,6 +78,11 @@ export function AarlaShop({
           {error}
         </p>
       )}
+      {error && reference && (
+        <p className="app-muted mt-2 text-xs break-all">
+          Support reference: {reference}
+        </p>
+      )}
       <p className="app-muted mt-4">
         Your saving is for {email}. Use this email at Aarla checkout.
       </p>
@@ -85,6 +96,7 @@ export function AarlaShop({
             className="app-button primary"
             onClick={() => {
               setError("");
+              setReference("");
               setAttempt((x) => x + 1);
             }}
           >

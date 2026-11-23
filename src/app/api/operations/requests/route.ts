@@ -298,10 +298,17 @@ export async function POST(request: Request) {
       );
     if (error instanceof AppError)
       return reply({ ok: false, message: error.message }, error.status);
+    if (error instanceof ShopifyError)
+      return reply(
+        {
+          ok: false,
+          message: `${error.message} (${error.details.code}${error.details.operation ? `; ${error.details.operation}` : ""}${error.details.upstreamStatus ? `; HTTP ${error.details.upstreamStatus}` : ""})`,
+        },
+        409,
+      );
     if (
       error instanceof JourneyError ||
       error instanceof PilotError ||
-      error instanceof ShopifyError ||
       error instanceof GiftWorkspaceError
     )
       return reply({ ok: false, message: error.message }, 409);
