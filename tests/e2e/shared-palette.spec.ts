@@ -38,9 +38,7 @@ test("shared approved palette and immediate navigation feedback", async ({
     ]);
     await page.goto(baseURL + "/");
     await expect(
-      page
-        .getByRole("link", { name: "Tell us your story", exact: true })
-        .first(),
+      page.getByRole("link", { name: "Create my GYVFT", exact: true }).first(),
     ).toHaveCSS("background-color", "rgb(184, 35, 43)");
     await expect(page.locator("body")).toHaveCSS("color", "rgb(25, 27, 23)");
     await page.route("**/api/customer/home?section=aarla**", async (route) => {

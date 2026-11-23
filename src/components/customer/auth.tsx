@@ -95,7 +95,7 @@ export function CustomerAuth({
   return (
     <div>
       {mode === "login" || mode === "signup" ? (
-        <div className="mb-7 flex gap-5 border-b border-border pb-4">
+        <div className="mb-5 flex gap-5 border-b border-border pb-2">
           {(["login", "signup"] as const).map((value) => (
             <button
               key={value}
@@ -104,8 +104,8 @@ export function CustomerAuth({
               aria-pressed={mode === value}
               className={
                 mode === value
-                  ? "font-semibold underline underline-offset-8"
-                  : "text-muted-text"
+                  ? "min-h-11 font-semibold underline underline-offset-8"
+                  : "min-h-11 text-muted-text"
               }
               onClick={() => changeMode(value)}
             >
@@ -131,7 +131,7 @@ export function CustomerAuth({
               className="block text-sm font-medium"
               htmlFor="customer-email"
             >
-              Email used for your enquiry
+              Email address
               <input
                 id="customer-email"
                 className={input}

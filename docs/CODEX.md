@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Account-first customer website candidate — 23 November 2026
+
+See [CUSTOMER-WEBSITE.md](CUSTOMER-WEBSITE.md). The owner requested a new customer-facing website and supplied a problem film plus a solution film. The candidate homepage explains the account’s people/occasions/gifts/Circles benefits, offers direct registration via `/account/login?mode=signup`, retains Aarla portfolio proof and separates the 5% store benefit from custom quotes. Public navigation, the privacy banner and post-enquiry account invitation support that path. Media is click-to-play and static, with no new runtime filesystem reads. The solution film is awaiting the owner’s more visual revision and corrected account-first invitation/benefit wording. No migration or customer-data operation is involved. Build/unit checks do not constitute desktop/mobile browser or live-signup verification; consult the review document for the outstanding visual pass. Verify deployment state before claiming the public homepage has changed.
+
 ## Confirmed coupon-create defect — 23 November 2026
 
 A direct live reproduction of the coupon payload returned `INVALID` for both `customerGets.appliesOnSubscription` and `customerGets.appliesOnOneTimePurchase`: Shopify forbids supplying either field when Aarla does not use subscriptions, including a false value. Removing both inputs succeeded in the same store: ACTIVE, 5%, one specified customer, usage limit one, exactly 24-hour expiry, minimum requirement null, and returned ordinary-purchase/subscription defaults true/false. The app now omits the unsupported inputs but still validates those returned defaults. Unit and browser fixtures enforce the real merchant restriction rather than echoing the invalid input flags. One controlled diagnostic coupon was created through the connector to establish this evidence, tagged outside the app's `gyvft` namespace; no order/payment, production SQL or deletion occurred. Application handoff/reuse still requires a real authenticated retry after release.

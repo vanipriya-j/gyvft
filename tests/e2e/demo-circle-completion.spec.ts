@@ -64,7 +64,7 @@ test("an operator completes existing demo circles without customer passwords and
   await page.unroute("**/api/operations/demo-circles");
   await page.goto(baseURL + "/account/login");
   await page
-    .getByLabel("Email used for your enquiry")
+    .getByLabel("Email address")
     .fill("aarla+demo-communities@aarla.in");
   await page
     .getByLabel("Password", { exact: true })

@@ -1,62 +1,117 @@
-import Link from "next/link";
+"use client";
+
+import Link from "@/components/ui/navigation-link";
+import { useRef, useState } from "react";
+import { CircleHelp, Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/public/BrandLogo";
-import { ButtonLink } from "@/components/ui/button";
+import styles from "./site-navigation.module.css";
 
 const nav = [
-  { href: "/why-gyvft", label: "Why GYVFT" },
-  { href: "/stories", label: "Stories" },
-  { href: "/tell-your-story", label: "Tell your story" },
-  { href: "/for-organisations", label: "For organisations" },
-  { href: "/upload-a-brief", label: "Upload a brief" },
-  { href: "/book-a-discovery", label: "Book discovery" },
+  { href: "/#your-space", label: "Your GYVFT space" },
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/#gift-stories", label: "Gift stories" },
+  { href: "/#your-people", label: "For teams" },
 ];
 
 export function SiteHeader() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
-      <nav
-        aria-label="Primary navigation"
-        className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 lg:px-8"
-      >
-        <Link className="group inline-flex items-center gap-3" href="/">
+    <header
+      className={styles.header}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && menuOpen) {
+          setMenuOpen(false);
+          menuButton.current?.focus();
+        }
+      }}
+    >
+      <a className={styles.skipLink} href="#public-content">
+        Skip to content
+      </a>
+      <nav aria-label="Primary navigation" className={styles.navigation}>
+        <Link
+          className={styles.logo}
+          href="/"
+          aria-label="GYVFT home"
+          onClick={() => setMenuOpen(false)}
+        >
           <BrandLogo height={28} priority />
-          <span className="hidden text-sm text-muted-text transition group-hover:text-olive-dark sm:inline xl:hidden">
-            Your story. Our telling.
-          </span>
         </Link>
-        <div className="hidden items-center gap-7 xl:flex">
+        <div className={styles.desktopLinks}>
           {nav.map((item) => (
-            <Link
-              className="text-sm font-medium text-muted-text transition hover:text-ink"
-              href={item.href}
-              key={item.href}
-            >
+            <Link className={styles.navLink} href={item.href} key={item.href}>
               {item.label}
             </Link>
           ))}
-        </div>
-        <div className="flex shrink-0 items-center gap-4">
-          <Link
-            href="/account"
-            className="whitespace-nowrap text-sm font-medium text-olive-dark"
-          >
-            My GYVFT
+          <Link className={styles.benefitLink} href="/#aarla-benefit">
+            5% at Aarla
           </Link>
-          <ButtonLink
-            className="hidden sm:inline-flex"
-            href="/become-a-merch-partner"
-            variant="dark"
+          <Link className={styles.faqLink} href="/#faqs">
+            <CircleHelp size={16} aria-hidden="true" />
+            FAQs
+          </Link>
+        </div>
+        <div className={styles.accountActions}>
+          <Link
+            href="/account/login"
+            className={styles.signIn}
+            onClick={() => setMenuOpen(false)}
           >
-            Merch partner
-          </ButtonLink>
+            Sign in
+          </Link>
+          <Link
+            href="/account/login?mode=signup"
+            className={styles.createAccount}
+            onClick={() => setMenuOpen(false)}
+          >
+            Create account
+          </Link>
+          <button
+            ref={menuButton}
+            type="button"
+            className={styles.menuToggle}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="public-mobile-menu"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? (
+              <X size={22} aria-hidden="true" />
+            ) : (
+              <Menu size={22} aria-hidden="true" />
+            )}
+          </button>
         </div>
       </nav>
-      <div className="flex gap-5 overflow-x-auto border-t border-border/70 px-5 py-3 text-sm xl:hidden">
+      <div className={styles.mobileQuickLinks}>
+        <Link
+          className={styles.benefitLink}
+          href="/#aarla-benefit"
+          onClick={() => setMenuOpen(false)}
+        >
+          5% at Aarla
+        </Link>
+        <Link
+          className={styles.faqLink}
+          href="/#faqs"
+          onClick={() => setMenuOpen(false)}
+        >
+          <CircleHelp size={17} aria-hidden="true" />
+          FAQs
+        </Link>
+      </div>
+      <div
+        className={styles.mobileMenu}
+        id="public-mobile-menu"
+        hidden={!menuOpen}
+      >
         {nav.map((item) => (
           <Link
-            className="shrink-0 font-medium text-muted-text"
+            className={styles.navLink}
             href={item.href}
             key={item.href}
+            onClick={() => setMenuOpen(false)}
           >
             {item.label}
           </Link>
