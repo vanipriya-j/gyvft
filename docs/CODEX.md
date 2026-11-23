@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Confirmed coupon-create defect — 23 November 2026
+
+A direct live reproduction of the coupon payload returned `INVALID` for both `customerGets.appliesOnSubscription` and `customerGets.appliesOnOneTimePurchase`: Shopify forbids supplying either field when Aarla does not use subscriptions, including a false value. Removing both inputs succeeded in the same store: ACTIVE, 5%, one specified customer, usage limit one, exactly 24-hour expiry, minimum requirement null, and returned ordinary-purchase/subscription defaults true/false. The app now omits the unsupported inputs but still validates those returned defaults. Unit and browser fixtures enforce the real merchant restriction rather than echoing the invalid input flags. One controlled diagnostic coupon was created through the connector to establish this evidence, tagged outside the app's `gyvft` namespace; no order/payment, production SQL or deletion occurred. Application handoff/reuse still requires a real authenticated retry after release.
+
 ## Pinned Aarla Shopify domain — 23 November 2026
 
 The owner's live Operations result identified the configured store-domain value as invalid. The Shopify connector verified `aarla-merch.myshopify.com`; the owner explicitly requested hardcoding it. `shopifyStoreDomain()` now returns that fixed host for token exchange, Admin requests and coupon identity. `SHOPIFY_SHOP_DOMAIN` is retired and ignored, including stale values already in Vercel. Only the server credentials remain configurable. Fixture transports intercept the pinned host and continue blocking live writes. No credential, schema or data change is made. A subsequent live check must still establish authentication, permissions and the coupon handoff; removing the confirmed domain blocker alone is not full sign-off.
