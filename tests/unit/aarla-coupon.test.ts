@@ -81,12 +81,30 @@ beforeEach(() => {
           appliesOncePerCustomer: boolean;
           context: { customers: { add: string[] } };
           customerGets: {
-            appliesOnOneTimePurchase: boolean;
-            appliesOnSubscription: boolean;
+            appliesOnOneTimePurchase?: boolean;
+            appliesOnSubscription?: boolean;
             value: { percentage: number };
             items: { all: boolean };
           };
         };
+        // Verified live Shopify constraint for a shop without subscriptions.
+        if (
+          "appliesOnOneTimePurchase" in p.customerGets ||
+          "appliesOnSubscription" in p.customerGets
+        )
+          return {
+            discountCodeBasicCreate: {
+              codeDiscountNode: null,
+              userErrors: [
+                {
+                  code: "INVALID",
+                  field: ["basicCodeDiscount", "customerGets"],
+                  message:
+                    "Subscription fields are not permitted without the shop using subscriptions.",
+                },
+              ],
+            },
+          };
         if (rows.has(p.code))
           return {
             discountCodeBasicCreate: {
@@ -114,8 +132,8 @@ beforeEach(() => {
               customers: p.context.customers.add.map((id: string) => ({ id })),
             },
             customerGets: {
-              appliesOnOneTimePurchase: p.customerGets.appliesOnOneTimePurchase,
-              appliesOnSubscription: p.customerGets.appliesOnSubscription,
+              appliesOnOneTimePurchase: true,
+              appliesOnSubscription: false,
               value: {
                 __typename: "DiscountPercentage",
                 percentage: p.customerGets.value.percentage,
@@ -165,6 +183,22 @@ describe("user-specific Aarla saving", () => {
       "write_discounts",
     );
     expect(created).toBe(0);
+  });
+  it("supports Aarla without subscription inputs while enforcing the returned ordinary-purchase policy", async () => {
+    const coupon = await liveAarlaCoupon(account, customer);
+    const request = mock.request.mock.calls.find(
+      ([query]) => query === COUPON_CREATE,
+    )![1];
+    expect(request.input.customerGets).not.toHaveProperty(
+      "appliesOnOneTimePurchase",
+    );
+    expect(request.input.customerGets).not.toHaveProperty(
+      "appliesOnSubscription",
+    );
+    expect(rows.get(coupon.code)!.codeDiscount.customerGets).toMatchObject({
+      appliesOnOneTimePurchase: true,
+      appliesOnSubscription: false,
+    });
   });
   it("reuses a live coupon across repeated shopping clicks", async () => {
     const a = await liveAarlaCoupon(account, customer);

@@ -222,8 +222,8 @@ export async function liveAarlaCoupon(accountId: string, customerId: string) {
           customerGets: {
             value: { percentage: 0.05 },
             items: { all: true },
-            appliesOnOneTimePurchase: true,
-            appliesOnSubscription: false,
+            // Aarla has no subscriptions: Shopify rejects both subscription
+            // flags even when false. Verify its returned defaults in checked().
           },
           usageLimit: 1,
           appliesOncePerCustomer: true,

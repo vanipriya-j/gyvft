@@ -109,6 +109,25 @@ globalThis.fetch = async (input, init) => {
       data = { codeDiscountNodeByCode: coupons.get(v.code) || null };
     } else if (query.includes("GYVFTCreateCoupon")) {
       const p = v.input;
+      if (
+        "appliesOnOneTimePurchase" in p.customerGets ||
+        "appliesOnSubscription" in p.customerGets
+      )
+        return Response.json({
+          data: {
+            discountCodeBasicCreate: {
+              codeDiscountNode: null,
+              userErrors: [
+                {
+                  code: "INVALID",
+                  field: ["basicCodeDiscount", "customerGets"],
+                  message:
+                    "Subscription fields are not permitted without the shop using subscriptions.",
+                },
+              ],
+            },
+          },
+        });
       if (coupons.has(p.code))
         data = {
           discountCodeBasicCreate: {

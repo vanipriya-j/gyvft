@@ -12,7 +12,7 @@ The native Admin API uses the pinned `2026-10` schema:
 
 - Verify the configured shop's primary domain is Aarla and inspect the calling app's granted discount scope.
 - Find the latest GYVFT coupon tagged for the linked identity. Validate the specific customer, 5% value, all ordinary product items, one redemption, exactly 24-hour lifetime and no minimum requirement before reuse. A changed/broadened coupon fails closed.
-- Create with `discountCodeBasicCreate`, `context.customers.add: [customer GID]`, `customerGets.value.percentage: 0.05`, `usageLimit: 1`, `appliesOncePerCustomer: true`, explicit start/end and ordinary one-time purchases. Shopify's default discount-combination behaviour is retained; this feature adds no separate stacking policy.
+- Create with `discountCodeBasicCreate`, `context.customers.add: [customer GID]`, `customerGets.value.percentage: 0.05`, `usageLimit: 1`, `appliesOncePerCustomer: true`, explicit start/end and ordinary one-time purchases. Do not send `appliesOnOneTimePurchase` or `appliesOnSubscription` inputs: Shopify rejects either on Aarla because subscriptions are not enabled. Its returned true/false defaults are still checked before redirecting. Shopify's default discount-combination behaviour is retained; this feature adds no separate stacking policy.
 - An opaque customer-specific code prefix and generation number make concurrent/retried creation converge on the same native code. Shopify enforces code uniqueness. Direct lookup by that code recovers a lost creation response or lagging search result; an unconfirmed POST does not move to another code.
 - Scheduled activation waits rather than issuing another generation. Expired/redeemed codes can advance to a replacement. No coupon is marked used merely by clicking.
 - Confirm success before redirecting to `https://aarla.in/discount/CODE?redirect=ENCODED_STORE_PATH`. Only store home, products and collections are allowed. Variant selection and GYVFT attribution survive; arbitrary return URLs, credentials, ports and external destinations are rejected.
@@ -40,7 +40,7 @@ Reference: [Shopify client-credentials authentication](https://shopify.dev/docs/
 
 Use **Operations → Settings & connections → Connections & access → Check Aarla savings connection**. This read-only check uses the deployed credential, confirms Aarla's domain and reports discount-creation permission. It creates no coupon. A configured token alone is not a successful connection test. Ordinary browsing remains available when the server connection is not configured; sample accounts use ordinary links without the benefit. Provider errors preserve the handoff screen with Retry and Back; the app does not redirect while falsely claiming a saving.
 
-No production SQL change accompanies this feature. No merchant coupon or order was created during development. The first real authenticated shopping click and the eligible customer's checkout should be confirmed in production after the connection check passes.
+No production SQL change accompanies this feature. On 23 November, a controlled live diagnostic reproduced the rejected subscription inputs, then successfully created one customer-only 5% coupon with those inputs omitted. That diagnostic is tagged separately from app coupons and expires after 24 hours; no order or payment was created. The application's authenticated shopping click, reuse and the eligible customer's checkout still need confirmation after the code fix is deployed.
 
 ## Diagnosing a failed handoff
 
