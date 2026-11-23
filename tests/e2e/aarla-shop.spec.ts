@@ -46,7 +46,7 @@ test.beforeAll(async () => {
       if (shopify === customerId) owner = existing.id;
       else other = existing.id;
     } else
-      await sql`INSERT INTO gyvft_customer_accounts(id,email,password_hash,shopify_customer_id,shopify_sync_state) VALUES(${id},${id + "@example.test"},'local-only',${shopify},'synced')`;
+      await sql`INSERT INTO gyvft_customer_accounts(id,email,password_hash,shopify_customer_id,shopify_sync_state) VALUES(${id},${id + "@example.test"},'local-only',${shopify === customerId ? null : shopify},${shopify === customerId ? "pending" : "synced"})`;
   }
 });
 test.afterAll(async () => {
@@ -103,6 +103,7 @@ test("Shop at Aarla reuses a customer-only 24-hour code and redirects to the sel
   ).toBe("/products/fixture-gift");
   const created = calls().filter((c) => c.operation === "created");
   expect(calls().some((c) => c.operation === "authenticate")).toBe(true);
+  expect(calls().some((c) => c.operation === "customer_lookup")).toBe(true);
   expect(created).toHaveLength(1);
   expect(created[0].customerId).toBe(customerId);
   expect(Date.parse(created[0].endsAt) - Date.parse(created[0].startsAt)).toBe(
@@ -149,6 +150,7 @@ test("unauthenticated visits do not create coupons and errors keep the user in G
         ok: false,
         error: {
           message: "We couldn’t confirm your 5% saving. Please try again.",
+          reference: "11111111-1111-4111-8111-111111111111",
         },
       },
     }),
@@ -161,6 +163,11 @@ test("unauthenticated visits do not create coupons and errors keep the user in G
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Try again", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Support reference: 11111111-1111-4111-8111-111111111111", {
+      exact: true,
+    }),
   ).toBeVisible();
   expect(["127.0.0.1", "localhost"]).toContain(new URL(page.url()).hostname);
   await page.setViewportSize({ width: 390, height: 844 });

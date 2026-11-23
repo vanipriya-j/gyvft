@@ -1,7 +1,35 @@
 import "server-only";
 import { createHash } from "node:crypto";
 
-export class ShopifyError extends Error {}
+export type ShopifyFailure = {
+  code?:
+    | "SHOPIFY_UNCONFIRMED"
+    | "SHOPIFY_AUTH_FAILED"
+    | "SHOPIFY_NETWORK_FAILED"
+    | "SHOPIFY_HTTP_FAILED"
+    | "SHOPIFY_ACCESS_DENIED"
+    | "SHOPIFY_GRAPHQL_FAILED"
+    | "SHOPIFY_CUSTOMER_REJECTED"
+    | "SHOPIFY_COUPON_REJECTED";
+  phase?: "authentication" | "customer" | "coupon";
+  operation?: string;
+  upstreamStatus?: number;
+  providerCode?: string;
+};
+export class ShopifyError extends Error {
+  readonly details: ShopifyFailure;
+  constructor(message: string, details: ShopifyFailure = {}) {
+    super(message);
+    this.details = { code: "SHOPIFY_UNCONFIRMED", ...details };
+  }
+}
+
+/** Accept only a provider enum, never its raw message or input field values. */
+export function shopifyProviderCode(value: unknown) {
+  return typeof value === "string" && /^[A-Z][A-Z0-9_]{0,39}$/.test(value)
+    ? value
+    : undefined;
+}
 
 type CachedToken = { key: string; token: string; refreshAt: number };
 let cached: CachedToken | undefined;
@@ -54,9 +82,19 @@ async function exchange(
       if (body.error === "shop_not_permitted")
         throw new ShopifyError(
           "The Shopify app and Aarla store must belong to the same Shopify organization for client credentials. Check the app installation and store domain.",
+          {
+            code: "SHOPIFY_AUTH_FAILED",
+            phase: "authentication",
+            upstreamStatus: response.status,
+          },
         );
       throw new ShopifyError(
         "Shopify authentication was not confirmed. Check the client ID, client secret and approved app installation on Aarla.",
+        {
+          code: "SHOPIFY_AUTH_FAILED",
+          phase: "authentication",
+          upstreamStatus: response.status,
+        },
       );
     }
     const body = await response.json();
@@ -70,6 +108,7 @@ async function exchange(
     )
       throw new ShopifyError(
         "Shopify returned an invalid authentication response.",
+        { code: "SHOPIFY_AUTH_FAILED", phase: "authentication" },
       );
     const lifetime = body.expires_in * 1000;
     const token = {
@@ -83,6 +122,7 @@ async function exchange(
     if (error instanceof ShopifyError) throw error;
     throw new ShopifyError(
       "Shopify authentication could not be completed. Check the connection and try again.",
+      { code: "SHOPIFY_AUTH_FAILED", phase: "authentication" },
     );
   }
 }

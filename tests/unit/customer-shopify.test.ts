@@ -7,6 +7,7 @@ import {
   shopifyRequest,
   provinceCode,
   createOrSyncShopifyOrder,
+  ShopifyError,
 } from "@/lib/customer/shopify";
 import { demoAccounts } from "@/lib/customer/demo-accounts";
 const owner = "11111111-1111-4111-8111-111111111111";
@@ -50,8 +51,14 @@ describe("Shopify customer identity and retry boundaries", () => {
         data: {
           customers: {
             nodes: [
-              { id: "gid://shopify/Customer/2", email: "OWNER@example.test" },
-              { id: "wrong", email: "other@example.test" },
+              {
+                id: "gid://shopify/Customer/2",
+                defaultEmailAddress: { emailAddress: "OWNER@example.test" },
+              },
+              {
+                id: "wrong",
+                defaultEmailAddress: { emailAddress: "other@example.test" },
+              },
             ],
           },
         },
@@ -105,6 +112,33 @@ describe("Shopify customer identity and retry boundaries", () => {
       "myshopify.com",
     );
     expect(fetch).not.toHaveBeenCalled();
+  });
+  it("classifies protected-data/permission errors without exposing the provider response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(
+        Response.json({
+          errors: [
+            {
+              message: "private provider body",
+              extensions: { code: "ACCESS_DENIED" },
+            },
+          ],
+        }),
+      ),
+    );
+    const failure = await shopifyRequest(
+      "query GYVFTCustomer { fixture }",
+      {},
+    ).catch((e) => e);
+    if (!(failure instanceof ShopifyError))
+      throw Error("Expected a classified Shopify failure");
+    expect(failure.details).toMatchObject({
+      code: "SHOPIFY_ACCESS_DENIED",
+      operation: "GYVFTCustomer",
+      providerCode: "ACCESS_DENIED",
+    });
+    expect(failure.message).not.toContain("private provider body");
   });
   it("records only a fully verified outstanding balance without the Plus-only amount field", async () => {
     mocks.sql

@@ -31,11 +31,13 @@ const operations = new Set([
   "gift-workspace",
   "home",
   "status",
+  "aarla-coupon",
 ]);
 const routes = new Set([
   "/account",
   "/api/customer/home",
   "/api/customer/saved-ideas",
+  "/api/customer/aarla-shop",
   "/account/login",
   "/api/setup",
   "/api/health",

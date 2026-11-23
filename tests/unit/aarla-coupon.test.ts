@@ -1,8 +1,8 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 const mock = vi.hoisted(() => ({ request: vi.fn() }));
-vi.mock("@/lib/customer/shopify", () => ({
+vi.mock("@/lib/customer/shopify", async () => ({
   shopifyRequest: mock.request,
-  ShopifyError: class extends Error {},
+  ShopifyError: (await import("@/services/shopify/admin-auth")).ShopifyError,
 }));
 import {
   liveAarlaCoupon,
@@ -13,6 +13,7 @@ import {
   COUPON_CONNECTION,
   type Coupon,
 } from "@/services/shopify/aarla-coupon";
+import { ShopifyError } from "@/services/shopify/admin-auth";
 import {
   aarlaDestination,
   aarlaDiscountUrl,
@@ -214,6 +215,35 @@ describe("user-specific Aarla saving", () => {
     expect(a.code).toBe(b.code);
     expect(created).toBe(1);
     expect(rows.size).toBe(1);
+  });
+  it("retains the rejection code after same-code reconciliation without minting a replacement", async () => {
+    const original = mock.request.getMockImplementation()!;
+    mock.request.mockImplementation(
+      async (query: string, variables: Record<string, unknown>) => {
+        if (query === COUPON_CREATE)
+          return {
+            discountCodeBasicCreate: {
+              codeDiscountNode: null,
+              userErrors: [
+                { code: "INVALID", message: "private provider response" },
+              ],
+            },
+          };
+        return original(query, variables);
+      },
+    );
+    const failure = await liveAarlaCoupon(account, customer).catch((e) => e);
+    expect(failure).toBeInstanceOf(ShopifyError);
+    expect(failure.details).toMatchObject({
+      code: "SHOPIFY_COUPON_REJECTED",
+      providerCode: "INVALID",
+      operation: "GYVFTCreateCoupon",
+    });
+    expect(failure.message).not.toContain("private provider");
+    expect(
+      mock.request.mock.calls.filter(([q]) => q === COUPON_CREATE),
+    ).toHaveLength(1);
+    expect(rows.size).toBe(0);
   });
   it("does not share a code between customer identities", async () => {
     const a = await liveAarlaCoupon(account, customer);

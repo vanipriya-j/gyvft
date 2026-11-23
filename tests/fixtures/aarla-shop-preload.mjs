@@ -27,7 +27,12 @@ function record(operation, data = {}) {
 }
 const connection = {
   shop: { primaryDomain: { host: "aarla.in" } },
-  currentAppInstallation: { accessScopes: [{ handle: "write_discounts" }] },
+  currentAppInstallation: {
+    accessScopes: [
+      { handle: "write_discounts" },
+      { handle: "write_customers" },
+    ],
+  },
 };
 globalThis.fetch = async (input, init) => {
   const u = new URL(
@@ -53,7 +58,24 @@ globalThis.fetch = async (input, init) => {
       throw Error("Admin call must use the exchanged token");
     const { query, variables: v } = JSON.parse(init.body);
     let data;
-    if (query.includes("GYVFTCouponConnection")) {
+    if (query.includes("GYVFTCustomer(")) {
+      const email = JSON.parse(v.query.slice(6));
+      if (!email.endsWith("@example.test"))
+        throw Error("Local fixture customers only");
+      if (!query.includes("defaultEmailAddress"))
+        throw Error("Use the current customer email field");
+      record("customer_lookup");
+      data = {
+        customers: {
+          nodes: [
+            {
+              id: "gid://shopify/Customer/123",
+              defaultEmailAddress: { emailAddress: email },
+            },
+          ],
+        },
+      };
+    } else if (query.includes("GYVFTCouponConnection")) {
       record("connection");
       data = connection;
     } else if (query.includes("GYVFTLatestCoupon")) {

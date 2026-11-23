@@ -55,9 +55,9 @@ globalThis.fetch = async (input, init) => {
     if (query.includes("GYVFTCustomerCreate")) {
       const c = {
         id: `gid://shopify/Customer/${customers.size + 1}`,
-        email: v.input.email,
+        defaultEmailAddress: { emailAddress: v.input.email },
       };
-      customers.set(c.email, c);
+      customers.set(c.defaultEmailAddress.emailAddress, c);
       data = { customerCreate: { customer: c, userErrors: [] } };
     } else if (query.includes("GYVFTCustomer(")) {
       const email = JSON.parse(v.query.slice(6));

@@ -1,14 +1,21 @@
 import { beforeEach, it, expect, vi } from "vitest";
-const mock = vi.hoisted(() => ({ account: vi.fn(), shop: vi.fn() }));
+const mock = vi.hoisted(() => ({
+  account: vi.fn(),
+  shop: vi.fn(),
+  log: vi.fn(),
+  event: vi.fn(),
+}));
+vi.mock("@/lib/logging/logger", () => ({ logger: { error: mock.log } }));
 vi.mock("@/lib/customer/session", () => ({ getCustomerAccount: mock.account }));
 vi.mock("@/lib/customer/aarla-shop", () => ({
   shopAarlaForAccount: mock.shop,
 }));
 vi.mock("@/lib/customer/observability", () => ({
-  recordCustomerEvent: vi.fn(),
+  recordCustomerEvent: mock.event,
 }));
 import { POST } from "@/app/api/customer/aarla-shop/route";
 import { resetMemoryGuardsForTests } from "@/lib/security/memory-guards";
+import { ShopifyError } from "@/services/shopify/admin-auth";
 const request = (data: unknown, origin = "https://www.gyvft.com") =>
   new Request("https://www.gyvft.com/api/customer/aarla-shop", {
     method: "POST",
@@ -48,4 +55,37 @@ it("rejects another customer ID or an external redirect supplied by the browser"
   ])
     expect((await POST(request(data))).status).toBe(400);
   expect(mock.shop).not.toHaveBeenCalled();
+});
+it("returns a support reference and logs the failure stage without provider messages or customer input", async () => {
+  mock.shop.mockRejectedValueOnce(
+    new ShopifyError("upstream secret and private-person@example.test", {
+      code: "SHOPIFY_ACCESS_DENIED",
+      phase: "customer",
+      operation: "GYVFTCustomer",
+    }),
+  );
+  const response = await POST(request({ destination: "/" }));
+  expect(response.status).toBe(503);
+  const body = await response.json();
+  expect(body.error.reference).toMatch(/^[0-9a-f-]{36}$/i);
+  expect(mock.log).toHaveBeenCalledWith("Aarla shopping handoff failed", {
+    requestId: body.error.reference,
+    code: "SHOPIFY_ACCESS_DENIED",
+    phase: "customer",
+    operation: "GYVFTCustomer",
+  });
+  expect(mock.event.mock.calls[0][1]).toMatchObject({
+    requestId: body.error.reference,
+    metadata: {
+      route: "/api/customer/aarla-shop",
+      operation: "aarla-coupon",
+      code: "SHOPIFY_ACCESS_DENIED",
+    },
+  });
+  expect(JSON.stringify([body, mock.log.mock.calls])).not.toContain(
+    "upstream secret",
+  );
+  expect(JSON.stringify([body, mock.log.mock.calls])).not.toContain(
+    "private-person",
+  );
 });

@@ -5,6 +5,7 @@ import {
   shopifyConfigured,
   syncShopifyCustomer,
   shopifyRequest,
+  ShopifyError,
 } from "./shopify";
 import {
   COUPON_CONNECTION,
@@ -34,13 +35,33 @@ export async function shopAarlaForAccount(
       "Your Aarla saving is not available yet. Please contact the team.",
       { status: 503 },
     );
-  const customer = await syncShopifyCustomer(account.id);
+  let customer: string | null;
+  try {
+    customer = await syncShopifyCustomer(account.id);
+  } catch (error) {
+    if (error instanceof ShopifyError)
+      throw new ShopifyError(error.message, {
+        ...error.details,
+        phase: error.details.phase || "customer",
+      });
+    throw error;
+  }
   if (!customer)
     throw new AppError(
       "CONFLICT",
       "Your Aarla connection is being prepared. Please try again in a moment.",
     );
-  const coupon = await liveAarlaCoupon(account.id, customer);
+  let coupon: Awaited<ReturnType<typeof liveAarlaCoupon>>;
+  try {
+    coupon = await liveAarlaCoupon(account.id, customer);
+  } catch (error) {
+    if (error instanceof ShopifyError)
+      throw new ShopifyError(error.message, {
+        ...error.details,
+        phase: error.details.phase || "coupon",
+      });
+    throw error;
+  }
   return {
     redirectUrl: aarlaDiscountUrl(coupon.code, destination),
     expiresAt: coupon.expiresAt,
@@ -55,13 +76,22 @@ export async function aarlaCouponConnectionStatus() {
       message:
         "Set SHOPIFY_CLIENT_ID and SHOPIFY_CLIENT_SECRET in Vercel, then redeploy. An existing Admin API access token is also supported.",
     };
-  const allowed = checkCouponConnection(
-    await shopifyRequest<CouponConnection>(COUPON_CONNECTION, {}),
+  // Probe the same protected email field used by matching, without exposing it.
+  const connection = await shopifyRequest<CouponConnection>(
+    COUPON_CONNECTION,
+    {},
   );
+  const allowed = checkCouponConnection(connection);
+  const mayCreateCustomers =
+    connection.currentAppInstallation.accessScopes.some(
+      (s) => s.handle === "write_customers",
+    );
   return {
-    ready: allowed,
+    ready: allowed && mayCreateCustomers,
     message: allowed
-      ? "Connected to Aarla. Discount creation is permitted. This check created no coupon."
+      ? mayCreateCustomers
+        ? "Connected to Aarla. Discount creation is permitted. This check created no coupon."
+        : "Customer lookup succeeded, but the app also needs write_customers to link new GYVFT customers. Approve that permission on the installed app."
       : "The Shopify app needs Discounts read/write (write_discounts). Update its permissions, then check again.",
   };
 }

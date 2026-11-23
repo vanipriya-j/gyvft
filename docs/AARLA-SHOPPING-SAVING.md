@@ -41,6 +41,16 @@ Use **Operations → Settings & connections → Connections & access → Check A
 
 No production SQL change accompanies this feature. No merchant coupon or order was created during development. The first real authenticated shopping click and the eligible customer's checkout should be confirmed in production after the connection check passes.
 
+## Diagnosing a failed handoff
+
+The customer screen shows a support reference on provider failure. Search Vercel runtime logs for that reference and `Aarla shopping handoff failed`. The safe log identifies authentication, customer linking or coupon handling, the named operation, a classified error code, HTTP status when present and an enum from Shopify when available. It does not include email, a token, a coupon, query variables or raw provider messages. The application event stores the same reference, route and classified code; no schema change is required.
+
+Operations' connection check uses the deployed credential and probes the current protected customer-email field as well as discount scope. It requires `write_customers` for new-user linking and `write_discounts` for issuance. Its success reports no coupon created. Its safe failure code distinguishes authentication/HTTP failure from a GraphQL access denial. A failure while selecting customer email can still require the installed app's customer-data permission/approval, beyond the declared scope. The Shopify connector in chat is a separate identity and cannot establish those deployed permissions.
+
+The 23 November live store audit found one exact customer and no GYVFT coupon after the owner's failed attempt. Deprecated email selection and missing diagnostics were corrected, but the actual runtime failure is not established until the owner supplies the connection result or correlated log. Do not claim that source correction alone proves the incident resolved.
+
+References: [customer email field](https://shopify.dev/docs/api/admin-graphql/2026-10/objects/Customer), [customer queries](https://shopify.dev/docs/api/admin-graphql/2026-10/queries/customers).
+
 ## Validation
 
 - GraphQL lookup, connection and create documents validated against Shopify's official public Admin `2026-10` introspection schema. The connected schema tool supplied types and field contracts; the shipped validator required its missing local assets to be populated from the same official public schema endpoint.

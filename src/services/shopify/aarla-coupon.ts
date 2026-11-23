@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash } from "crypto";
 import { shopifyRequest, ShopifyError } from "@/lib/customer/shopify";
-import { shopifyStoreDomain } from "./admin-auth";
+import { shopifyStoreDomain, shopifyProviderCode } from "./admin-auth";
 
 export const COUPON_FIELDS = `fragment GYVFTCouponFields on DiscountCodeBasic {
   title tags startsAt endsAt status asyncUsageCount usageLimit appliesOncePerCustomer
@@ -17,6 +17,7 @@ export const COUPON_FIELDS = `fragment GYVFTCouponFields on DiscountCodeBasic {
 export const COUPON_CONNECTION = `query GYVFTCouponConnection {
   shop { primaryDomain { host } }
   currentAppInstallation { accessScopes { handle } }
+  customerAccess: customers(first:1) { nodes { id defaultEmailAddress { emailAddress } } }
 }`;
 export type CouponConnection = {
   shop: { primaryDomain: { host: string } };
@@ -203,11 +204,12 @@ export async function liveAarlaCoupon(accountId: string, customerId: string) {
       );
     const now = new Date(),
       ends = new Date(now.getTime() + day);
+    let creationError: ShopifyError | undefined;
     try {
       const result = await shopifyRequest<{
         discountCodeBasicCreate: {
           codeDiscountNode: Node | null;
-          userErrors: unknown[];
+          userErrors: { code?: string }[];
         };
       }>(COUPON_CREATE, {
         input: {
@@ -232,14 +234,30 @@ export async function liveAarlaCoupon(accountId: string, customerId: string) {
         const c = checked(node, identity);
         if (c.live) return c;
       }
-    } catch {
+      if (result.discountCodeBasicCreate.userErrors?.length)
+        creationError = new ShopifyError("Shopify declined saving creation.", {
+          code: "SHOPIFY_COUPON_REJECTED",
+          phase: "coupon",
+          operation: "GYVFTCreateCoupon",
+          providerCode: shopifyProviderCode(
+            result.discountCodeBasicCreate.userErrors[0]?.code,
+          ),
+        });
+    } catch (error) {
       // Never choose a different code after an uncertain create response.
+      if (error instanceof ShopifyError) creationError = error;
     }
-    const recovered = await byCode(code);
+    let recovered: Awaited<ReturnType<typeof byCode>>;
+    try {
+      recovered = await byCode(code);
+    } catch (error) {
+      throw creationError || error;
+    }
     if (recovered) {
       const c = checked(recovered, identity);
       if (c.live) return c;
     }
+    if (creationError) throw creationError;
     throw new ShopifyError(
       "Saving creation was not confirmed. Retry the same shopping action.",
     );
