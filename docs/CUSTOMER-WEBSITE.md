@@ -1,10 +1,12 @@
 # Account-first customer website
 
-23 November 2026. The owner requested a customer-facing website mock-up, supplied two films, clarified that the first describes the problem and the second the solution, then asked to redo the website to make account creation easy. This branch is a working homepage and registration-entry candidate for review. A preview deployment does not mean the existing production homepage has changed.
+23 November 2026. The owner requested a customer-facing website mock-up, supplied two films, clarified that the first describes the problem and the second the solution, then asked to redo the website to make account creation easy. The owner approved production integration. PR #65 was merged as `43b4ce46fbc817437c7da34b0813830e3db17772`, and the successful production deployment was checked through live HTTP requests: the homepage, section targets, direct registration entry, sign-in/recovery screens, hero image, both MP4 files and solution captions. These checks did not submit signup/reset forms or replace the outstanding browser verification.
 
 ## Customer path
 
 The owner approved the clearer hero wording: **You know them. Give something that feels like them.** Section transitions now follow that thought: save the person’s details and dates, share a brief when ready, choose from Aarla’s possibilities, see what that becomes, and optionally bring more people into Circles. Account-creation buttons use a consistent invitation; the store saving remains a supporting benefit.
+
+The Aarla saving is an ongoing benefit: **5% at Aarla. Every time.** The 24-hour limit applies to each single-use code, not to membership or a signup-bonus period. The homepage, FAQ, customer handoff and Operations copy now distinguish those facts. Existing coupon reuse/replacement rules are unchanged; no Shopify mutation accompanies this copy correction.
 
 The main invitation is **Create my GYVFT**, linking directly to `/account/login?mode=signup`. The form opens in registration mode with email and password, without assuming an existing enquiry. Normal sign-in, recovery and reset-token precedence are preserved. The copy introduces people, occasions, saved ideas and Aarla’s curated gift choices. Circles remain optional. A submitted public brief now offers an account invitation using the same email; the existing seven-step brief is retained.
 

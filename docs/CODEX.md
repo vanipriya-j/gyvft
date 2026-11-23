@@ -4,9 +4,9 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
-## Account-first customer website candidate — 23 November 2026
+## Account-first customer website launch — 23 November 2026
 
-See [CUSTOMER-WEBSITE.md](CUSTOMER-WEBSITE.md). The owner requested a new customer-facing website and supplied a problem film plus a solution film. The candidate homepage explains the account’s people/occasions/gifts/Circles benefits, offers direct registration via `/account/login?mode=signup`, retains Aarla portfolio proof and separates the 5% store benefit from custom quotes. Public navigation, the privacy banner and post-enquiry account invitation support that path. Media is click-to-play and static, with no new runtime filesystem reads. The solution film is awaiting the owner’s more visual revision and corrected account-first invitation/benefit wording. No migration or customer-data operation is involved. Build/unit checks do not constitute desktop/mobile browser or live-signup verification; consult the review document for the outstanding visual pass. Verify deployment state before claiming the public homepage has changed.
+See [CUSTOMER-WEBSITE.md](CUSTOMER-WEBSITE.md). The owner approved production integration; PR #65 deployed successfully and live HTTP checks confirmed the new homepage, section links, registration/sign-in/recovery entries, hero image and film files. The site explains people/occasions/gifts/Circles, opens registration directly via `/account/login?mode=signup`, retains Aarla portfolio proof and separates the ongoing 5% store benefit from custom quotes. Each code is single-use and expires after 24 hours; the benefit remains available on subsequent shopping visits. Public navigation, privacy choices and the post-enquiry account invitation support signup. Media is click-to-play and static, with no new runtime filesystem reads. The solution film awaits the owner’s more visual revision. No migration or customer-data operation is involved. HTTP/build/unit checks do not establish desktop/mobile browser or submitted-signup verification; consult the review document for that limit.
 
 ## Confirmed coupon-create defect — 23 November 2026
 
