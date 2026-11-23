@@ -33,8 +33,9 @@ export function AarlaSavingsConnection({
     <div className="mt-4 border-t border-border pt-4">
       <h3 className="font-medium">Aarla shopping saving</h3>
       <p className="app-muted mt-2">
-        Shop from GYVFT with a customer-only, single-use 5% code valid for 24
-        hours. Shopify holds the code and its usage.
+        Customers get 5% off each eligible Aarla store purchase started through
+        GYVFT. Each code is customer-only, single-use and valid for 24 hours.
+        Shopify holds the code and its usage.
       </p>
       <button
         type="button"

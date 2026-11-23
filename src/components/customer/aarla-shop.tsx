@@ -87,8 +87,9 @@ export function AarlaShop({
         Your saving is for {email}. Use this email at Aarla checkout.
       </p>
       <p className="app-muted text-sm mt-2">
-        One use, valid for 24 hours. We’ll open Aarla with the code applied once
-        it’s confirmed.
+        Enjoy 5% off every time you shop at Aarla through GYVFT. This code is
+        single-use and valid for 24 hours. We’ll open Aarla with the code
+        applied once it’s confirmed.
       </p>
       <div className="app-actions mt-5">
         {error && (

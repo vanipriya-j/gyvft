@@ -46,7 +46,7 @@ test("homepage loads with GYVFT brand and CTAs", async ({ page }) => {
   await expect(page).toHaveURL(/\/#aarla-benefit$/);
   await expect(
     page.getByRole("heading", {
-      name: "Your personal 5% at Aarla.",
+      name: "5% at Aarla. Every time.",
       exact: true,
     }),
   ).toBeInViewport();

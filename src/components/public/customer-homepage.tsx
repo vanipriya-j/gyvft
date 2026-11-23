@@ -326,14 +326,12 @@ export function CustomerHomepage() {
         </div>
         <div>
           <p className={styles.eyebrow}>Your GYVFT extra</p>
-          <h2 id="saving-heading">Your personal 5% at Aarla.</h2>
-          <p>
-            Shop through your GYVFT account for a personal, single-use 5% code,
-            valid for 24 hours.
-          </p>
+          <h2 id="saving-heading">5% at Aarla. Every time.</h2>
+          <p>Enjoy 5% off every time you shop at Aarla through GYVFT.</p>
           <p className={styles.savingTerms}>
-            Use your account email at Aarla checkout. For eligible Aarla store
-            purchases; separate from custom gift quotes.
+            Each code is single-use and valid for 24 hours. Use your account
+            email at Aarla checkout. For eligible Aarla store purchases;
+            separate from custom gift quotes.
           </p>
         </div>
         <Link className={styles.outlineButton} href="/account/shop?to=%2F">
@@ -355,6 +353,17 @@ export function CustomerHomepage() {
           </h2>
         </div>
         <div className={styles.faqList}>
+          <details>
+            <summary>Can I use the Aarla saving every time I shop?</summary>
+            <p>
+              Yes. Your 5% saving is an ongoing GYVFT benefit. Start your Aarla
+              shopping through your GYVFT account each time. We reuse your
+              available code or prepare a new one if it has been used or has
+              expired. Each code is for you, works once and is valid for 24
+              hours. This applies to eligible Aarla store purchases, separately
+              from custom gift quotes.
+            </p>
+          </details>
           <details>
             <summary>Do I need a gift in mind to join?</summary>
             <p>
