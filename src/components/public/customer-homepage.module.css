@@ -24,6 +24,9 @@
   color: var(--action);
   font-weight: 400;
 }
+.site section[id] {
+  scroll-margin-top: 7rem;
+}
 .eyebrow {
   display: flex;
   align-items: center;
@@ -768,20 +771,37 @@
   grid-template-columns: auto 1fr auto;
   gap: 2.2rem;
   padding: 1.9rem 2.1rem;
-  background: #ebedde;
-  border-radius: 0.8rem;
+  background: var(--olive-dark);
+  color: var(--paper);
+  border-radius: 1rem;
   align-items: center;
 }
 .savingSection .eyebrow {
   margin-bottom: 0.45rem;
+  color: #e6eccd;
 }
 .savingSection h2 {
   font-size: 1.7rem;
 }
 .savingSection p:not(.eyebrow) {
   margin-top: 0.45rem;
-  color: #54584a;
-  font-size: 0.9rem;
+  color: #f1f3e9;
+  font-size: 1rem;
+}
+.savingSection .outlineButton {
+  color: var(--olive-dark);
+  background: var(--paper);
+  border-color: var(--paper);
+}
+.savingSection .outlineButton:hover {
+  background: #eceedc;
+}
+.savingSection .outlineButton:focus-visible {
+  outline-color: white;
+}
+.savingSection:target {
+  outline: 3px solid var(--olive);
+  outline-offset: 5px;
 }
 .savingSection .savingTerms {
   font-size: 0.75rem !important;
@@ -792,16 +812,23 @@
   font-size: 5.6rem;
   line-height: 1;
   letter-spacing: -0.07em;
-  color: var(--olive-dark);
+  color: #f1e3b8;
 }
 .savingMark span {
   font-size: 2rem;
 }
 .faqSection {
-  padding-block: 4.7rem;
+  padding: 2.25rem;
+  margin-block: 3rem;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
   display: grid;
   grid-template-columns: 0.7fr 1.3fr;
   gap: 3rem;
+}
+.faqSection:target {
+  border-color: var(--olive);
 }
 .faqList details {
   border-bottom: 1px solid var(--border);
@@ -837,7 +864,7 @@
 .faqList details > p {
   color: var(--muted-text);
   padding-bottom: 1.25rem;
-  font-size: 0.94rem;
+  font-size: 1rem;
   max-width: 40rem;
 }
 .finalSection {
@@ -954,6 +981,11 @@
   color: var(--olive-dark);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+@media (max-width: 1100px) {
+  .site section[id] {
+    scroll-margin-top: 8.5rem;
+  }
 }
 @media (max-width: 1050px) {
   .container {
@@ -1270,7 +1302,8 @@
     grid-column: 1;
   }
   .faqSection {
-    padding-block: 2.7rem;
+    padding: 1.3rem;
+    margin-block: 2.25rem;
     grid-template-columns: 1fr;
     gap: 1.4rem;
   }

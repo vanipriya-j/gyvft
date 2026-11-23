@@ -22,6 +22,34 @@ test("homepage loads with GYVFT brand and CTAs", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Sign in", exact: true }).first(),
   ).toBeVisible();
+  const navigation = page.getByRole("navigation", {
+    name: "Primary navigation",
+  });
+  await expect(
+    navigation.getByRole("link", { name: "Gift stories", exact: true }),
+  ).toHaveAttribute("href", "/#gift-stories");
+  await expect(
+    navigation.getByRole("link", { name: "For teams", exact: true }),
+  ).toHaveAttribute("href", "/#your-people");
+  await navigation.getByRole("link", { name: "FAQs", exact: true }).click();
+  await expect(page).toHaveURL(/\/#faqs$/);
+  await expect(
+    page.getByRole("heading", {
+      name: "Questions before you join?",
+      exact: true,
+    }),
+  ).toBeInViewport();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await navigation
+    .getByRole("link", { name: "5% at Aarla", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/#aarla-benefit$/);
+  await expect(
+    page.getByRole("heading", {
+      name: "Your personal 5% at Aarla.",
+      exact: true,
+    }),
+  ).toBeInViewport();
 });
 
 test("homepage opens registration directly without an existing enquiry", async ({
@@ -92,6 +120,12 @@ test("homepage product preview, named films and mobile navigation", async ({
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+  await expect(
+    page.getByRole("link", { name: "FAQs", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "5% at Aarla", exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Open menu", exact: true }).click();
   await expect(page.locator("#public-mobile-menu")).toBeVisible();
   await page

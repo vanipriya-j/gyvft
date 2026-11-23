@@ -12,6 +12,8 @@ The homepage progresses through an emotional introduction, an interactive Gifts/
 
 Header navigation emphasises the product, process, gift stories, team gifting, sign-in and registration. Existing brief, discovery, upload, partnership and brand routes remain available through the footer. The mobile menu is a disclosure with Escape/close behaviour. The privacy banner is shorter; consent storage and optional-tag behaviour remain unchanged. Public links reuse the existing progress indicator outside document flow.
 
+Gift stories and For teams now jump to the corresponding homepage sections instead of the legacy listing/organisation pages. FAQs and the Aarla 5% benefit have distinct header links; on smaller screens both stay visible in a compact row outside the collapsed menu. The benefit uses a contrasting olive panel, and FAQs have a clearly labelled, framed section. These are visual emphasis and in-page navigation, not pop-ups or automatic dialogs. Anchor spacing accounts for the sticky header. Detailed portfolio cards still open their individual stories; the team-gift action enters the existing gift-brief flow.
+
 ## Films and assets
 
 - Problem film: [GYVFT — Your Story Film](https://drive.google.com/file/d/1QH-fy3S12JQq4ImBJkIJvrsky9FIUgch/view), 65 seconds. The original 20 MB MP4 was copied and compressed to a 1280px H.264/AAC review delivery of approximately 5.1 MB, with fast-start metadata. Original Drive content is unchanged. On-screen text is present; a separate first-film caption track/transcript has not been verified.

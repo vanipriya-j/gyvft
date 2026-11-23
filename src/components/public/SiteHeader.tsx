@@ -2,15 +2,15 @@
 
 import Link from "@/components/ui/navigation-link";
 import { useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { CircleHelp, Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/public/BrandLogo";
 import styles from "./site-navigation.module.css";
 
 const nav = [
   { href: "/#your-space", label: "Your GYVFT space" },
   { href: "/#how-it-works", label: "How it works" },
-  { href: "/stories", label: "Gift stories" },
-  { href: "/for-organisations", label: "For teams" },
+  { href: "/#gift-stories", label: "Gift stories" },
+  { href: "/#your-people", label: "For teams" },
 ];
 
 export function SiteHeader() {
@@ -44,6 +44,13 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          <Link className={styles.benefitLink} href="/#aarla-benefit">
+            5% at Aarla
+          </Link>
+          <Link className={styles.faqLink} href="/#faqs">
+            <CircleHelp size={16} aria-hidden="true" />
+            FAQs
+          </Link>
         </div>
         <div className={styles.accountActions}>
           <Link
@@ -77,6 +84,23 @@ export function SiteHeader() {
           </button>
         </div>
       </nav>
+      <div className={styles.mobileQuickLinks}>
+        <Link
+          className={styles.benefitLink}
+          href="/#aarla-benefit"
+          onClick={() => setMenuOpen(false)}
+        >
+          5% at Aarla
+        </Link>
+        <Link
+          className={styles.faqLink}
+          href="/#faqs"
+          onClick={() => setMenuOpen(false)}
+        >
+          <CircleHelp size={17} aria-hidden="true" />
+          FAQs
+        </Link>
+      </div>
       <div
         className={styles.mobileMenu}
         id="public-mobile-menu"

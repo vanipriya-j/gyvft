@@ -309,8 +309,8 @@ export function CustomerHomepage() {
             <Link href={signup} className={styles.oliveButton}>
               Create my GYVFT
             </Link>
-            <Link href="/for-organisations" className={styles.textLink}>
-              Gifting for a team?
+            <Link href="/account/gifts/new" className={styles.textLink}>
+              Start a team gift
             </Link>
           </div>
         </div>
@@ -318,14 +318,15 @@ export function CustomerHomepage() {
 
       <section
         className={`${styles.container} ${styles.savingSection}`}
+        id="aarla-benefit"
         aria-labelledby="saving-heading"
       >
         <div className={styles.savingMark}>
           5<span>%</span>
         </div>
         <div>
-          <p className={styles.eyebrow}>A little extra, from Aarla</p>
-          <h2 id="saving-heading">Something caught your eye at Aarla?</h2>
+          <p className={styles.eyebrow}>Your GYVFT extra</p>
+          <h2 id="saving-heading">Your personal 5% at Aarla.</h2>
           <p>
             Shop through your GYVFT account for a personal, single-use 5% code,
             valid for 24 hours.
@@ -342,14 +343,15 @@ export function CustomerHomepage() {
 
       <section
         className={`${styles.container} ${styles.faqSection}`}
+        id="faqs"
         aria-labelledby="questions-heading"
       >
         <div>
-          <p className={styles.eyebrow}>A few things you might be wondering</p>
+          <p className={styles.eyebrow}>FAQs</p>
           <h2 id="questions-heading">
-            Before you
+            Questions before
             <br />
-            <em>come on in.</em>
+            <em>you join?</em>
           </h2>
         </div>
         <div className={styles.faqList}>
