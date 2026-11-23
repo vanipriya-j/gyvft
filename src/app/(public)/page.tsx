@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     "Keep your people and occasions together, explore gifts curated by Aarla, and make every gift feel personal. Create your GYVFT account.",
   openGraph: {
-    title: "GYVFT — You know them. Let’s gift like it.",
+    title: "GYVFT — You know them. Give something that feels like them.",
     description:
       "Your people, their moments, and gifts that mean something. A little space for more thoughtful gifting, with Aarla by your side.",
     images: [

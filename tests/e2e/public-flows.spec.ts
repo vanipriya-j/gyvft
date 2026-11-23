@@ -12,7 +12,9 @@ test("homepage loads with GYVFT brand and CTAs", async ({ page }) => {
     page.getByRole("link", { name: "GYVFT home", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: /You know them.*Let’s gift like it/i }),
+    page.getByRole("heading", {
+      name: /You know them.*Give something that feels like them/i,
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Create my GYVFT", exact: true }).first(),

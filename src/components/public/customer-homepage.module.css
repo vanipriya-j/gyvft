@@ -102,6 +102,15 @@
   line-height: 1.1;
   letter-spacing: -0.055em;
 }
+.heroPromise {
+  display: block;
+  max-width: 12em;
+  margin-top: 0.12em;
+  font-size: 0.76em;
+  line-height: 1.18;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
 .heroDescription {
   font-size: 1.08rem;
   max-width: 32rem;
@@ -845,6 +854,8 @@
   font-size: clamp(3.7rem, 5.5vw, 5rem);
 }
 .finalSection p:not(.eyebrow) {
+  max-width: 29rem;
+  margin-inline: auto;
   margin-top: 1rem;
   color: var(--ink-soft);
 }

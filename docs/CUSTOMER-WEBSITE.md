@@ -4,6 +4,8 @@
 
 ## Customer path
 
+The owner approved the clearer hero wording: **You know them. Give something that feels like them.** Section transitions now follow that thought: save the person’s details and dates, share a brief when ready, choose from Aarla’s possibilities, see what that becomes, and optionally bring more people into Circles. Account-creation buttons use a consistent invitation; the store saving remains a supporting benefit.
+
 The main invitation is **Create my GYVFT**, linking directly to `/account/login?mode=signup`. The form opens in registration mode with email and password, without assuming an existing enquiry. Normal sign-in, recovery and reset-token precedence are preserved. The copy introduces people, occasions, saved ideas and Aarla’s curated gift choices. Circles remain optional. A submitted public brief now offers an account invitation using the same email; the existing seven-step brief is retained.
 
 The homepage progresses through an emotional introduction, an interactive Gifts/Occasions/Circles example, Aarla’s curation process, existing gift stories, personal/community/team context, the separate Aarla shopping benefit, FAQs and account creation. Portfolio examples link to their existing story pages. Fictional workspace content is explicitly labelled as an example. The page does not promise instant AI options, automated occasion reminders, complete B2B billing or GST support.

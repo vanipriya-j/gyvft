@@ -27,16 +27,17 @@ export function CustomerHomepage() {
           <h1 id="home-heading">
             You know them.
             <br />
-            Let’s gift <em>like it.</em>
+            <span className={styles.heroPromise}>
+              Give something that feels <em>like them.</em>
+            </span>
           </h1>
           <p className={styles.heroDescription}>
             Their little quirks. Their big days. The things they love.
-            <br className={styles.desktopBreak} /> Turn what you know into a
-            gift that feels like them.
+            <br className={styles.desktopBreak} /> Put those details at the
+            heart of your next gift.
           </p>
           <p className={styles.heroPractical}>
-            Your own space for people, occasions and thoughtful gifts—with Aarla
-            by your side.
+            Keep their details and dates in GYVFT. Let Aarla help with the gift.
           </p>
           <div className={styles.heroActions}>
             <Link className={styles.primaryButton} href={signup}>
@@ -47,7 +48,7 @@ export function CustomerHomepage() {
             </FilmButton>
           </div>
           <p className={styles.heroNote}>
-            Start with one person. You don’t need a gift in mind.
+            Start with one person. The gift can come later.
           </p>
         </div>
         <div className={styles.heroVisual}>
@@ -105,15 +106,16 @@ export function CustomerHomepage() {
         aria-labelledby="space-heading"
       >
         <div className={styles.productCopy}>
-          <p className={styles.eyebrow}>A little less last-minute</p>
+          <p className={styles.eyebrow}>First, make a little space for them</p>
           <h2 id="space-heading">
             A home for your
             <br />
             <em>thoughtful side.</em>
           </h2>
           <p>
-            Good intentions deserve somewhere to go. Keep the people, dates and
-            ideas you care about together, ready for the next little moment.
+            A passing “I love that.” A birthday you don’t want to miss. Save the
+            details in GYVFT, so you have somewhere to start when the next
+            occasion comes around.
           </p>
           <ul className={styles.featureList}>
             <li>
@@ -148,7 +150,7 @@ export function CustomerHomepage() {
           <div className={styles.sectionHeading}>
             <div>
               <p className={styles.eyebrow}>
-                You bring the person. We bring the possibilities.
+                Then, turn the thought into a gift
               </p>
               <h2 id="how-heading">
                 From “what should I get?”
@@ -157,9 +159,8 @@ export function CustomerHomepage() {
               </h2>
             </div>
             <p>
-              You don’t have to know the perfect gift.
-              <br />
-              That’s what we’ll figure out together.
+              When you’re ready, share a little about them. Aarla brings the
+              possibilities, and you choose what feels right.
             </p>
           </div>
           <div className={styles.steps}>
@@ -167,10 +168,10 @@ export function CustomerHomepage() {
               <span className={styles.stepIcon}>
                 <Heart size={26} aria-hidden="true" />
               </span>
-              <h3>Tell us about them.</h3>
+              <h3>Start with what you know.</h3>
               <p>
-                A person, an occasion, a budget. The more you share, the more
-                personal we can make it.
+                Tell us who it’s for, what they love, your budget and when you
+                need it.
               </p>
             </article>
             <article>
@@ -204,7 +205,7 @@ export function CustomerHomepage() {
       >
         <div className={styles.sectionHeading}>
           <div>
-            <p className={styles.eyebrow}>Made with a person in mind</p>
+            <p className={styles.eyebrow}>Here’s what that can become</p>
             <h2 id="stories-heading">
               Thoughtfulness you can <em>hold.</em>
             </h2>
@@ -289,7 +290,7 @@ export function CustomerHomepage() {
           </div>
         </div>
         <div>
-          <p className={styles.eyebrow}>One person. Or your whole world.</p>
+          <p className={styles.eyebrow}>And it doesn’t stop with one person</p>
           <h2 id="people-heading">
             Some gifts say “I see you.”
             <br />
@@ -306,7 +307,7 @@ export function CustomerHomepage() {
           </p>
           <div className={styles.inlineActions}>
             <Link href={signup} className={styles.oliveButton}>
-              Make room for your people
+              Create my GYVFT
             </Link>
             <Link href="/for-organisations" className={styles.textLink}>
               Gifting for a team?
@@ -407,9 +408,8 @@ export function CustomerHomepage() {
             Start with <em>them.</em>
           </h2>
           <p>
-            The next birthday. A long-overdue thank-you.
-            <br />
-            Or a small, lovely reason of your own.
+            Add someone you care about. Keep a little note, save their special
+            day, or start a gift. Make the space your own.
           </p>
           <Link className={styles.primaryButton} href={signup}>
             Create my GYVFT
