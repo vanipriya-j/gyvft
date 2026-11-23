@@ -27,7 +27,8 @@ Use the already-installed Aarla OS app. In Vercel's GYVFT project, set these ser
 
 - `SHOPIFY_CLIENT_ID`: the app's Client ID.
 - `SHOPIFY_CLIENT_SECRET`: the app's Client secret.
-- `SHOPIFY_SHOP_DOMAIN`: Aarla's full `*.myshopify.com` domain, without `https://` or a path (existing default: `aarla-merch.myshopify.com`).
+
+The store is pinned in code to **`aarla-merch.myshopify.com`**, verified through Shopify and approved by the owner on 23 November. `SHOPIFY_SHOP_DOMAIN` is no longer read; stale or shortened values in Vercel cannot block or redirect authentication. Do not replace the fixed host with the storefront domain `aarla.in`.
 
 The app and store must belong to the same Shopify organization for the client-credentials grant. Release/approve **Discounts read/write (`write_discounts`)** on the existing app installation; existing customer read/write and customer-data access remain necessary for customer matching. Reuse the credentials without rotating, uninstalling or replacing the Aarla OS app. No manual coupon creation is required. The chat connector does not supply runtime credentials.
 
@@ -47,7 +48,7 @@ The customer screen shows a support reference on provider failure. Search Vercel
 
 Operations' connection check uses the deployed credential and probes the current protected customer-email field as well as discount scope. It requires `write_customers` for new-user linking and `write_discounts` for issuance. Its success reports no coupon created. Its safe failure code distinguishes authentication/HTTP failure from a GraphQL access denial. A failure while selecting customer email can still require the installed app's customer-data permission/approval, beyond the declared scope. The Shopify connector in chat is a separate identity and cannot establish those deployed permissions.
 
-The 23 November live store audit found one exact customer and no GYVFT coupon after the owner's failed attempt. Deprecated email selection and missing diagnostics were corrected, but the actual runtime failure is not established until the owner supplies the connection result or correlated log. Do not claim that source correction alone proves the incident resolved.
+The 23 November live store audit found one exact customer and no GYVFT coupon after the owner's failed attempt. Deprecated email selection and missing diagnostics were corrected, but the subsequent live Operations check identified an invalid configured store domain. That confirmed blocker is removed by pinning the verified host; authentication, customer access and live coupon creation still require a successful retry. Do not claim that source correction alone proves the incident resolved.
 
 References: [customer email field](https://shopify.dev/docs/api/admin-graphql/2026-10/objects/Customer), [customer queries](https://shopify.dev/docs/api/admin-graphql/2026-10/queries/customers).
 

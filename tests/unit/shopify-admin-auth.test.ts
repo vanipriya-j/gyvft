@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 vi.mock("next/server", () => ({ after: vi.fn() }));
-const domain = "aarla-auth-fixture.myshopify.com";
+const domain = "aarla-merch.myshopify.com";
 const issued = (token = "fixture-issued-token", expires = 86399) =>
   Response.json({
     access_token: token,
@@ -22,7 +22,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
-it("exchanges client credentials only on the validated store endpoint and reuses the issued token", async () => {
+it("exchanges client credentials only on the pinned Aarla endpoint and reuses the issued token", async () => {
   const fetch = vi.fn().mockResolvedValueOnce(issued());
   vi.stubGlobal("fetch", fetch);
   const { shopifyAdminToken, shopifyServerConfigured } =
@@ -77,7 +77,7 @@ it("renews before Shopify's returned expiry without a refresh-token cron", async
   expect(await shopifyAdminToken()).toBe("second");
   expect(fetch).toHaveBeenCalledTimes(2);
 });
-it.each(["SHOPIFY_CLIENT_SECRET", "SHOPIFY_CLIENT_ID", "SHOPIFY_SHOP_DOMAIN"])(
+it.each(["SHOPIFY_CLIENT_SECRET", "SHOPIFY_CLIENT_ID"])(
   "does not reuse a cached token after %s changes",
   async (field) => {
     const fetch = vi
@@ -87,12 +87,7 @@ it.each(["SHOPIFY_CLIENT_SECRET", "SHOPIFY_CLIENT_ID", "SHOPIFY_SHOP_DOMAIN"])(
     vi.stubGlobal("fetch", fetch);
     const { shopifyAdminToken } = await import("@/services/shopify/admin-auth");
     expect(await shopifyAdminToken()).toBe("first");
-    vi.stubEnv(
-      field,
-      field === "SHOPIFY_SHOP_DOMAIN"
-        ? "another-fixture.myshopify.com"
-        : "rotated-fixture",
-    );
+    vi.stubEnv(field, "rotated-fixture");
     expect(await shopifyAdminToken()).toBe("second");
     expect(fetch).toHaveBeenCalledTimes(2);
   },
@@ -127,18 +122,26 @@ it("rejects an incomplete pair rather than hiding it behind a legacy token", asy
   expect(fetch).not.toHaveBeenCalled();
 });
 it.each([
+  "aarla-merch",
+  "aarla.in",
   "https://aarla.in",
   "bad.example",
   "aarla.myshopify.com@evil.test",
   "aarla.myshopify.com/other",
-])("never sends secrets to an invalid store domain: %s", async (bad) => {
-  vi.stubEnv("SHOPIFY_SHOP_DOMAIN", bad);
-  const fetch = vi.fn();
-  vi.stubGlobal("fetch", fetch);
-  const { shopifyAdminToken } = await import("@/services/shopify/admin-auth");
-  await expect(shopifyAdminToken()).rejects.toThrow("myshopify.com");
-  expect(fetch).not.toHaveBeenCalled();
-});
+  "another-fixture.myshopify.com",
+])(
+  "keeps credentials pinned to Aarla despite a stale domain override: %s",
+  async (bad) => {
+    vi.stubEnv("SHOPIFY_SHOP_DOMAIN", bad);
+    const fetch = vi.fn().mockResolvedValueOnce(issued());
+    vi.stubGlobal("fetch", fetch);
+    const { shopifyAdminToken } = await import("@/services/shopify/admin-auth");
+    expect(await shopifyAdminToken()).toBe("fixture-issued-token");
+    expect(fetch.mock.calls[0][0]).toBe(
+      `https://${domain}/admin/oauth/access_token`,
+    );
+  },
+);
 it("does not retain failed exchanges or expose provider bodies/secrets", async () => {
   const fetch = vi
     .fn()

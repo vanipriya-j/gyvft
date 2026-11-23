@@ -137,14 +137,16 @@ describe("Shopify customer identity and retry boundaries", () => {
       "orderCreate(",
     );
   });
-  it("requires a valid server store domain before sending credentials", async () => {
+  it("pins Admin requests to Aarla even if the old store variable is incorrect", async () => {
     vi.stubEnv("SHOPIFY_SHOP_DOMAIN", "attacker.example");
-    const fetch = vi.fn();
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ data: { confirmed: true } }));
     vi.stubGlobal("fetch", fetch);
-    await expect(shopifyRequest("query{}", {})).rejects.toThrow(
-      "myshopify.com",
+    expect(await shopifyRequest("query{}", {})).toEqual({ confirmed: true });
+    expect(fetch.mock.calls[0][0]).toBe(
+      "https://aarla-merch.myshopify.com/admin/api/2026-10/graphql.json",
     );
-    expect(fetch).not.toHaveBeenCalled();
   });
   it("classifies protected-data/permission errors without exposing the provider response", async () => {
     vi.stubGlobal(

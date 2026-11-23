@@ -8,7 +8,6 @@ if (
   !["localhost", "127.0.0.1"].includes(database.hostname)
 )
   throw Error("Local test database required");
-process.env.SHOPIFY_SHOP_DOMAIN = "gyvft-fixture.myshopify.com";
 process.env.SHOPIFY_ADMIN_ACCESS_TOKEN = "local-fixture-token";
 const captureAuthMail = process.env.GYVFT_AUTH_MAIL_FIXTURE === "1";
 process.env.RESEND_API_KEY = captureAuthMail ? "re_local_auth_fixture" : "";
@@ -49,7 +48,7 @@ globalThis.fetch = async (input, init) => {
     }
     return Response.json({ id: "local-mail-accepted" });
   }
-  if (url.startsWith("https://gyvft-fixture.myshopify.com/admin/api/")) {
+  if (url.startsWith("https://aarla-merch.myshopify.com/admin/api/")) {
     const { query, variables: v } = JSON.parse(init.body);
     let data;
     if (query.includes("GYVFTCustomerCreate")) {

@@ -36,14 +36,8 @@ let cached: CachedToken | undefined;
 let pending: { key: string; request: Promise<CachedToken> } | undefined;
 
 export function shopifyStoreDomain() {
-  const domain = (
-    process.env.SHOPIFY_SHOP_DOMAIN || "aarla-merch.myshopify.com"
-  )
-    .trim()
-    .toLowerCase();
-  if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(domain))
-    throw new ShopifyError("Use the store’s myshopify.com domain.");
-  return domain;
+  // Verified Aarla store. An environment typo must not block or redirect auth.
+  return "aarla-merch.myshopify.com";
 }
 
 export function shopifyServerConfigured() {
@@ -129,7 +123,7 @@ async function exchange(
 
 /** Server-memory cache only; each instance can authenticate independently. */
 export async function shopifyAdminToken() {
-  // Validate before sending either a secret or an existing token anywhere.
+  // Both authentication modes use the verified Aarla host.
   const domain = shopifyStoreDomain();
   const id = process.env.SHOPIFY_CLIENT_ID?.trim();
   const secret = process.env.SHOPIFY_CLIENT_SECRET?.trim();

@@ -7,7 +7,6 @@ if (
   !database.pathname.startsWith("/gyvft_aarla_coupon_")
 )
   throw Error("Dedicated local coupon fixture required");
-process.env.SHOPIFY_SHOP_DOMAIN = "aarla-coupon-fixture.myshopify.com";
 process.env.SHOPIFY_ADMIN_ACCESS_TOKEN = "";
 process.env.SHOPIFY_CLIENT_ID = "local-coupon-client";
 process.env.SHOPIFY_CLIENT_SECRET = "local-coupon-secret";
@@ -40,7 +39,7 @@ globalThis.fetch = async (input, init) => {
   const u = new URL(
     typeof input === "string" ? input : input.url || String(input),
   );
-  if (u.hostname === "aarla-coupon-fixture.myshopify.com") {
+  if (u.hostname === "aarla-merch.myshopify.com") {
     if (u.pathname === "/admin/oauth/access_token") {
       const form = new URLSearchParams(init.body);
       if (
