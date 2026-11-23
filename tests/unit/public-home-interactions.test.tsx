@@ -103,7 +103,13 @@ describe("public product preview", () => {
       "/website-review/gyvft-how-it-works.mp4",
     );
     expect(document.querySelector("video track")?.getAttribute("kind")).toBe(
-      "captions",
+      "descriptions",
+    );
+    expect(document.querySelector("video track")?.getAttribute("label")).toBe(
+      "English on-screen text",
+    );
+    expect(document.querySelector("details")?.textContent).toContain(
+      "Bring your people. Bring your next idea.",
     );
     await click(
       document.querySelector<HTMLButtonElement>(
