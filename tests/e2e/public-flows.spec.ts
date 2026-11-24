@@ -73,6 +73,48 @@ test("homepage opens registration directly without an existing enquiry", async (
   ).toBeVisible();
 });
 
+test("mobile homepage shows concise copy, signup and the gift image in the first fold", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 400, height: 656 });
+  await page.goto("/");
+  await page
+    .getByRole("button", { name: "Reject optional", exact: true })
+    .click();
+  await page.evaluate(() => document.fonts.ready);
+  const hero = page.locator('section[aria-labelledby="home-heading"]');
+  await expect(hero.getByRole("heading", { level: 1 })).toHaveText(
+    /Gifts that feel\s*like them\./,
+    { useInnerText: true },
+  );
+  const image = await hero.getByRole("img").boundingBox();
+  const signup = await hero
+    .getByRole("link", { name: "Create my GYVFT", exact: true })
+    .boundingBox();
+  expect(image!.y + image!.height).toBeLessThanOrEqual(656);
+  expect(signup!.y + signup!.height).toBeLessThanOrEqual(656);
+  await expect(
+    hero.getByRole("button", { name: "65 sec film", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.setViewportSize({ width: 320, height: 656 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(hero.getByRole("heading", { level: 1 })).toHaveText(
+    /You know them\..*Give something that feels like them\./s,
+    { useInnerText: true },
+  );
+  await expect(hero.getByRole("button", { name: /Why GYVFT/ })).toBeVisible();
+});
+
 test("homepage product preview, named films and mobile navigation", async ({
   page,
 }) => {
@@ -88,7 +130,8 @@ test("homepage product preview, named films and mobile navigation", async ({
   await page.getByRole("tab", { name: "Circles", exact: true }).click();
   await expect(page.getByRole("tabpanel")).toContainText("Our family");
   await page.getByRole("tab", { name: "Your gifts", exact: true }).click();
-  await page.getByLabel(/A little keepsake/).check();
+  await page.getByText("A little keepsake", { exact: true }).click();
+  await expect(page.getByLabel(/A little keepsake/)).toBeChecked();
   await expect(
     page.getByText(/A little keepsake selected in this example/),
   ).toBeVisible();

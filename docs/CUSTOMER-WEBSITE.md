@@ -4,6 +4,12 @@
 
 ## Customer path
 
+### Mobile design draft — 24 November 2026
+
+The owner requested a mobile mock-up **before any production change** after reporting that the page looked like a newspaper. Branch `codex/mobile-homepage-copy` is a preview-only design candidate; do not merge or publish it to production without that design approval. Mobile uses a two-line sans-serif headline, one supporting sentence, inline signup/film actions and an image in the first fold. Repeated eyebrow introductions and feature lists are omitted, process copy is shorter, portfolio stories become thumbnail rows, and Circles/benefit/final-invitation copy is condensed. FAQs and full answers remain available, along with the visible FAQ/benefit header links and optional Circles/privacy terms. Desktop keeps its fuller wording and typography.
+
+Local browser checks at 400×656, 320×656, 390×844 and 1440×1000 measured no horizontal overflow or page JavaScript errors. At 400×656 the CTA ends around 330px and the complete hero image around 526px. Visible mobile main content is approximately 289 words versus 646 on desktop; the hero is 22 words. These are measurements of the draft, not a production rollout or a submitted-account test.
+
 The owner approved the clearer hero wording: **You know them. Give something that feels like them.** Section transitions now follow that thought: save the person’s details and dates, share a brief when ready, choose from Aarla’s possibilities, see what that becomes, and optionally bring more people into Circles. Account-creation buttons use a consistent invitation; the store saving remains a supporting benefit.
 
 The Aarla saving is an ongoing benefit: **5% at Aarla. Every time.** The 24-hour limit applies to each single-use code, not to membership or a signup-bonus period. The homepage, FAQ, customer handoff and Operations copy now distinguish those facts. Existing coupon reuse/replacement rules are unchanged; no Shopify mutation accompanies this copy correction.
@@ -30,6 +36,6 @@ Media is served as static files under `/website-review/`, with no external ifram
 
 The production build, TypeScript and focused signup/authentication/asset checks pass. Unit interaction checks exercise keyboard tab navigation, gift choice feedback, dialog names, deferred media mounting and film close/unmount. The browser suite was updated for the direct signup path, new email label, product preview, mobile navigation and the two films; it has not run in this turn.
 
-Managed Sites guidance prohibits a browser-control fallback when `cua_repl.js` is unavailable. No supported browser QA tool is available in this session, so desktop/mobile visual layout, native video playback and complete browser signup remain unverified here. Unit DOM tests are not a visual browser pass. Review the preview at desktop and 390px/320px mobile widths, open/close both films, use the mobile menu, and follow registration before signing off the public redesign.
+The original website rollout did not include a visual browser pass. The 24 November mobile draft has since been checked through the repository’s local production server using headless Chromium, under the updated Cloud desktop testing guidance: 400px/320px/390px mobile and 1440px desktop rendering, visible copy, first-fold image/actions and horizontal overflow. Project browser checks also cover the homepage links and film/navigation interactions. These draft checks do not establish a submitted production signup, email delivery, Shopify checkout or carrier operation.
 
 No migration, database reset, customer-data edit, account creation, email, Shopify coupon/order mutation or deployment-history deletion accompanies this change. Images and videos are static deployment assets; local Next dependency traces must not include the MP4 files. Existing backend registration and recovery commands are unchanged.

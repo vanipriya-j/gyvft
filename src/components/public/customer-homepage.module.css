@@ -4,6 +4,9 @@
   line-height: 1.65;
   overflow: clip;
 }
+.mobileCopy {
+  display: none;
+}
 .container {
   width: min(100% - 4rem, 76rem);
   margin-inline: auto;
@@ -1387,5 +1390,212 @@
   .filmDialog * {
     transition: none !important;
     animation: none !important;
+  }
+}
+
+/* Mobile has its own concise story and visual hierarchy. */
+@media (max-width: 760px) {
+  .desktopCopy {
+    display: none;
+  }
+  .mobileCopy {
+    display: inline;
+  }
+  .site h1,
+  .site h2,
+  .site h3,
+  .site h4 {
+    font-family: var(--font-body), sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+  }
+  .site h2 {
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+  .site .eyebrow,
+  .heroDescription,
+  .heroNote,
+  .promiseStrip,
+  .photoCaption,
+  .momentCard,
+  .featureList,
+  .previewInstruction,
+  .howSection .sectionHeading > p,
+  .circleIllustration,
+  .savingMark,
+  .finalFlower {
+    display: none;
+  }
+  .hero {
+    padding-block: 1.25rem;
+    gap: 1.2rem;
+  }
+  .hero h1 {
+    font-size: 2rem;
+    line-height: 1.12;
+  }
+  .hero h1 em {
+    font-style: normal;
+    font-weight: 600;
+  }
+  .heroPractical {
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  .heroActions {
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+  }
+  .heroActions .primaryButton {
+    min-height: 3rem;
+    padding-inline: 1.05rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+  .heroActions .filmButton {
+    min-height: 3rem;
+    font-size: 0.875rem;
+    gap: 0.4rem;
+    white-space: nowrap;
+  }
+  .heroActions .filmButton > svg {
+    width: 0.9rem;
+  }
+  .heroVisual {
+    padding: 0;
+  }
+  .heroVisual::after {
+    display: none;
+  }
+  .heroImage {
+    height: 11rem;
+    border-radius: 0.8rem;
+    object-position: center 58%;
+  }
+  .productSection {
+    padding-block: 1.6rem 2.2rem;
+    gap: 1.2rem;
+    border-top: 1px solid var(--border);
+  }
+  .productCopy > p:not(.eyebrow):not(.previewInstruction) {
+    margin-top: 0.6rem;
+  }
+  .textFilmButton {
+    margin-top: 0.45rem;
+  }
+  .howSection {
+    padding-block: 2rem;
+  }
+  .sectionHeading {
+    margin-bottom: 1.1rem;
+  }
+  .steps {
+    gap: 1rem;
+  }
+  .steps h3 {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  .steps p {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+  .storiesSection {
+    padding-block: 2rem;
+  }
+  .storiesSection .sectionHeading {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .storiesSection .textLink {
+    font-size: 0.875rem;
+  }
+  .storyGrid {
+    gap: 0.8rem;
+  }
+  .storyCard {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .storyCard:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  .storyImage {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .storyImage img {
+    height: 5.5rem;
+    aspect-ratio: 1;
+    max-height: none;
+  }
+  .storyCard h3 {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 1rem;
+    line-height: 1.45;
+    margin: 0;
+  }
+  .storyCard > p,
+  .storyLink {
+    display: none;
+  }
+  .circlesSection {
+    padding-block: 0 2rem;
+    gap: 0;
+  }
+  .circlesSection > div > p:not(.eyebrow) {
+    margin-top: 0.65rem;
+  }
+  .circlesSection .circlesNote {
+    font-size: 0.875rem;
+  }
+  .inlineActions {
+    margin-top: 1rem;
+  }
+  .savingSection .savingTerms {
+    font-size: 0.875rem !important;
+    line-height: 1.5;
+  }
+  .faqSection {
+    margin-block: 2rem;
+    gap: 0.8rem;
+  }
+  .faqList summary {
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+  .finalSection {
+    padding-block: 2rem;
+  }
+  .finalSection h2 {
+    font-size: 1.75rem;
+  }
+  .finalSection p:not(.eyebrow) {
+    margin-top: 0.6rem;
+    font-size: 1rem;
+  }
+  .finalSection .finalSignin {
+    font-size: 0.875rem;
+  }
+}
+@media (max-width: 380px) {
+  .heroImage {
+    height: 10rem;
+  }
+  .heroActions {
+    gap: 0.6rem;
+  }
+  .heroActions .primaryButton {
+    padding-inline: 0.9rem;
   }
 }
