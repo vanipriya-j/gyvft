@@ -17,6 +17,12 @@ export type StoryStatus = "ready" | "review" | "reference-required";
 export type StoryMedia = {
   src: string;
   alt: string;
+  /** Optional intrinsic dimensions preserve the complete artwork in a gallery. */
+  width?: number;
+  height?: number;
+  caption?: string;
+  /** Readable alternative for text contained in an artwork image. */
+  transcript?: string;
   /**
    * True when no usable final image should be shown.
    * Forced for missing files and for reference-required entries in production.
@@ -312,6 +318,54 @@ export const stories: Story[] = [
       "Distinct visual outcomes for Dr Harapriya and Dr Saileela within one umbrella story.",
     hero: heroFor("cardiologist-visual-communication", "Cardiologist visual communication"),
     reviewNote: "Do not merge the two doctors or commissions into a single undifferentiated project.",
+  },
+  {
+    slug: "orient-star-diwali-hamper",
+    title: "Orient Star Group — Diwali Gifting",
+    groupId: "organisations-events",
+    status: "review",
+    summary:
+      "Across Skies & Seas: a Diwali hamper with a shared story across gifts, packaging and a personal greeting.",
+    introduction:
+      "A Diwali gift for Orient Star Group, brought together through Indian imagery of flight, flowing water and journeys onward.",
+    theStory:
+      "Orient Star Group wanted a Diwali gift rooted in Indian tradition. The brief called for a thoughtful collection with a connection to journeys and movement, expressed through an Indian visual language.",
+    ourInterpretation:
+      "Across Skies & Seas brought Garuda and Makara together in blue and white. Garuda takes flight above the waves while Makara moves through the waters below; flowing lines connect their worlds. The artwork speaks of courage, resilience and the possibilities of journeying onward.",
+    whatItBecame:
+      "The curation brought together a tray, a flat-lid kumkum box and a brass diya, with a magnet as an additional option. Coordinated packaging and a greeting card carried the same visual story through the collection. The card explained the imagery and closed with a wish: ‘This Diwali, may every journey lead to light.’",
+    hero: {
+      src: `${CASE_BASE}/orient-star-diwali-hamper/hero.webp`,
+      alt: "Orient Star Group Diwali hamper design with a blue-and-white Garuda–Makara tray, flat-lid kumkum box, brass diya, magnet and matching kraft box",
+      width: 1536,
+      height: 1024,
+      caption: "Hamper design visual, including the magnet option.",
+      isPlaceholder: false,
+    },
+    gallery: [
+      {
+        src: `${CASE_BASE}/orient-star-diwali-hamper/greeting-card.webp`,
+        alt: "Blue-and-white Diwali greeting card with Garuda and Makara artwork and an Across Skies & Seas message inside",
+        width: 1254,
+        height: 1254,
+        caption:
+          "The greeting card gives the artwork its meaning: Across Skies & Seas.",
+        transcript:
+          "Happy Diwali\n\nAcross Skies & Seas\n\nGaruda takes flight above the waves, while Makara moves through the waters below. In this artwork, they come together as an expression of courage, resilience and the spirit of journeying onward.\n\nThe flowing waves connect their worlds—a reminder that every journey holds new possibilities.\n\nThis Diwali, may every journey lead to light.",
+        isPlaceholder: false,
+      },
+      {
+        src: `${CASE_BASE}/orient-star-diwali-hamper/packaging.webp`,
+        alt: "Kraft gift box with a cobalt blue Happy Diwali label, white Garuda and Makara artwork, flowing waves and Orient Star Group branding",
+        width: 1448,
+        height: 1086,
+        caption:
+          "The outer packaging carries the same blue-and-white artwork. Design visual.",
+        isPlaceholder: false,
+      },
+    ],
+    reviewNote:
+      "New owner-supplied case study, 24 November 2026. Exact matching originals recovered from the Hamper Curation archive: A149, A129 and A035. These are design visuals, not delivery photographs. Review copy before publication. Omit disputed quantities, pricing and final option splits; do not include early bottle/tote or Kamadhenu explorations as the supplied hamper.",
   },
 ];
 

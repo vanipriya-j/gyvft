@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "baseAssetPath": "/images/gyvft/case-studies",
   "caseStudies": [
     {"order":1,"slug":"thambi-100","title":"Thambi 100","status":"ready","asset":"thambi-100/hero.png","action":"retain","note":"Commemorative family project marking what would have been his 100th year; do not depict a living centenarian celebration."},
@@ -17,6 +17,7 @@
     {"order":13,"slug":"tm-karthik-crew-gifting","title":"TM Karthik — Crew Gifting","status":"ready","asset":"tm-karthik-crew-gifting/hero.png","action":"add","note":"Recurring post-production gifting across The Father, Flowers, Aha Kalyanam and Meeting Mr Green."},
     {"order":14,"slug":"jannal-oram","title":"Jannal Oram — Performance Merchandise","status":"ready","asset":"jannal-oram/hero.png","action":"add","note":"Use only the supplied project references and current approved visual."},
     {"order":15,"slug":"root360","title":"Root360 — Apparel Programme","status":"ready","asset":"root360/hero.png","action":"add","note":"Organisation apparel/merchandise programme."},
-    {"order":16,"slug":"cardiologist-visual-communication","title":"Cardiologist Visual Communication","status":"ready","asset":"cardiologist-visual-communication/hero.png","action":"add","note":"Includes Little Hearts design for Dr Harapriya's Mending Tiny Hearts Foundation and technical diagrams for Dr Saileela's paper. Keep these as distinct project outcomes within the umbrella story."}
+    {"order":16,"slug":"cardiologist-visual-communication","title":"Cardiologist Visual Communication","status":"ready","asset":"cardiologist-visual-communication/hero.png","action":"add","note":"Includes Little Hearts design for Dr Harapriya's Mending Tiny Hearts Foundation and technical diagrams for Dr Saileela's paper. Keep these as distinct project outcomes within the umbrella story."},
+    {"order":17,"slug":"orient-star-diwali-hamper","title":"Orient Star Group — Diwali Gifting","status":"review","asset":"orient-star-diwali-hamper/hero.webp","action":"add","note":"Across Skies & Seas. Owner supplied the hamper, greeting-card and packaging visuals on 24 November 2026. Matching originals A149/A129/A035 recovered from the Hamper Curation archive. Preserve design-visual captions; omit uncertain quantities, prices and final option splits. Existing stories retained unchanged."}
   ]
 }

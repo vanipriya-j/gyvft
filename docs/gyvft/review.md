@@ -18,6 +18,7 @@
 | 14 | Jannal Oram | Ready | New page copy needed | Supply/approve project narrative |
 | 15 | Root360 | Ready | New page copy needed | Supply/approve project narrative |
 | 16 | Cardiologist Visual Communication | Ready | New umbrella copy needed | Confirm whether to keep one page or split into two projects |
+| 17 | Orient Star Group — Diwali Gifting | Owner-selected design visuals A149/A129/A035 | Draft based on Hamper Curation record and supplied artwork | Review the narrative before publishing; no disputed quantity, pricing or final option split claimed |
 
 ## Music-school factual mapping
 
