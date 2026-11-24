@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import Link from "@/components/ui/navigation-link";
 import {
   CalendarDays,
@@ -13,6 +14,21 @@ import styles from "./customer-homepage.module.css";
 
 const signup = "/account/login?mode=signup";
 
+function ResponsiveCopy({
+  desktop,
+  mobile,
+}: {
+  desktop: ReactNode;
+  mobile: ReactNode;
+}) {
+  return (
+    <>
+      <span className={styles.desktopCopy}>{desktop}</span>
+      <span className={styles.mobileCopy}>{mobile}</span>
+    </>
+  );
+}
+
 export function CustomerHomepage() {
   return (
     <div className={styles.site}>
@@ -25,11 +41,24 @@ export function CustomerHomepage() {
             <span aria-hidden="true">✳</span> For the people who matter
           </p>
           <h1 id="home-heading">
-            You know them.
-            <br />
-            <span className={styles.heroPromise}>
-              Give something that feels <em>like them.</em>
-            </span>
+            <ResponsiveCopy
+              desktop={
+                <>
+                  You know them.
+                  <br />
+                  <span className={styles.heroPromise}>
+                    Give something that feels <em>like them.</em>
+                  </span>
+                </>
+              }
+              mobile={
+                <>
+                  Gifts that make
+                  <br />
+                  <em>any day special.</em>
+                </>
+              }
+            />
           </h1>
           <p className={styles.heroDescription}>
             Their little quirks. Their big days. The things they love.
@@ -37,14 +66,24 @@ export function CustomerHomepage() {
             heart of your next gift.
           </p>
           <p className={styles.heroPractical}>
-            Keep their details and dates in GYVFT. Let Aarla help with the gift.
+            <ResponsiveCopy
+              desktop="For your people and your moments, big or small. Plan a thoughtful gift with Aarla."
+              mobile="For your people. Your moments. Or just because."
+            />
           </p>
           <div className={styles.heroActions}>
             <Link className={styles.primaryButton} href={signup}>
               Create my GYVFT
             </Link>
             <FilmButton className={styles.filmButton}>
-              Why GYVFT? <span className={styles.buttonMeta}>65 sec</span>
+              <ResponsiveCopy
+                desktop={
+                  <>
+                    Why GYVFT? <span className={styles.buttonMeta}>65 sec</span>
+                  </>
+                }
+                mobile="65 sec film"
+              />
             </FilmButton>
           </div>
           <p className={styles.heroNote}>
@@ -88,7 +127,7 @@ export function CustomerHomepage() {
       >
         <span>
           <CalendarDays size={18} aria-hidden="true" />
-          Keep their special days close
+          Plan your special occasions
         </span>
         <span>
           <Gift size={18} aria-hidden="true" />
@@ -108,14 +147,22 @@ export function CustomerHomepage() {
         <div className={styles.productCopy}>
           <p className={styles.eyebrow}>First, make a little space for them</p>
           <h2 id="space-heading">
-            A home for your
-            <br />
-            <em>thoughtful side.</em>
+            <ResponsiveCopy
+              desktop={
+                <>
+                  A home for your
+                  <br />
+                  <em>thoughtful side.</em>
+                </>
+              }
+              mobile="Your people. Your plans."
+            />
           </h2>
           <p>
-            A passing “I love that.” A birthday you don’t want to miss. Save the
-            details in GYVFT, so you have somewhere to start when the next
-            occasion comes around.
+            <ResponsiveCopy
+              desktop="A passing “I love that.” A birthday you don’t want to miss. Save the details in GYVFT, so you have somewhere to start when the next occasion comes around."
+              mobile="People, occasions and gift ideas. All in one place."
+            />
           </p>
           <ul className={styles.featureList}>
             <li>
@@ -153,9 +200,16 @@ export function CustomerHomepage() {
                 Then, turn the thought into a gift
               </p>
               <h2 id="how-heading">
-                From “what should I get?”
-                <br />
-                to <em>“this is so them.”</em>
+                <ResponsiveCopy
+                  desktop={
+                    <>
+                      From “what should I get?”
+                      <br />
+                      to <em>“this is so them.”</em>
+                    </>
+                  }
+                  mobile="A little help. A personal gift."
+                />
               </h2>
             </div>
             <p>
@@ -168,30 +222,51 @@ export function CustomerHomepage() {
               <span className={styles.stepIcon}>
                 <Heart size={26} aria-hidden="true" />
               </span>
-              <h3>Start with what you know.</h3>
+              <h3>
+                <ResponsiveCopy
+                  desktop="Start with what you know."
+                  mobile="Tell us about them"
+                />
+              </h3>
               <p>
-                Tell us who it’s for, what they love, your budget and when you
-                need it.
+                <ResponsiveCopy
+                  desktop="Tell us who it’s for, what they love, your budget and when you need it."
+                  mobile="Who it’s for, your occasion, budget and date."
+                />
               </p>
             </article>
             <article>
               <span className={styles.stepIcon}>
                 <Sparkles size={26} aria-hidden="true" />
               </span>
-              <h3>See what Aarla imagines.</h3>
+              <h3>
+                <ResponsiveCopy
+                  desktop="See what Aarla imagines."
+                  mobile="Choose with Aarla"
+                />
+              </h3>
               <p>
-                Explore gift options curated around your brief. Choose a
-                favourite or customise a copy.
+                <ResponsiveCopy
+                  desktop="Explore gift options curated around your brief. Choose a favourite or customise a copy."
+                  mobile="Pick a curated option or make it your own."
+                />
               </p>
             </article>
             <article>
               <span className={styles.stepIcon}>
                 <Gift size={26} aria-hidden="true" />
               </span>
-              <h3>Make it theirs.</h3>
+              <h3>
+                <ResponsiveCopy
+                  desktop="Make it theirs."
+                  mobile="Make it personal"
+                />
+              </h3>
               <p>
-                Review your quote and design before we make it. Keep the
-                decisions and updates together in your account.
+                <ResponsiveCopy
+                  desktop="Review your quote and design before we make it. Keep the decisions and updates together in your account."
+                  mobile="Approve the details. We’ll make, pack and coordinate delivery."
+                />
               </p>
             </article>
           </div>
@@ -207,11 +282,21 @@ export function CustomerHomepage() {
           <div>
             <p className={styles.eyebrow}>Here’s what that can become</p>
             <h2 id="stories-heading">
-              Thoughtfulness you can <em>hold.</em>
+              <ResponsiveCopy
+                desktop={
+                  <>
+                    Thoughtfulness you can <em>hold.</em>
+                  </>
+                }
+                mobile="Made personal."
+              />
             </h2>
           </div>
           <Link className={styles.textLink} href="/stories">
-            More gifting stories
+            <ResponsiveCopy
+              desktop="More gifting stories"
+              mobile="All stories"
+            />
           </Link>
         </div>
         <div className={styles.storyGrid}>
@@ -220,6 +305,7 @@ export function CustomerHomepage() {
               image: "diwali-gifting",
               label: "For a festive hello",
               title: "A Diwali gift with a little more heart.",
+              mobileTitle: "Diwali, made personal.",
               copy: "A considered collection, shaped around the people receiving it.",
               href: "/stories/private-diwali-hampers",
               alt: "A festive Aarla gift collection with a printed tote, lamps and sweets",
@@ -228,6 +314,7 @@ export function CustomerHomepage() {
               image: "kumon-delegate-gifting",
               label: "For a community that gives so much",
               title: "A thoughtful thank-you for educators.",
+              mobileTitle: "A thank-you for educators.",
               copy: "Personal notes and useful keepsakes, brought together for Kumon.",
               href: "/stories/kumon-delegate-gifting",
               alt: "Kumon delegate gifting with useful keepsakes and a personal note",
@@ -236,6 +323,7 @@ export function CustomerHomepage() {
               image: "tm-karthik-crew-gifting",
               label: "For the people behind the scenes",
               title: "A curtain call for the whole crew.",
+              mobileTitle: "For the whole crew.",
               copy: "Gifts that carry a production’s story beyond the final performance.",
               href: "/stories/tm-karthik-crew-gifting",
               alt: "Personalised gifts made for TM Karthik’s theatre crews",
@@ -251,12 +339,17 @@ export function CustomerHomepage() {
                   src={`/website-review/${story.image}.webp`}
                   width={1200}
                   height={900}
-                  sizes="(max-width: 760px) 100vw, 33vw"
+                  sizes="(max-width: 760px) 88px, 33vw"
                   alt={story.alt}
                 />
               </div>
               <p className={styles.storyLabel}>{story.label}</p>
-              <h3>{story.title}</h3>
+              <h3>
+                <ResponsiveCopy
+                  desktop={story.title}
+                  mobile={story.mobileTitle}
+                />
+              </h3>
               <p>{story.copy}</p>
               <span className={styles.storyLink}>See the story</span>
             </Link>
@@ -292,18 +385,28 @@ export function CustomerHomepage() {
         <div>
           <p className={styles.eyebrow}>And it doesn’t stop with one person</p>
           <h2 id="people-heading">
-            Some gifts say “I see you.”
-            <br />
-            Others say <em>“we belong.”</em>
+            <ResponsiveCopy
+              desktop={
+                <>
+                  Some gifts say “I see you.”
+                  <br />
+                  Others say <em>“we belong.”</em>
+                </>
+              }
+              mobile="Your people, together."
+            />
           </h2>
           <p>
-            Keep close to family and friends. Bring your book club, alumni group
-            or team into a Circle. Share occasions and invite people to tell you
-            a little about themselves.
+            <ResponsiveCopy
+              desktop="Keep close to family and friends. Bring your book club, alumni group or team into a Circle. Share occasions and invite people to tell you a little about themselves."
+              mobile="Family, friends or your team. Share occasions in a Circle."
+            />
           </p>
           <p className={styles.circlesNote}>
-            Start on your own. Circles are there whenever you need them. Your
-            gifts and private notes stay yours.
+            <ResponsiveCopy
+              desktop="Start on your own. Circles are there whenever you need them. Your gifts and private notes stay yours."
+              mobile="Circles are optional. Your gift plans stay private."
+            />
           </p>
           <div className={styles.inlineActions}>
             <Link href={signup} className={styles.oliveButton}>
@@ -327,11 +430,17 @@ export function CustomerHomepage() {
         <div>
           <p className={styles.eyebrow}>Your GYVFT extra</p>
           <h2 id="saving-heading">5% at Aarla. Every time.</h2>
-          <p>Enjoy 5% off every time you shop at Aarla through GYVFT.</p>
+          <p>
+            <ResponsiveCopy
+              desktop="Enjoy 5% off every time you shop at Aarla through GYVFT."
+              mobile="An ongoing benefit when you shop through GYVFT."
+            />
+          </p>
           <p className={styles.savingTerms}>
-            Each code is single-use and valid for 24 hours. Use your account
-            email at Aarla checkout. For eligible Aarla store purchases;
-            separate from custom gift quotes.
+            <ResponsiveCopy
+              desktop="Each code is single-use and valid for 24 hours. Use your account email at Aarla checkout. For eligible Aarla store purchases; separate from custom gift quotes."
+              mobile="Single-use codes, valid 24 hours. Eligible store purchases; custom gift quotes separate."
+            />
           </p>
         </div>
         <Link className={styles.outlineButton} href="/account/shop?to=%2F">
@@ -347,9 +456,16 @@ export function CustomerHomepage() {
         <div>
           <p className={styles.eyebrow}>FAQs</p>
           <h2 id="questions-heading">
-            Questions before
-            <br />
-            <em>you join?</em>
+            <ResponsiveCopy
+              desktop={
+                <>
+                  Questions before
+                  <br />
+                  <em>you join?</em>
+                </>
+              }
+              mobile="FAQs"
+            />
           </h2>
         </div>
         <div className={styles.faqList}>
@@ -373,11 +489,11 @@ export function CustomerHomepage() {
             </p>
           </details>
           <details>
-            <summary>Can I gift for just one person?</summary>
+            <summary>Can I plan for one person or a whole group?</summary>
             <p>
-              Absolutely. Start with a gift for one person, or tell us about a
-              family gathering, community celebration or team. Share your
-              quantity and budget in your brief so we can explore what fits.
+              Both. Whether it’s a personal gesture or gifts for everyone
+              celebrating with you, share the occasion, quantity and budget.
+              Aarla can help with a thoughtful direction.
             </p>
           </details>
           <details>
@@ -416,11 +532,20 @@ export function CustomerHomepage() {
             Someone just came to mind, didn’t they?
           </p>
           <h2 id="join-heading">
-            Start with <em>them.</em>
+            <ResponsiveCopy
+              desktop={
+                <>
+                  Start with <em>them.</em>
+                </>
+              }
+              mobile="Someone in mind?"
+            />
           </h2>
           <p>
-            Add someone you care about. Keep a little note, save their special
-            day, or start a gift. Make the space your own.
+            <ResponsiveCopy
+              desktop="Add someone you care about. Keep a little note, save their special day, or start a gift. Make the space your own."
+              mobile="Start with them. We’ll help with the gift."
+            />
           </p>
           <Link className={styles.primaryButton} href={signup}>
             Create my GYVFT
