@@ -1,4 +1,5 @@
 "use client";
+import { trackConversionEvent } from "@/components/analytics/AnalyticsProvider";
 import { useEffect, useState } from "react";
 import Link from "@/components/ui/navigation-link";
 import { LoaderCircle } from "lucide-react";
@@ -45,7 +46,10 @@ export function AarlaShop({
           !url.pathname.startsWith("/discount/GYVFT5-")
         )
           throw Error("Your saving link could not be confirmed.");
-        if (active) window.location.replace(url.href);
+        if (active) {
+          trackConversionEvent("shop_aarla");
+          window.location.replace(url.href);
+        }
       } catch (e) {
         if (active && !controller.signal.aborted)
           setError(

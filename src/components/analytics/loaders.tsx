@@ -1,6 +1,13 @@
 "use client";
 
 import Script from "next/script";
+import { useEffect } from "react";
+import {
+  analyticsAllowedHere,
+  analyticsConfiguration,
+  prepareGoogleAnalytics,
+  suspendGoogleAnalytics,
+} from "@/lib/analytics/browser";
 
 type LoaderProps = {
   analytics: boolean;
@@ -22,12 +29,15 @@ export function shouldLoadClarity(input: {
   const pathname =
     input.pathname ??
     (typeof window === "undefined" ? "" : window.location.pathname);
-  return Boolean(input.analytics && input.projectId && !pathname.startsWith("/studio"));
+  return Boolean(
+    input.analytics && input.projectId && !pathname.startsWith("/studio"),
+  );
 }
 
 export function GTMLoader({ analytics }: LoaderProps) {
-  const id = process.env.NEXT_PUBLIC_GTM_ID;
-  if (!analytics || !id) return null;
+  const config = analyticsConfiguration();
+  const id = config?.mode === "gtm" ? config.id : undefined;
+  if (!analytics || !id || !analyticsAllowedHere()) return null;
   return (
     <Script id="gyvft-gtm" strategy="afterInteractive">
       {`
@@ -42,20 +52,19 @@ export function GTMLoader({ analytics }: LoaderProps) {
 }
 
 export function GA4Loader({ analytics }: LoaderProps) {
-  const id = process.env.NEXT_PUBLIC_GA4_MEASUREMENT_ID;
-  if (!analytics || !id) return null;
+  const config = analyticsConfiguration();
+  const id = config?.mode === "ga4" ? config.id : undefined;
+  useEffect(() => {
+    if (analytics) prepareGoogleAnalytics();
+    else suspendGoogleAnalytics();
+  }, [analytics]);
+  if (!analytics || !id || !analyticsAllowedHere()) return null;
   return (
-    <>
-      <Script async src={`https://www.googletagmanager.com/gtag/js?id=${id}`} strategy="afterInteractive" />
-      <Script id="gyvft-ga4" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${id}', { anonymize_ip: true });
-        `}
-      </Script>
-    </>
+    <Script
+      async
+      src={`https://www.googletagmanager.com/gtag/js?id=${id}`}
+      strategy="afterInteractive"
+    />
   );
 }
 

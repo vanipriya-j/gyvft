@@ -34,6 +34,7 @@ import {
   scheduleNotifications,
 } from "@/lib/customer/notifications";
 import { getSql } from "@/lib/database/client";
+import { conversionReport } from "@/lib/customer/conversion-report";
 import { shippingCommand } from "@/lib/customer/shipping-commands";
 import { DelhiveryError } from "@/services/shipping/delhivery";
 import { notificationStatus } from "@/lib/customer/notification-status";
@@ -135,6 +136,8 @@ export async function POST(request: Request) {
         message: `Processed ${result.candidates} due notifications; ${result.accepted} accepted by provider. Check notification status for failures.`,
       });
     }
+    if (raw.op === "conversion_report")
+      return reply({ ok: true, report: await conversionReport(raw) });
     if (raw.op === "snapshot")
       return reply({
         ok: true,

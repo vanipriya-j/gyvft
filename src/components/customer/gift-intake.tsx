@@ -3,6 +3,7 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveGiftBrief } from "@/app/account/journey-actions";
+import { trackConversionEvent } from "@/components/analytics/AnalyticsProvider";
 import type { GiftBrief } from "@/lib/customer/journey-model";
 const labels = [
   "Your story",
@@ -101,6 +102,9 @@ export function GiftIntake({
       const r = await saveGiftBrief(giftId, brief, draft);
       setMessage(r.message);
       if (r.ok && "id" in r) {
+        trackConversionEvent(
+          draft ? "gift_brief_saved" : "gift_brief_submitted",
+        );
         router.push(`/account/projects/${r.id}${draft ? "?view=edit" : ""}`);
         router.refresh();
       }

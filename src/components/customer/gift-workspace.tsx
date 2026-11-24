@@ -1,4 +1,5 @@
 "use client";
+import { trackConversionEvent } from "@/components/analytics/AnalyticsProvider";
 import { useHydrated } from "@/hooks/use-hydrated";
 /* eslint-disable @next/next/no-img-element -- Private hamper photos are served through an ownership-checked endpoint. */
 import {
@@ -499,6 +500,7 @@ export function GiftWorkspace({
         setMessage(r.message);
         return;
       }
+      trackConversionEvent("gift_quote_requested");
       setSelections((ss) => [
         { ...r.selection, quoted: false },
         ...ss.filter((s) => s.id !== r.selection.id),

@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { AccountNavigation } from "@/components/customer/account-navigation";
 import { getCustomerAccount } from "@/lib/customer/session";
 import { BrandLogo } from "@/components/public/BrandLogo";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
 export const metadata = {
   title: "My GYVFT",
   robots: { index: false, follow: false },
@@ -44,6 +45,7 @@ export default function AccountLayout({
           </div>
         </div>
       </footer>
+      <ConsentBanner />
     </div>
   );
 }

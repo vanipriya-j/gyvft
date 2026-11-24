@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, PT_Serif } from "next/font/google";
 import "./globals.css";
+import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 
 const inter = Inter({
   variable: "--font-body",
@@ -47,7 +48,7 @@ export default function RootLayout({
       className={`${inter.variable} ${ptSerif.variable} h-full scroll-smooth antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
-        {children}
+        <AnalyticsProvider>{children}</AnalyticsProvider>
       </body>
     </html>
   );
