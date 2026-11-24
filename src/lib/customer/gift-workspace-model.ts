@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { OptionImage } from "./option-image-model";
 const text = (max: number) => z.string().trim().max(max);
 export const catalogue = [
   {
@@ -134,6 +135,8 @@ export type GiftOption = {
   description: string;
   contents: GiftContent[];
   has_image: boolean;
+  images?: OptionImage[];
+  draft_version?: number;
   published: boolean;
   hidden: boolean;
   pricing: GiftPricing;

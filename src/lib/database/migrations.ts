@@ -3,6 +3,13 @@ import { readdir, readFile } from "fs/promises";
 import path from "path";
 import type { Sql } from "postgres";
 import type { MigrationProgress } from "./migration-progress";
+import {
+  optionImagesFile,
+  optionImagesChecksum,
+  optionImagesPrerequisites,
+  agentProposalsFile,
+  agentProposalsChecksum,
+} from "./option-images-activation";
 export class MigrationExecutionError extends Error {
   constructor(
     public filename: string,
@@ -15,7 +22,8 @@ export class MigrationExecutionError extends Error {
 const migrationDirectory = path.join(process.cwd(), "supabase", "migrations");
 // Transaction-scoped: safe with connection pooling, shared by web and CLI runners.
 const migrationLock = 714093821;
-export type MigrationScope = "all" | "customer" | "shipping";
+export type MigrationScope =
+  "all" | "customer" | "shipping" | "option-images" | "agent-proposals";
 const shippingFile = "20261120000001_shipping.sql";
 // Exact SQL approved on 20 November. A changed file needs a fresh review.
 const shippingChecksum =
@@ -36,6 +44,8 @@ const customerMigrations = [
   "20261119000001_gifting_journeys.sql",
   "20261119000002_circles.sql",
   "20261120000001_shipping.sql",
+  optionImagesFile,
+  agentProposalsFile,
 ] as const;
 export type MigrationStatus = { id: string; appliedAt: string | null };
 export class MigrationBusyError extends Error {
@@ -55,6 +65,9 @@ export async function migrationFiles(scope: MigrationScope = "all") {
       throw new Error(`Packaged customer migration missing: ${required}`);
   }
   if (scope === "shipping") return [shippingFile];
+  if (scope === "option-images") return [optionImagesFile];
+  if (scope === "agent-proposals")
+    return [optionImagesFile, agentProposalsFile];
   return files.filter((file) =>
     customerMigrations.some((required) => required === file),
   );
@@ -104,7 +117,9 @@ export async function runPendingMigrations(
   const prerequisites =
     scope === "shipping"
       ? (await migrationFiles("customer")).filter((id) => id < shippingFile)
-      : [];
+      : scope === "option-images" || scope === "agent-proposals"
+        ? [...optionImagesPrerequisites]
+        : [];
   if (
     scope === "shipping" &&
     createHash("sha256").update(migrations[0].contents).digest("hex") !==
@@ -112,6 +127,22 @@ export async function runPendingMigrations(
   )
     throw new MigrationPreconditionError(
       "The shipping SQL differs from the approved version. Nothing was applied; ask for a new review.",
+    );
+  if (
+    (scope === "option-images" || scope === "agent-proposals") &&
+    createHash("sha256").update(migrations[0].contents).digest("hex") !==
+      optionImagesChecksum
+  )
+    throw new MigrationPreconditionError(
+      "The option-image SQL differs from the reviewed version. Nothing was applied; review the changed SQL first.",
+    );
+  if (
+    scope === "agent-proposals" &&
+    createHash("sha256").update(migrations[1].contents).digest("hex") !==
+      agentProposalsChecksum
+  )
+    throw new MigrationPreconditionError(
+      "The agent workspace SQL differs from the reviewed version. Nothing was applied; review the changed SQL first.",
     );
   const applied: string[] = [];
   await sql.begin(async (tx) => {
@@ -137,7 +168,7 @@ export async function runPendingMigrations(
     const missing = prerequisites.filter((id) => !seen.has(id));
     if (missing.length)
       throw new MigrationPreconditionError(
-        "Shipping was not applied. Earlier updates need separate review: " +
+        `${scope === "shipping" ? "Shipping" : "Option images"} was not applied. Earlier updates need separate review: ` +
           missing.join(", "),
       );
     const pending = migrations.filter((m) => !seen.has(m.id));

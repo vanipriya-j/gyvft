@@ -4,7 +4,7 @@ import { analyticsPage, googleParameters } from "@/lib/analytics/model";
 describe("analytics data boundaries", () => {
   it("removes customer IDs and tokens while preserving the journey screen", () => {
     const page = analyticsPage(
-      "/account/projects/a29f35c6-42ad-4bf5-b227-5687bf6ad7ea",
+      "/account/projects/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
       "view=quote&token=secret&email=person@example.com",
     );
     expect(page).toEqual({
@@ -26,6 +26,10 @@ describe("analytics data boundaries", () => {
       "/studio",
       "/setup/shipping",
       "/api/events",
+      "/mcp",
+      "/mcp/oauth/authorize",
+      "/connect/gyvft-agent",
+      "/.well-known/oauth-protected-resource",
       "/account/invitations/private-token",
       "/account/circle-invitations/private-token",
       "/account/password/secret",

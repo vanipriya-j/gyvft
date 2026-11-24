@@ -35,6 +35,11 @@ import {
 } from "@/lib/customer/notifications";
 import { getSql } from "@/lib/database/client";
 import { conversionReport } from "@/lib/customer/conversion-report";
+import {
+  saveOptionDraft,
+  publishOptionDraft,
+} from "@/lib/customer/option-drafts";
+import { mcpSettings, setMcpEnabled, revokeMcpGrant } from "@/lib/mcp/settings";
 import { shippingCommand } from "@/lib/customer/shipping-commands";
 import { DelhiveryError } from "@/services/shipping/delhivery";
 import { notificationStatus } from "@/lib/customer/notification-status";
@@ -138,6 +143,26 @@ export async function POST(request: Request) {
     }
     if (raw.op === "conversion_report")
       return reply({ ok: true, report: await conversionReport(raw) });
+    if (raw.op === "mcp_status")
+      return reply({ ok: true, settings: await mcpSettings() });
+    if (raw.op === "mcp_enabled") {
+      await setMcpEnabled(z.boolean().parse(raw.enabled));
+      return reply({
+        ok: true,
+        settings: await mcpSettings(),
+        message: raw.enabled
+          ? "GPT connections enabled. Authorise ChatGPT to connect."
+          : "GPT access disabled and existing connections revoked.",
+      });
+    }
+    if (raw.op === "mcp_revoke") {
+      await revokeMcpGrant(z.string().uuid().parse(raw.grant_id));
+      return reply({
+        ok: true,
+        settings: await mcpSettings(),
+        message: "GPT connection revoked.",
+      });
+    }
     if (raw.op === "snapshot")
       return reply({
         ok: true,
@@ -264,7 +289,30 @@ export async function POST(request: Request) {
         message: `Processed ${result.candidates} due notifications; ${result.accepted} accepted by provider. Future retries and uncertain sends are not resent by this action.`,
       });
     }
-    if (raw.op === "publish_gift_option")
+    if (raw.op === "save_option_draft")
+      return reply({
+        ok: true,
+        draft: await saveOptionDraft(
+          {
+            project_id: id,
+            client_reference: z.string().uuid().parse(raw.request_id),
+            option_id: raw.option_id,
+            expected_version: raw.expected_version,
+            option: raw,
+            images: raw.images,
+          },
+          "operations",
+        ),
+        message:
+          "Private option draft saved. The customer has not been notified.",
+      });
+    if (raw.op === "publish_option_draft")
+      await publishOptionDraft(
+        id,
+        z.string().uuid().parse(raw.option_id),
+        z.number().int().positive().parse(raw.expected_version),
+      );
+    else if (raw.op === "publish_gift_option")
       await publishGiftOption(id, z.string().uuid().parse(raw.request_id), raw);
     else if (raw.op === "gift_visibility")
       await setGiftVisibility(

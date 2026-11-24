@@ -16,7 +16,11 @@ const safeModes = new Set(["signup", "login", "forgot", "recover", "reset"]);
 
 /** No customer names, account/gift IDs, recovery tokens or arbitrary URL queries. */
 export function analyticsPage(pathname: string, query = "") {
-  if (/^\/(operations(?:-review)?|studio|setup|api)(\/|$)/.test(pathname))
+  if (
+    /^\/(operations(?:-review)?|studio|setup|api|mcp|connect\/gyvft-agent|\.well-known)(\/|$)/.test(
+      pathname,
+    )
+  )
     return null;
   if (/^\/account\/(?:circle-)?invitations?(\/|$)/.test(pathname)) return null;
   let path = pathname.replace(/\/$/, "") || "/";
