@@ -2,6 +2,7 @@ import { getSql } from "@/lib/database/client";
 import { getCustomerAccount } from "@/lib/customer/session";
 import { validSetupSecret } from "@/lib/security/setup-secret";
 import { uuidPattern } from "@/lib/customer/model";
+import { operationsIntakeReady } from "@/lib/customer/operations-intake";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function GET(
@@ -19,6 +20,7 @@ export async function GET(
       "gift-option-image",
       "moment",
       "approval-draft",
+      "requirement",
     ].includes(kind)
   )
     return new Response(null, { status: 404 });
@@ -27,6 +29,23 @@ export async function GET(
   if (!operator && !account && kind !== "moment")
     return new Response(null, { status: 404 });
   const sql = getSql();
+  if (kind === "requirement") {
+    if (!(await operationsIntakeReady(sql)))
+      return new Response(null, { status: 404 });
+    const [file] =
+      await sql`SELECT f.file_data,f.mime_type,f.filename FROM gyvft_requirement_attachments f JOIN customer_projects p ON p.id=f.project_id WHERE f.id=${id}::uuid AND (${operator} OR p.customer_account_id=${account?.id || null}::uuid)`;
+    if (!file) return new Response(null, { status: 404 });
+    return new Response(new Uint8Array(file.file_data), {
+      headers: {
+        "Content-Type": file.mime_type,
+        "Content-Disposition": `attachment; filename="requirement"; filename*=UTF-8''${encodeURIComponent(file.filename).replace(/'/g, "%27")}`,
+        "Cache-Control": "private, no-store",
+        Vary: "Cookie",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; sandbox",
+      },
+    });
+  }
   if (kind === "gift-option-image") {
     const [table] =
       await sql`SELECT to_regclass('gyvft_gift_option_images')::text AS name`;

@@ -4,6 +4,11 @@ import path from "path";
 import type { Sql } from "postgres";
 import type { MigrationProgress } from "./migration-progress";
 import {
+  operationsIntakeFile,
+  operationsIntakeChecksum,
+  operationsIntakePrerequisites,
+} from "./operations-intake-activation";
+import {
   optionImagesFile,
   optionImagesChecksum,
   optionImagesPrerequisites,
@@ -23,7 +28,12 @@ const migrationDirectory = path.join(process.cwd(), "supabase", "migrations");
 // Transaction-scoped: safe with connection pooling, shared by web and CLI runners.
 const migrationLock = 714093821;
 export type MigrationScope =
-  "all" | "customer" | "shipping" | "option-images" | "agent-proposals";
+  | "all"
+  | "customer"
+  | "shipping"
+  | "option-images"
+  | "agent-proposals"
+  | "operations-intake";
 const shippingFile = "20261120000001_shipping.sql";
 // Exact SQL approved on 20 November. A changed file needs a fresh review.
 const shippingChecksum =
@@ -46,6 +56,7 @@ const customerMigrations = [
   "20261120000001_shipping.sql",
   optionImagesFile,
   agentProposalsFile,
+  operationsIntakeFile,
 ] as const;
 export type MigrationStatus = { id: string; appliedAt: string | null };
 export class MigrationBusyError extends Error {
@@ -66,6 +77,7 @@ export async function migrationFiles(scope: MigrationScope = "all") {
   }
   if (scope === "shipping") return [shippingFile];
   if (scope === "option-images") return [optionImagesFile];
+  if (scope === "operations-intake") return [operationsIntakeFile];
   if (scope === "agent-proposals")
     return [optionImagesFile, agentProposalsFile];
   return files.filter((file) =>
@@ -119,7 +131,17 @@ export async function runPendingMigrations(
       ? (await migrationFiles("customer")).filter((id) => id < shippingFile)
       : scope === "option-images" || scope === "agent-proposals"
         ? [...optionImagesPrerequisites]
-        : [];
+        : scope === "operations-intake"
+          ? [...operationsIntakePrerequisites]
+          : [];
+  if (
+    scope === "operations-intake" &&
+    createHash("sha256").update(migrations[0].contents).digest("hex") !==
+      operationsIntakeChecksum
+  )
+    throw new MigrationPreconditionError(
+      "The Operations intake SQL differs from the reviewed version. Nothing was applied; review the changed SQL first.",
+    );
   if (
     scope === "shipping" &&
     createHash("sha256").update(migrations[0].contents).digest("hex") !==
@@ -168,7 +190,7 @@ export async function runPendingMigrations(
     const missing = prerequisites.filter((id) => !seen.has(id));
     if (missing.length)
       throw new MigrationPreconditionError(
-        `${scope === "shipping" ? "Shipping" : "Option images"} was not applied. Earlier updates need separate review: ` +
+        `${scope === "shipping" ? "Shipping" : scope === "operations-intake" ? "Operations intake" : "Option images"} was not applied. Earlier updates need separate review: ` +
           missing.join(", "),
       );
     const pending = migrations.filter((m) => !seen.has(m.id));

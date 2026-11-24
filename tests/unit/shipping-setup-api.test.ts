@@ -113,3 +113,26 @@ it("returns a blocked prerequisite without claiming migration success", async ()
     message: "Earlier updates need separate review.",
   });
 });
+it("requires approval and uses only the Operations intake scope", async () => {
+  const secret = "local-setup-operator-secret";
+  expect(
+    (await command({ action: "operations-intake-migrate", secret })).status,
+  ).toBe(400);
+  expect(mocks.run).not.toHaveBeenCalled();
+  mocks.run.mockResolvedValue(["20261124000003_operations_intake.sql"]);
+  expect(
+    (
+      await command({
+        action: "operations-intake-migrate",
+        secret,
+        confirm: true,
+        filename: "unrelated.sql",
+      })
+    ).status,
+  ).toBe(200);
+  expect(mocks.run).toHaveBeenCalledExactlyOnceWith(
+    "fixture-sql",
+    undefined,
+    "operations-intake",
+  );
+});

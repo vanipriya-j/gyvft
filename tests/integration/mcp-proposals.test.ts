@@ -319,10 +319,11 @@ describe.skipIf(!uri)(
         "io.modelcontextprotocol/protocolVersion": "2026-07-28",
         "io.modelcontextprotocol/clientCapabilities": {},
       };
-      for (const headers of [
+      const mismatchedHeaders: Record<string, string>[] = [
         { "MCP-Protocol-Version": "2026-07-28" },
         { "MCP-Protocol-Version": "2026-07-28", "Mcp-Method": "ping" },
-      ]) {
+      ];
+      for (const headers of mismatchedHeaders) {
         const rejected = await protocol(
           {
             jsonrpc: "2.0",
