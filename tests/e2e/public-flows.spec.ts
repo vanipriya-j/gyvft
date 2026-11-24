@@ -93,9 +93,16 @@ test("mobile homepage shows concise copy, signup and the gift image in the first
     .boundingBox();
   expect(image!.y + image!.height).toBeLessThanOrEqual(656);
   expect(signup!.y + signup!.height).toBeLessThanOrEqual(656);
+  expect(image!.y).toBeLessThanOrEqual(signup!.y);
+  expect(image!.y + image!.height).toBeGreaterThanOrEqual(
+    signup!.y + signup!.height,
+  );
   await expect(
     hero.getByRole("button", { name: "65 sec film", exact: true }),
   ).toBeVisible();
+  await hero.getByRole("button", { name: "65 sec film", exact: true }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.getByRole("button", { name: "Close film", exact: true }).click();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,
