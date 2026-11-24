@@ -13,7 +13,7 @@
 | 9 | NatWest Team Event Badges | Ready | Rename/rewrite from Barclays | Verify NatWest wording |
 | 10 | Private Diwali Hampers | Ready (`diwali-gifting/hero.png`) | Existing site copy | Verify only — must not reuse Thambi 100 image; asset folder is `diwali-gifting` |
 | 11 | Chinmay — Brand Identity | Ready | New page copy needed | Supply/approve project narrative |
-| 12 | BITS 2001 Reunion Yearbook | Interim | New page copy needed | Replace image later if desired; approve scope |
+| 12 | BITS 2001 Reunion Yearbook | Refreshed from owner’s finished-book photos | Updated for the 25-year reunion | Owner requested styled mockups and publication, 24 November 2026; new visuals are labelled styled product mockups |
 | 13 | TM Karthik — Crew Gifting | Ready | New page copy needed | Verify plays and recurring-gift framing |
 | 14 | Jannal Oram | Ready | New page copy needed | Supply/approve project narrative |
 | 15 | Root360 | Ready | New page copy needed | Supply/approve project narrative |

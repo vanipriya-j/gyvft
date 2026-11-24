@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Orient and BITS case-study update — 24 November 2026
+
+The owner requested retaining the existing Stories collection, adding Orient Star’s Diwali curation at the top, then restaging finished BITS yearbook photographs in GYVFT’s visual language and publishing the result. See [Orient provenance](gyvft/orient-star.md) and [BITS provenance](gyvft/bits-2001.md). Orient is featured once above the category sections; the earlier story order is retained. BITS replaces its interim visual with two clearly labelled styled product mockups, updates its narrative around the 25-year reunion and adds an illustrated-spread gallery. The other 15 existing story records and all redirects are unchanged. Gallery images preserve their aspect ratios and the Orient card has a readable transcript. A confirmed reduced-motion hydration issue in `MotionReveal` is fixed without changing ordinary animations or layouts. No migration, data deletion or Shopify operation accompanies this content release.
+
 ## Account-first customer website launch — 23 November 2026
 
 24 November update: the owner supplied the new 59-second solution film. Its web copy, frame poster, Drive fallback link and visible-text alternative replace the earlier 86-second version. The original problem film is preserved. The new MP4 has no embedded captions; the timed track is explicitly labelled as descriptions of on-screen text, with a readable alternative, rather than retaining the old narration captions. See the film provenance in [CUSTOMER-WEBSITE.md](CUSTOMER-WEBSITE.md).

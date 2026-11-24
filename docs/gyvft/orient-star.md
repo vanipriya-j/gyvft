@@ -28,14 +28,14 @@ These are artwork/mockup visuals, identified accordingly in the gallery. They ar
 
 ## Release
 
-Review branch only. No production publication, migration, customer-data operation or Shopify write is part of this addition. The existing optional gallery field is now rendered when present; older stories have no gallery, so their presentation is unchanged.
+Initially prepared as a review branch. The owner subsequently requested first placement for Orient and publication of the refreshed case-study work alongside BITS. No migration, customer-data operation or Shopify write is involved. The existing optional gallery field is now rendered when present. BITS uses this same gallery support for its newly requested illustrated spread; the other earlier stories retain their existing presentation.
 
 ## Verification
 
 - Production build passes; the route is statically generated.
 - Browser checks at 320, 390 and 1440 pixels: HTTP 200, no horizontal overflow or JavaScript errors, both gallery images load at their full aspect ratios, and the greeting-card disclosure opens by keyboard with a 44-pixel control.
 - The browser pass exposed an existing reduced-motion hydration bug in `MotionReveal`: content could retain its initial zero opacity when the motion preference became available. An explicit immediate visible state fixes this without changing normal-motion animation or page layout. Visibility was checked on all 17 story headings with reduced motion and on Orient with normal motion.
-- All 16 original story routes return HTTP 200 and have no new gallery. A direct record comparison against the base commit confirms the original content, order and redirects are unchanged; the listing now has 17 unique stories.
+- Before the BITS refresh, all 16 original story routes returned HTTP 200 with no new gallery, and record comparison confirmed they were unchanged. After the owner requested the BITS update, that one existing story gains its illustrated-spread gallery; the other 15 retain their content and presentation. The listing has 17 unique stories, Orient first, with the previous stories in their original category order. Redirects are unchanged.
 - Repository lint passes with two existing warnings in `tests/unit/public-home-interactions.test.tsx`. The original mobile homepage browser assertion used a dot-all regular-expression flag unsupported by the repo’s ES2017 TypeScript target; its equivalent `[\s\S]` form removes that typecheck blocker without changing the website.
 - Full TypeScript checking passes after that equivalent assertion correction; changed source files also pass ESLint.
 - Local screenshots and the browser verification script are kept under ignored `work/orient-review/`.

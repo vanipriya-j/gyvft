@@ -94,7 +94,7 @@ export default async function StoryDetailPage({ params }: PageProps) {
           >
             The details, brought together
           </h2>
-          <div className="mt-6 grid items-start gap-8 md:grid-cols-2">
+          <div className={`mt-6 grid items-start gap-8 ${story.gallery.length > 1 ? "md:grid-cols-2" : "max-w-5xl"}`}>
             {story.gallery.map((media) => (
               <figure className="min-w-0" key={media.src}>
                 <a
