@@ -24,6 +24,19 @@ async function writeApprovalDraft(
       gift_selection_id: z.string().uuid().nullable().optional(),
     })
     .parse(raw);
+  if (raw.expected_draft_version !== undefined) {
+    const expected = z
+      .number()
+      .int()
+      .nonnegative()
+      .parse(raw.expected_draft_version);
+    const [current] =
+      await tx`SELECT version FROM gyvft_gift_approval_drafts WHERE project_id=${projectId}::uuid AND kind=${kind} FOR UPDATE`;
+    if (Number(current?.version || 0) !== expected)
+      throw new JourneyError(
+        "The approval draft changed. Read its latest version before saving.",
+      );
+  }
   let bytes: Buffer | null = null,
     mime: string | null = null;
   if (raw.image) {

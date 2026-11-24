@@ -54,7 +54,7 @@ export function AgentConsent({
         Connect GPT to your gifting desk
       </h1>
       <p className="mt-3 text-muted-text">
-        Authorise ChatGPT to help prepare gift options in GYVFT.
+        Authorise ChatGPT to act on your instructions in GYVFT.
       </p>
       <section className="mt-6 rounded-xl border border-border bg-paper p-5">
         <h2 className="font-medium">Access you are granting</h2>
@@ -67,10 +67,52 @@ export function AgentConsent({
               Create and edit private option drafts, including attached images.
             </li>
           )}
+          {scopes.includes("gyvft:operations:read") && (
+            <li>
+              Read Operations status, approval versions, receipts, messages and
+              customer records.
+            </li>
+          )}
+          {scopes.includes("gyvft:options:publish") && (
+            <li>
+              Publish reviewed gift options and queue their customer
+              notifications.
+            </li>
+          )}
+          {scopes.includes("gyvft:approvals:write") && (
+            <li>
+              Prepare and publish quotes/artwork. Record the customer’s offline
+              approval with private attached proof.
+            </li>
+          )}
+          {scopes.includes("gyvft:messages:write") && (
+            <li>Send customer messages and email notifications.</li>
+          )}
+          {scopes.includes("gyvft:payments:write") && (
+            <li>
+              Send payment requests and record your explicit confirmation of
+              money received.
+            </li>
+          )}
+          {scopes.includes("gyvft:orders:write") && (
+            <li>
+              Create the official Shopify order when its approval, advance and
+              delivery checks pass.
+            </li>
+          )}
+          {scopes.includes("gyvft:customers:write") && (
+            <li>
+              Create customer accounts, save requirements and files, and send a
+              separate password-setup email.
+            </li>
+          )}
         </ul>
         <p className="mt-4 text-sm">
-          You review and publish in Operations. Revoke this connection anytime
-          under Settings & connections.
+          Instruct the agent explicitly before publishing, emailing or recording
+          financial actions. Customer approval requires evidence of their
+          explicit consent; payment verification requires your confirmation of
+          actual receipt. Revoke this connection anytime under Settings &
+          connections.
         </p>
       </section>
       <form onSubmit={submit} className="mt-6 space-y-4" aria-busy={busy}>

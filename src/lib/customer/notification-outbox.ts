@@ -5,6 +5,7 @@ import { getSql } from "@/lib/database/client";
 import { logger } from "@/lib/logging/logger";
 import { demoAccountIds } from "./demo-accounts";
 import { notificationUrl, notificationText } from "./notification-model";
+import { paymentRequestEmail } from "./payment-request-email";
 import {
   NotificationTransportError,
   sendNotificationEmail,
@@ -31,6 +32,7 @@ export async function queueNotification(
     ON CONFLICT(event_key) DO NOTHING`;
 }
 type Job = {
+  event_key: string;
   id: string;
   project_id: string;
   recipient: string;
@@ -61,12 +63,17 @@ export async function deliverNotifications(projectId?: string) {
     await Promise.all(
       jobs.slice(start, start + 2).map(async (job) => {
         try {
+          const payment = await paymentRequestEmail(sql, job.event_key);
+          if (payment?.superseded) {
+            await sql`UPDATE gyvft_customer_notifications SET state='failed',attempts=8 WHERE id=${job.id}::uuid AND state='sending' AND attempts=${job.attempts}`;
+            return;
+          }
           const url = notificationUrl(job.project_id, job.destination);
           const input = {
             id: job.id,
             to: job.recipient,
             subject: job.subject,
-            text: notificationText(url),
+            text: payment?.text || notificationText(url),
           };
           try {
             await sendNotificationEmail(input);

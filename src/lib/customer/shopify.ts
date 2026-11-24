@@ -211,7 +211,18 @@ export function provinceCode(state: string) {
     ? value
     : states[state.toLowerCase().replace(/[^a-z]/g, "")] || null;
 }
-export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
+export async function createOrSyncShopifyOrder(
+  id: string,
+  confirmed: boolean,
+  expected?: {
+    quoteId: string;
+    quoteVersion: number;
+    paidPaise: number;
+    createOnly: boolean;
+    designId: string;
+    designVersion: number;
+  },
+) {
   const sql = getSql();
   const [p] =
     await sql`SELECT p.*,a.email,a.shopify_customer_id FROM customer_projects p JOIN gyvft_customer_accounts a ON a.id=p.customer_account_id WHERE p.id=${id}::uuid`;
@@ -219,6 +230,20 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
     throw new ShopifyError("Convert the approved quote to a B2C order first.");
   if (String(p.submission_key || "").startsWith("gyvft-demo-"))
     throw new ShopifyError("Sample requests cannot create Shopify orders.");
+  if (expected) {
+    const [quote] =
+      await sql`SELECT id,version,status FROM customer_project_approvals WHERE project_id=${id}::uuid AND kind='proposal' ORDER BY version DESC LIMIT 1`;
+    if (
+      !quote ||
+      quote.id !== expected.quoteId ||
+      Number(quote.version) !== expected.quoteVersion ||
+      quote.status !== "approved" ||
+      Number(p.paid_paise) !== expected.paidPaise
+    )
+      throw new ShopifyError(
+        "The approved quote or verified receipts changed. Review Operations before creating the official order.",
+      );
+  }
   const customerId =
     p.shopify_customer_id || (await syncShopifyCustomer(p.customer_account_id));
   if (!customerId)
@@ -258,7 +283,7 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
       );
     if (received === verified) {
       await sql`UPDATE customer_projects SET shopify_payment_state='idle' WHERE id=${id}::uuid`;
-    } else if (confirmed) {
+    } else if (confirmed && !expected?.createOnly) {
       if (verified !== Number(p.total_paise))
         throw new ShopifyError(
           "The order is linked. Additional partial receipts remain verified in GYVFT; sync the Shopify balance after the full order total is verified, or reconcile it manually in Shopify.",
@@ -305,6 +330,14 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
     );
   const [approvedQuote] =
     await sql`SELECT id,version,status,amount_paise,gift_selection_id FROM customer_project_approvals WHERE project_id=${id}::uuid AND kind='proposal' ORDER BY version DESC LIMIT 1`;
+  if (
+    expected &&
+    (approvedQuote?.id !== expected.quoteId ||
+      Number(approvedQuote?.version) !== expected.quoteVersion)
+  )
+    throw new ShopifyError(
+      "The quote changed during the handoff. Review it before creating the official order.",
+    );
   const [selectedGift] =
     await sql`SELECT id,snapshot FROM gyvft_gift_selections WHERE project_id=${id}::uuid ORDER BY created_at DESC,id DESC LIMIT 1`;
   const [openChange] =
@@ -324,7 +357,15 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
   const items =
     await sql`SELECT * FROM customer_order_items WHERE project_id=${id}::uuid`;
   const [design] =
-    await sql`SELECT status FROM customer_project_approvals WHERE project_id=${id}::uuid AND kind='design' ORDER BY version DESC LIMIT 1`;
+    await sql`SELECT id,version,status FROM customer_project_approvals WHERE project_id=${id}::uuid AND kind='design' ORDER BY version DESC LIMIT 1`;
+  if (
+    expected &&
+    (design?.id !== expected.designId ||
+      Number(design?.version) !== expected.designVersion)
+  )
+    throw new ShopifyError(
+      "The approved artwork changed during the handoff. Review it before creating the official order.",
+    );
   if (!address || !provinceCode(address.state))
     throw new ShopifyError(
       "Save a complete Indian shipping address with a recognised state.",
@@ -422,6 +463,7 @@ export async function createOrSyncShopifyOrder(id: string, confirmed: boolean) {
       AND (SELECT a.status FROM customer_project_approvals a WHERE a.id=${approvedQuote.id}::uuid)='approved'
       AND COALESCE((SELECT s.id FROM gyvft_gift_selections s WHERE s.project_id=${id}::uuid ORDER BY s.created_at DESC,s.id DESC LIMIT 1),'00000000-0000-0000-0000-000000000000'::uuid)=COALESCE(${selectedGift?.id || null}::uuid,'00000000-0000-0000-0000-000000000000'::uuid)
       AND EXISTS(SELECT 1 FROM customer_delivery_addresses a WHERE a.project_id=${id}::uuid AND a.recipient_name=${address.recipient_name} AND a.phone=${address.phone} AND a.address=${address.address} AND a.city=${address.city} AND a.state=${address.state} AND a.postal_code=${address.postal_code})
+      AND (${!expected} OR ((SELECT a.id FROM customer_project_approvals a WHERE a.project_id=${id}::uuid AND a.kind='design' ORDER BY a.version DESC LIMIT 1)=${expected?.designId || null}::uuid AND EXISTS(SELECT 1 FROM customer_project_approvals a WHERE a.id=${expected?.designId || null}::uuid AND a.status='approved')))
       AND NOT EXISTS(SELECT 1 FROM gyvft_gift_changes c WHERE c.project_id=${id}::uuid AND c.status='open') RETURNING id`;
   if (!claimed.length)
     throw new ShopifyError("Order creation is already in progress.");

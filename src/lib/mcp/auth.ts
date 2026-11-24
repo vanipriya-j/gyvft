@@ -69,7 +69,7 @@ export const authorisationInput = z.object({
   code_challenge: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
   state: z.string().min(1).max(2048),
   resource: z.string().refine((value) => value === mcpResource()),
-  scope: z.string().max(200).default(mcpScopes.join(" ")),
+  scope: z.string().max(600).default(mcpScopes.join(" ")),
 });
 type Authorisation = z.infer<typeof authorisationInput>;
 function scopesFor(value: string) {

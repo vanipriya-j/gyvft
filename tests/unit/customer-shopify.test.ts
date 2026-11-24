@@ -271,6 +271,87 @@ describe("Shopify customer identity and retry boundaries", () => {
     );
     expect(fetch).toHaveBeenCalledTimes(1);
   });
+  it("agent create-only reconciles an existing order without syncing an additional receipt", async () => {
+    const quoteId = "22222222-2222-4222-8222-222222222222";
+    mocks.sql
+      .mockResolvedValueOnce([
+        {
+          id: owner,
+          kind: "project",
+          customer_type: "b2c",
+          total_paise: 100000,
+          paid_paise: 100000,
+          shopify_customer_id: "gid://shopify/Customer/1",
+        },
+      ])
+      .mockResolvedValueOnce([{ id: quoteId, version: 3, status: "approved" }])
+      .mockResolvedValue([]);
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({
+          data: {
+            orders: {
+              nodes: [
+                {
+                  id: "gid://shopify/Order/1",
+                  name: "#1",
+                  customer: { id: "gid://shopify/Customer/1" },
+                  totalPriceSet: {
+                    shopMoney: { amount: "1000.00", currencyCode: "INR" },
+                  },
+                  totalReceivedSet: {
+                    shopMoney: { amount: "500.00", currencyCode: "INR" },
+                  },
+                },
+              ],
+            },
+          },
+        }),
+      );
+    vi.stubGlobal("fetch", fetch);
+    expect(
+      await createOrSyncShopifyOrder(owner, true, {
+        quoteId,
+        quoteVersion: 3,
+        paidPaise: 100000,
+        createOnly: true,
+        designId: owner,
+        designVersion: 1,
+      }),
+    ).toBe("#1");
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(fetch.mock.calls[0][1].body).query).not.toContain(
+      "mutation",
+    );
+  });
+  it("agent stale quote/paid snapshots block all external requests", async () => {
+    mocks.sql
+      .mockResolvedValueOnce([
+        {
+          id: owner,
+          kind: "project",
+          customer_type: "b2c",
+          total_paise: 100000,
+          paid_paise: 75000,
+          shopify_customer_id: "gid://shopify/Customer/1",
+        },
+      ])
+      .mockResolvedValueOnce([{ id: owner, version: 2, status: "approved" }]);
+    const fetch = vi.fn();
+    vi.stubGlobal("fetch", fetch);
+    await expect(
+      createOrSyncShopifyOrder(owner, true, {
+        quoteId: owner,
+        quoteVersion: 1,
+        paidPaise: 50000,
+        createOnly: true,
+        designId: owner,
+        designVersion: 1,
+      }),
+    ).rejects.toThrow("changed");
+    expect(fetch).not.toHaveBeenCalled();
+  });
   it("maps Indian state names and codes without inventing unknown states", () => {
     expect(provinceCode("Tamil Nadu")).toBe("TN");
     expect(provinceCode("KA")).toBe("KA");

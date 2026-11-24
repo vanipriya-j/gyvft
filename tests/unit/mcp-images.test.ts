@@ -8,6 +8,7 @@ import {
   openAiDownloadUrl,
   publicIpv4,
   prepareMcpImages,
+  prepareMcpRequirementFiles,
   optimiseMcpImage,
 } from "@/lib/mcp/images";
 beforeEach(() => {
@@ -60,6 +61,47 @@ describe("GPT image inputs", () => {
     expect(JSON.stringify(mocks.request.mock.calls[0][0])).not.toContain(
       "Authorization",
     );
+  });
+  it("downloads requirement PDFs through the same pinned transport and sanitises filenames", async () => {
+    const bytes = Buffer.from("%PDF-1.4\nFictional fixture\n%%EOF");
+    mocks.lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
+    mocks.request.mockImplementation(
+      (_options: unknown, callback: (response: unknown) => void) =>
+        Object.assign(new EventEmitter(), {
+          end() {
+            queueMicrotask(() => {
+              const response = Object.assign(new EventEmitter(), {
+                statusCode: 200,
+                headers: { "content-length": String(bytes.length) },
+                resume: vi.fn(),
+                destroy: vi.fn(),
+              });
+              callback(response);
+              queueMicrotask(() => {
+                response.emit("data", bytes);
+                response.emit("end");
+              });
+            });
+          },
+          destroy: vi.fn(),
+        }),
+    );
+    const [file] = await prepareMcpRequirementFiles([
+      {
+        file_id: "file_pdf",
+        download_url: "https://files.oaiusercontent.com/requirement",
+        file_name: "folder/" + "x".repeat(160),
+      },
+    ]);
+    expect(file.mime).toBe("application/pdf");
+    expect(file.filename).not.toContain("/");
+    expect(file.filename).toHaveLength(160);
+    expect(file.filename.endsWith(".pdf")).toBe(true);
+    expect(Buffer.from(file.data, "base64")).toEqual(bytes);
+    expect(mocks.request.mock.calls[0][0]).toMatchObject({
+      hostname: "93.184.216.34",
+      servername: "files.oaiusercontent.com",
+    });
   });
   it("revalidates redirected hosts and rejects malformed redirects", async () => {
     mocks.lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);

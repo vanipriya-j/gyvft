@@ -4,6 +4,11 @@ import path from "path";
 import type { Sql } from "postgres";
 import type { MigrationProgress } from "./migration-progress";
 import {
+  agentOperationsFile,
+  agentOperationsChecksum,
+  agentOperationsPrerequisites,
+} from "./agent-operations-activation";
+import {
   operationsIntakeFile,
   operationsIntakeChecksum,
   operationsIntakePrerequisites,
@@ -33,7 +38,8 @@ export type MigrationScope =
   | "shipping"
   | "option-images"
   | "agent-proposals"
-  | "operations-intake";
+  | "operations-intake"
+  | "agent-operations";
 const shippingFile = "20261120000001_shipping.sql";
 // Exact SQL approved on 20 November. A changed file needs a fresh review.
 const shippingChecksum =
@@ -57,6 +63,7 @@ const customerMigrations = [
   optionImagesFile,
   agentProposalsFile,
   operationsIntakeFile,
+  agentOperationsFile,
 ] as const;
 export type MigrationStatus = { id: string; appliedAt: string | null };
 export class MigrationBusyError extends Error {
@@ -75,6 +82,8 @@ export async function migrationFiles(scope: MigrationScope = "all") {
     if (!files.includes(required))
       throw new Error(`Packaged customer migration missing: ${required}`);
   }
+  if (scope === "agent-operations")
+    return [operationsIntakeFile, agentOperationsFile];
   if (scope === "shipping") return [shippingFile];
   if (scope === "option-images") return [optionImagesFile];
   if (scope === "operations-intake") return [operationsIntakeFile];
@@ -127,13 +136,25 @@ export async function runPendingMigrations(
     })),
   );
   const prerequisites =
-    scope === "shipping"
-      ? (await migrationFiles("customer")).filter((id) => id < shippingFile)
-      : scope === "option-images" || scope === "agent-proposals"
-        ? [...optionImagesPrerequisites]
-        : scope === "operations-intake"
-          ? [...operationsIntakePrerequisites]
-          : [];
+    scope === "agent-operations"
+      ? [...agentOperationsPrerequisites]
+      : scope === "shipping"
+        ? (await migrationFiles("customer")).filter((id) => id < shippingFile)
+        : scope === "option-images" || scope === "agent-proposals"
+          ? [...optionImagesPrerequisites]
+          : scope === "operations-intake"
+            ? [...operationsIntakePrerequisites]
+            : [];
+  if (
+    scope === "agent-operations" &&
+    (createHash("sha256").update(migrations[0].contents).digest("hex") !==
+      operationsIntakeChecksum ||
+      createHash("sha256").update(migrations[1].contents).digest("hex") !==
+        agentOperationsChecksum)
+  )
+    throw new MigrationPreconditionError(
+      "The agent Operations SQL differs from the reviewed version. Nothing was applied; review the changed SQL first.",
+    );
   if (
     scope === "operations-intake" &&
     createHash("sha256").update(migrations[0].contents).digest("hex") !==
@@ -190,7 +211,7 @@ export async function runPendingMigrations(
     const missing = prerequisites.filter((id) => !seen.has(id));
     if (missing.length)
       throw new MigrationPreconditionError(
-        `${scope === "shipping" ? "Shipping" : scope === "operations-intake" ? "Operations intake" : "Option images"} was not applied. Earlier updates need separate review: ` +
+        `${scope === "shipping" ? "Shipping" : scope === "agent-operations" ? "Agent Operations" : scope === "operations-intake" ? "Operations intake" : "Option images"} was not applied. Earlier updates need separate review: ` +
           missing.join(", "),
       );
     const pending = migrations.filter((m) => !seen.has(m.id));

@@ -16,6 +16,7 @@ import { queueNotification } from "./notifications";
 import { notificationRows } from "./notification-status";
 import { assertShippingProgress } from "./shipping";
 import { requirementAttachmentsFor } from "./operations-intake";
+import {agentOperationsReady,offlineApprovalsFor} from './agent-operations';
 export class PilotError extends Error {}
 export async function pilotList(query = "") {
   const q = `%${query.slice(0, 120)}%`;
@@ -47,6 +48,8 @@ export async function pilotDetail(id: string) {
     sql`SELECT operation,created_at FROM gyvft_customer_admin_events WHERE project_id=${id}::uuid ORDER BY created_at DESC LIMIT 20`,
   ]);
   return {
+    agentOperationsInstalled:await agentOperationsReady(sql),
+    offlineApprovals:await offlineApprovalsFor(id,sql),
     attachments: await requirementAttachmentsFor(id, sql),
     workspace: await giftWorkspace(id),
     journey: await operationalExtras(id),
@@ -281,6 +284,20 @@ export async function mutatePilot(raw: Record<string, unknown>) {
       eventBody =
         "View your request for the latest payment instructions and order reference.";
     } else if (op === "payment" || op === "reject_payment") {
+      if (raw.expected_quote_id !== undefined) {
+        const [quote] =
+          await tx`SELECT id,version,status FROM customer_project_approvals WHERE project_id=${id}::uuid AND kind='proposal' ORDER BY version DESC LIMIT 1`;
+        if (
+          !quote ||
+          quote.id !== raw.expected_quote_id ||
+          Number(quote.version) !== raw.expected_quote_version ||
+          quote.status !== "approved" ||
+          Number(p.paid_paise) !== raw.expected_paid_paise
+        )
+          throw new PilotError(
+            "The quote or verified payment position changed. Read the latest Operations status before recording receipt.",
+          );
+      }
       if (p.kind !== "project" || !p.total_paise)
         throw new PilotError(
           "Convert an approved quote before recording a payment.",
