@@ -23,6 +23,11 @@ import { OperationsPageHeader } from "@/components/operations/page-header";
 import { OperationsConversions } from "@/components/operations/conversions";
 import { AgentConnections } from "@/components/operations/agent-connections";
 import { OperationsNotifications } from "@/components/operations/notifications";
+import {
+  OperationsCustomerIntake,
+  CustomerSetupEmail,
+} from "@/components/operations/customer-intake";
+import { RequirementAttachments } from "@/components/customer/requirement-attachments";
 import { ShippingSettings } from "@/components/operations/shipping-settings";
 import { OperationsShipments } from "@/components/operations/shipments";
 import { deliveryLabel } from "@/lib/customer/notification-model";
@@ -72,6 +77,8 @@ type Directory = {
     name: string;
     gifts: number;
     paid: string;
+    setup_pending?: boolean;
+    setup_email_state?: string | null;
   }[];
   occasions: {
     id: string;
@@ -254,6 +261,32 @@ export function B2CAdmin({
       );
     return data;
   }, []);
+  const intakePost = useCallback(
+    async (payload: Record<string, unknown>, signal?: AbortSignal) => {
+      const response = await fetch("/api/operations/intake", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-setup-secret": secret.current,
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(45000)])
+          : AbortSignal.timeout(45000),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok)
+        throw Error(data.message || "Customer intake could not be confirmed.");
+      return data;
+    },
+    [],
+  );
+  async function refreshIntake() {
+    const data = await post({ op: "directory" });
+    setDirectory(data);
+    await loadList();
+  }
   async function loadList(search = query, signal?: AbortSignal) {
     const data = await post(
       { op: "list", query: search },
@@ -662,7 +695,15 @@ export function B2CAdmin({
                   title="Requests & orders"
                   description="See the next task, who owns it and what’s due."
                   meta={
-                    <span className="app-badge">{rows.length} requests</span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="app-badge">{rows.length} requests</span>
+                      <OperationsCustomerIntake
+                        post={intakePost}
+                        withRequirement
+                        onSaved={refreshIntake}
+                        onOpenRequest={(id) => open(id, "brief")}
+                      />
+                    </div>
                   }
                 />
                 <div className="app-toolbar">
@@ -939,6 +980,15 @@ export function B2CAdmin({
                         </dl>
                       )}
                       <CustomerStoryDetails value={p.gift_brief} />
+                      <RequirementAttachments
+                        files={detail.attachments}
+                        load={(id) =>
+                          fetch(`/api/customer-assets/requirement/${id}`, {
+                            headers: { "x-setup-secret": secret.current },
+                            cache: "no-store",
+                          })
+                        }
+                      />
                     </section>
                     <section className="app-panel">
                       <h2>Occasion & delivery</h2>
@@ -2002,6 +2052,13 @@ export function B2CAdmin({
               <OperationsPageHeader
                 title="Customers"
                 description="People you’re creating thoughtful gifts for."
+                meta={
+                  <OperationsCustomerIntake
+                    post={intakePost}
+                    onSaved={refreshIntake}
+                    onOpenRequest={(id) => open(id, "brief")}
+                  />
+                }
               />
             )}
             {area === "customers" && (
@@ -2010,7 +2067,7 @@ export function B2CAdmin({
                   <DirectoryLoading />
                 ) : !directory?.customers.length ? (
                   <p className="app-muted">
-                    Customer accounts appear here when people join GYVFT.
+                    Add a customer here, or invite them to join GYVFT.
                   </p>
                 ) : null}
                 {directory?.customers.map((c) => (
@@ -2021,17 +2078,37 @@ export function B2CAdmin({
                         {c.email} · {c.gifts} gifts · {money(Number(c.paid))}{" "}
                         verified
                       </p>
+                      {c.setup_pending && (
+                        <div className="mt-3">
+                          <span className="app-badge">
+                            Password setup pending
+                          </span>
+                          <CustomerSetupEmail
+                            accountId={c.id}
+                            post={intakePost}
+                          />
+                        </div>
+                      )}
                     </div>
-                    <button
-                      className="app-button"
-                      onClick={() => {
-                        setQuery(c.email);
-                        setFilter("all");
-                        void navigate("worklist", c.email);
-                      }}
-                    >
-                      View their gifts
-                    </button>
+                    <div className="app-actions">
+                      <OperationsCustomerIntake
+                        post={intakePost}
+                        initialCustomer={c}
+                        withRequirement
+                        onSaved={refreshIntake}
+                        onOpenRequest={(id) => open(id, "brief")}
+                      />
+                      <button
+                        className="app-button"
+                        onClick={() => {
+                          setQuery(c.email);
+                          setFilter("all");
+                          void navigate("worklist", c.email);
+                        }}
+                      >
+                        View their gifts
+                      </button>
+                    </div>
                   </article>
                 ))}
               </section>

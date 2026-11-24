@@ -82,7 +82,8 @@ export async function POST(request: Request) {
     body.action !== "migrate" &&
     body.action !== "shipping-migrate" &&
     body.action !== "option-images-migrate" &&
-    body.action !== "agent-proposals-migrate"
+    body.action !== "agent-proposals-migrate" &&
+    body.action !== "operations-intake-migrate"
   )
     return reply(
       { ok: false, message: "Choose check status or run migrations." },
@@ -92,7 +93,8 @@ export async function POST(request: Request) {
     body.action === "migrate" ||
     body.action === "shipping-migrate" ||
     body.action === "option-images-migrate" ||
-    body.action === "agent-proposals-migrate";
+    body.action === "agent-proposals-migrate" ||
+    body.action === "operations-intake-migrate";
   if (migrationAction && body.confirm !== true)
     return reply(
       {
@@ -114,7 +116,9 @@ export async function POST(request: Request) {
                 ? "option-images"
                 : body.action === "agent-proposals-migrate"
                   ? "agent-proposals"
-                  : "customer",
+                  : body.action === "operations-intake-migrate"
+                    ? "operations-intake"
+                    : "customer",
           )
         : [];
       if (migrationAction) {

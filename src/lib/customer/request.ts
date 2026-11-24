@@ -4,6 +4,7 @@ import { ownedProject } from "./data";
 import { getSql } from "@/lib/database/client";
 import type { GiftSelection } from "./gift-workspace-model";
 import type { OrderItem } from "./pilot-model";
+import { requirementAttachmentsFor } from "./operations-intake";
 
 /** An owned request and its related records. Ownership is checked before child reads. */
 export async function requestForAccount(id: string, accountId: string) {
@@ -83,6 +84,7 @@ export async function requestForAccount(id: string, accountId: string) {
     >`SELECT c.id,c.body,c.status,a.kind,a.version FROM gyvft_gift_changes c JOIN customer_project_approvals a ON a.id=c.approval_id WHERE c.project_id=${id}::uuid ORDER BY c.created_at DESC`,
   ]);
   return {
+    attachments: await requirementAttachmentsFor(id, sql),
     project,
     events,
     messages,

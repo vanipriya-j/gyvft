@@ -1,4 +1,5 @@
 import { MomentUploader } from "@/components/customer/moment-uploader";
+import { RequirementAttachments } from "@/components/customer/requirement-attachments";
 import { shipmentsForProject } from "@/lib/customer/shipping";
 import { CustomerShipments } from "@/components/customer/shipments";
 /* eslint-disable @next/next/no-img-element -- Session-protected gift media. */
@@ -416,6 +417,7 @@ export default async function GiftPage({
                 </p>
               )}
               <CustomerStoryDetails value={p.gift_brief} />
+              <RequirementAttachments files={request.attachments} />
               {!locked && !q && (
                 <Link className="app-button mt-4" href={href("edit")}>
                   Edit brief

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createHash } from "node:crypto";
 import { getSql } from "@/lib/database/client";
 import { giftWorkspace } from "@/lib/customer/gift-workspace";
+import { requirementAttachmentsFor } from "@/lib/customer/operations-intake";
 import {
   saveOptionDraft,
   optionDraftReplay,
@@ -130,7 +131,7 @@ export const mcpTools = [
 ];
 async function requestRecord(id: string) {
   const [record] =
-    await getSql()`SELECT id,title,brief,gift_brief,customer_type,organisation_name,stage,target_date,delivery_date FROM customer_projects WHERE id=${id}::uuid AND NOT is_draft AND COALESCE(submission_key,'') NOT LIKE 'gyvft-demo-%' AND (customer_account_id IS NULL OR NOT(customer_account_id=ANY(${demoAccountIds}::uuid[])))`;
+    await getSql()`SELECT id,title,brief,gift_brief,draft_document,customer_type,organisation_name,stage,target_date,delivery_date FROM customer_projects WHERE id=${id}::uuid AND NOT is_draft AND COALESCE(submission_key,'') NOT LIKE 'gyvft-demo-%' AND (customer_account_id IS NULL OR NOT(customer_account_id=ANY(${demoAccountIds}::uuid[])))`;
   if (!record) throw Error("Submitted request unavailable.");
   return record;
 }
@@ -165,6 +166,7 @@ export async function callMcpTool(
       workspace = await giftWorkspace(request_id);
     return {
       request,
+      attachments: await requirementAttachmentsFor(request_id),
       options: workspace.options.map((o) => ({
         id: o.id,
         title: o.title,

@@ -15,6 +15,7 @@ import {
 import { queueNotification } from "./notifications";
 import { notificationRows } from "./notification-status";
 import { assertShippingProgress } from "./shipping";
+import { requirementAttachmentsFor } from "./operations-intake";
 export class PilotError extends Error {}
 export async function pilotList(query = "") {
   const q = `%${query.slice(0, 120)}%`;
@@ -46,6 +47,7 @@ export async function pilotDetail(id: string) {
     sql`SELECT operation,created_at FROM gyvft_customer_admin_events WHERE project_id=${id}::uuid ORDER BY created_at DESC LIMIT 20`,
   ]);
   return {
+    attachments: await requirementAttachmentsFor(id, sql),
     workspace: await giftWorkspace(id),
     journey: await operationalExtras(id),
     project,

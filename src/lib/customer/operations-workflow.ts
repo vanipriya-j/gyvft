@@ -7,6 +7,7 @@ import { momentsFor } from "./moments";
 import { lineItemSchema } from "./pilot-model";
 import { z } from "zod";
 import { validImage } from "./images";
+import { intakeAccessFor } from "./operations-intake";
 async function writeApprovalDraft(
   tx: Sql,
   projectId: string,
@@ -120,5 +121,22 @@ export async function operationsDirectory() {
     sql`SELECT DISTINCT o.id,o.title,o.occasion_date::text,p.customer_email FROM gyvft_customer_occasions o JOIN customer_projects p ON p.occasion_id=o.id WHERE p.is_draft=false ORDER BY o.occasion_date::text LIMIT 100`,
     sql`SELECT p.id,p.title,p.customer_email,t.rating,t.public_permission,(SELECT count(*) FROM gyvft_gift_photos f WHERE f.project_id=p.id)::int AS photos FROM customer_projects p LEFT JOIN gyvft_gift_testimonials t ON t.project_id=p.id WHERE p.stage>=10 AND p.is_draft=false ORDER BY p.created_at DESC LIMIT 100`,
   ]);
-  return { customers, occasions, submissions };
+  const access = new Map(
+    (
+      await intakeAccessFor(
+        customers.map((c) => String(c.id)),
+        sql,
+      )
+    ).map((row) => [row.account_id, row]),
+  );
+  return {
+    customers: customers.map((customer) => ({
+      ...customer,
+      setup_pending: access.get(String(customer.id))?.setup_pending || false,
+      setup_email_state:
+        access.get(String(customer.id))?.setup_email_state || null,
+    })),
+    occasions,
+    submissions,
+  };
 }

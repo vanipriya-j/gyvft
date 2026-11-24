@@ -3,9 +3,14 @@ import { CustomerAuth } from "@/components/customer/auth";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; next?: string; mode?: string }>;
+  searchParams: Promise<{
+    reset?: string;
+    next?: string;
+    mode?: string;
+    setup?: string;
+  }>;
 }) {
-  const { reset, next, mode } = await searchParams;
+  const { reset, next, mode, setup } = await searchParams;
   const resetToken =
     typeof reset === "string" && reset.length <= 512 ? reset : undefined;
   const initialMode =
@@ -35,7 +40,9 @@ export default async function LoginPage({
       <section className="rounded-2xl border border-border bg-paper p-6 shadow-sm md:p-8">
         <h2 className="mb-2 font-serif text-3xl">
           {resetToken
-            ? "Choose a new password"
+            ? setup === "1"
+              ? "Choose your password"
+              : "Choose a new password"
             : initialMode === "signup"
               ? "Make yourself at home."
               : initialMode === "recover"
@@ -44,7 +51,9 @@ export default async function LoginPage({
         </h2>
         <p className="mb-5 text-sm leading-relaxed text-muted-text">
           {resetToken
-            ? "Use the secure link from your email to restore access to My GYVFT."
+            ? setup === "1"
+              ? "Aarla has prepared your GYVFT account. Choose your own password, then sign in to see your gifting requests."
+              : "Use the secure link from your email to restore access to My GYVFT."
             : initialMode === "signup"
               ? "Just your email and a password to begin. You can add your people and occasions whenever you’re ready."
               : initialMode === "recover"

@@ -32,6 +32,7 @@ const operations = new Set([
   "home",
   "status",
   "aarla-coupon",
+  "operations-intake",
 ]);
 const routes = new Set([
   "/account",
@@ -42,6 +43,7 @@ const routes = new Set([
   "/api/setup",
   "/api/health",
   "/api/operations",
+  "/api/operations/intake",
   "/tell-your-story",
   "/upload-a-brief",
   "/book-a-discovery",
