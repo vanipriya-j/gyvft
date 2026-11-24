@@ -18,6 +18,8 @@ Customer signup/sign-in uses GYVFT-owned database accounts and secure session co
 
 ## Customer portal guides
 
+- [Website traffic, GA4 setup and gift conversion/follow-up reports](docs/CONVERSION-ANALYTICS.md)
+
 - [Account-first public website, films and design review](docs/CUSTOMER-WEBSITE.md)
 
 - [Aarla shopping: personal 5% coupon and 24-hour handoff](docs/AARLA-SHOPPING-SAVING.md)

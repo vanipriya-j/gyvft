@@ -20,6 +20,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { OperationsPageHeader } from "@/components/operations/page-header";
+import { OperationsConversions } from "@/components/operations/conversions";
 import { OperationsNotifications } from "@/components/operations/notifications";
 import { ShippingSettings } from "@/components/operations/shipping-settings";
 import { OperationsShipments } from "@/components/operations/shipments";
@@ -159,7 +160,7 @@ export function B2CAdmin({
   initialArea = "dashboard",
 }: {
   initialId: string;
-  initialArea?: "dashboard" | "worklist";
+  initialArea?: "dashboard" | "worklist" | "analytics";
 }) {
   const hydrated = useHydrated();
   const imageOpener = useRef<HTMLElement | null>(null),
@@ -170,6 +171,7 @@ export function B2CAdmin({
     lock = useRef(false),
     retry = useRef<{ key: string; id: string } | null>(null);
   const [unlocked, setUnlocked] = useState(false),
+    [analyticsRevision, setAnalyticsRevision] = useState(0),
     [busy, setBusy] = useState(false),
     [actionLocked, setActionLocked] = useState(false),
     [message, setMessage] = useState(""),
@@ -331,7 +333,9 @@ export function B2CAdmin({
     setMessage("");
     setBusy(true);
     try {
-      if (next === "dashboard") {
+      if (next === "analytics") {
+        setAnalyticsRevision((v) => v + 1);
+      } else if (next === "dashboard") {
         const data = await post(
           { op: "snapshot" },
           secret.current,
@@ -442,6 +446,7 @@ export function B2CAdmin({
     ["circles", "Circles & organisations"],
     ["occasions", "Occasions"],
     ["stories", "Feedback & photos"],
+    ["analytics", "Analytics & conversions"],
     ["reports", "Reports & health"],
     ["settings", "Settings & connections"],
   ];
@@ -452,6 +457,7 @@ export function B2CAdmin({
     circles: Users,
     occasions: CalendarDays,
     stories: MessageSquareQuote,
+    analytics: BarChart3,
     reports: BarChart3,
     settings: Settings,
   };
@@ -2100,6 +2106,13 @@ export function B2CAdmin({
                   </article>
                 ))}
               </section>
+            )}
+            {area === "analytics" && (
+              <OperationsConversions
+                post={post}
+                refreshVersion={analyticsRevision}
+                onOpen={(id, nextTab) => void open(id, nextTab)}
+              />
             )}
             {area === "reports" && (
               <OperationsPageHeader

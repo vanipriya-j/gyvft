@@ -1,5 +1,6 @@
 "use client";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { trackConversionEvent } from "@/components/analytics/AnalyticsProvider";
 
 import { startTransition, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -63,6 +64,8 @@ export function CustomerAuth({
         setMessage(result.message);
         setSuccessful(result.ok);
         if (!result.ok) return;
+        if (submittedMode === "signup") trackConversionEvent("sign_up");
+        if (submittedMode === "login") trackConversionEvent("login");
         if (
           result.redirectTo === "/account" ||
           result.redirectTo === "/account/login"

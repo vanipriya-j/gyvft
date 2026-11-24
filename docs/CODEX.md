@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Traffic and conversion analytics — 24 November 2026
+
+See [CONVERSION-ANALYTICS.md](CONVERSION-ANALYTICS.md). The owner supplied public GA4 stream `G-XFWQJZM0RN` and confirmed Enhanced measurement is switched off. The shared public configuration uses that stream unless explicitly overridden (an empty env override disables it). Consent gates manual SPA page views and success-only signup/brief/quote-request events; private values and Operations/Studio/setup routes are excluded. Operations adds a read-only Analytics & conversions view over existing request records, defaulting to the owner's **3 days** for stalled follow-ups, with clear denominators and safe CSV export. GA traffic figures remain in Google Analytics; no reporting API connection is claimed. Build, 324 unit tests, an isolated PostgreSQL report test and 320/390/1440px browser checks passed. Google transport was intercepted during local QA, so those checks do not establish live ingestion. No migration, backfill, data deletion, customer message or Shopify write accompanies this release.
+
 ## Orient and BITS case-study update — 24 November 2026
 
 The owner requested retaining the existing Stories collection, adding Orient Star’s Diwali curation at the top, then restaging finished BITS yearbook photographs in GYVFT’s visual language and publishing the result. See [Orient provenance](gyvft/orient-star.md) and [BITS provenance](gyvft/bits-2001.md). Orient is featured once above the category sections; the earlier story order is retained. BITS replaces its interim visual with two clearly labelled styled product mockups, updates its narrative around the 25-year reunion and adds an illustrated-spread gallery. The other 15 existing story records and all redirects are unchanged. Gallery images preserve their aspect ratios and the Orient card has a readable transcript. A confirmed reduced-motion hydration issue in `MotionReveal` is fixed without changing ordinary animations or layouts. No migration, data deletion or Shopify operation accompanies this content release.
