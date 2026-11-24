@@ -53,9 +53,9 @@ export function CustomerHomepage() {
               }
               mobile={
                 <>
-                  Gifts that feel
+                  Gifts that make
                   <br />
-                  <em>like them.</em>
+                  <em>any day special.</em>
                 </>
               }
             />
@@ -67,8 +67,8 @@ export function CustomerHomepage() {
           </p>
           <p className={styles.heroPractical}>
             <ResponsiveCopy
-              desktop="Personal gifts and return gifts for your celebrations—planned in GYVFT, with Aarla’s help."
-              mobile="Gifts for your people. Return gifts for your celebrations."
+              desktop="For your people and your moments, big or small. Plan a thoughtful gift with Aarla."
+              mobile="For your people. Your moments. Or just because."
             />
           </p>
           <div className={styles.heroActions}>
@@ -489,12 +489,11 @@ export function CustomerHomepage() {
             </p>
           </details>
           <details>
-            <summary>Can I plan return gifts for a function at home?</summary>
+            <summary>Can I plan for one person or a whole group?</summary>
             <p>
-              Yes. From a single personal gift to return gifts for a
-              housewarming, birthday or family function. Tell us about your
-              celebration, guest count and budget. We’ll help curate options for
-              your guests.
+              Both. Whether it’s a personal gesture or gifts for everyone
+              celebrating with you, share the occasion, quantity and budget.
+              Aarla can help with a thoughtful direction.
             </p>
           </details>
           <details>

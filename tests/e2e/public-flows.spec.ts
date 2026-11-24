@@ -84,7 +84,7 @@ test("mobile homepage shows concise copy, signup and the gift image in the first
   await page.evaluate(() => document.fonts.ready);
   const hero = page.locator('section[aria-labelledby="home-heading"]');
   await expect(hero.getByRole("heading", { level: 1 })).toHaveText(
-    /Gifts that feel\s*like them\./,
+    /Gifts that make\s*any day special\./,
     { useInnerText: true },
   );
   const image = await hero.getByRole("img").boundingBox();
