@@ -67,8 +67,15 @@ describe("GA4 transport", () => {
       send_page_view: false,
     });
     expect(commands().find((c) => c[0] === "set")?.[1]).toMatchObject({
+      send_page_view: false,
+      page_location:
+        window.location.origin + "/account/projects/[id]?view=quote",
       page_referrer: "https://example.com",
     });
+    const queued = commands();
+    expect(queued.findIndex((c) => c[0] === "set")).toBeLessThan(
+      queued.findIndex((c) => c[0] === "js"),
+    );
     expect(commands().filter((c) => c[0] === "event")).toHaveLength(1);
     const text = JSON.stringify(commands());
     expect(text).toContain("/account/projects/[id]?view=quote");
