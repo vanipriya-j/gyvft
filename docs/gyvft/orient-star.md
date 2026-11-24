@@ -2,6 +2,8 @@
 
 Added for owner review on 24 November 2026. The 16 existing stories, homepage story links and layouts are retained. Proposed route: `/stories/orient-star-diwali-hamper`.
 
+The owner requested Orient at the top. It is the first case study on `/stories`, in a featured position above the category sections. It appears once; all 16 earlier stories keep their existing category order. The homepage’s selected stories are unchanged.
+
 ## Story
 
 The narrative follows **Across Skies & Seas**: Garuda, Makara and flowing waves as an Indian visual language for journeys, courage and resilience. The curation connects the tray, flat-lid kumkum box, brass diya, magnet option, packaging and greeting card. The greeting-card text has a readable disclosure beside its artwork.
