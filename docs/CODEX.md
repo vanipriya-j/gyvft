@@ -4,6 +4,8 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+For the product, engineering and design rationale across the build, read the [GYVFT decision book](GYVFT-DECISION-BOOK.md): 40 chapters, a 120-decision register, screen inventory, glossary and snapshot-pinned sources.
+
 ## Agent Operations expansion — 24 November 2026
 
 See [AGENT-OPERATIONS.md](AGENT-OPERATIONS.md). The owner authorised publication, customer messaging, offline customer approval with attached proof, payment requests/receipt recording and Shopify handoff through MCP. Fifteen tools now use granular OAuth scopes; existing read/draft grants never gain new privileges automatically. Offline decisions share the customer approval service and save proof atomically; evidence is Operations-only. Payment requests carry exact snapshots, suppress stale asks and link to locally generated amount-prefilled UPI QR. Existing Shopify B2C/single-line gates remain; agent creation never implicitly syncs an additional payment. Additive SQL03/04 require separate owner approval at `/setup/agent-operations`; no production SQL, real email or Shopify write was performed. Refresh/reconnect the ChatGPT app after activation. Tests and local production-build browser results are documented; direct dispatch to a user’s Dot is not provided by this MCP.
