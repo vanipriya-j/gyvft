@@ -1,7 +1,21 @@
 export const mcpScopes = [
   "gyvft:requests:read",
   "gyvft:options:write",
+  "gyvft:operations:read",
+  "gyvft:options:publish",
+  "gyvft:approvals:write",
+  "gyvft:messages:write",
+  "gyvft:payments:write",
+  "gyvft:orders:write",
+  "gyvft:customers:write",
 ] as const;
+export class McpScopeError extends Error {
+  constructor(public scope: string) {
+    super(
+      "This connection needs additional permission. Reconnect GYVFT and review the requested Operations access.",
+    );
+  }
+}
 export const mcpClientId = "gyvft-chatgpt";
 export function mcpOrigin() {
   const configured = process.env.GYVFT_MCP_ORIGIN;

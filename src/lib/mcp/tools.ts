@@ -12,6 +12,8 @@ import { parseOptionImport } from "@/lib/customer/option-import";
 import { demoAccountIds } from "@/lib/customer/demo-accounts";
 import { mcpOrigin, mcpScopes } from "./config";
 import { prepareMcpImages, openAiFileSchema } from "./images";
+import { operationTools, operationToolScope } from "./operation-tools";
+import { callOperationTool } from "./operations";
 const readSecurity = [{ type: "oauth2", scopes: [mcpScopes[0]] }];
 const writeSecurity = [{ type: "oauth2", scopes: [mcpScopes[1]] }];
 const file = {
@@ -128,6 +130,7 @@ export const mcpTools = [
       "openai/toolInvocation/invoked": "Private draft ready for review",
     },
   },
+  ...operationTools,
 ];
 async function requestRecord(id: string) {
   const [record] =
@@ -141,6 +144,8 @@ export async function callMcpTool(
   actor: { id: string; scopes: string[] },
   signal?: AbortSignal,
 ) {
+  if (operationToolScope.has(name))
+    return callOperationTool(name, raw, actor, signal);
   const needed =
     name === "save_gift_option_draft"
       ? "gyvft:options:write"

@@ -163,6 +163,7 @@ describe("database migrations", () => {
       "20261124000001_gift_option_images.sql",
       "20261124000002_agent_proposals.sql",
       "20261124000003_operations_intake.sql",
+      "20261124000004_agent_operations.sql",
     ]);
     read
       .mockResolvedValueOnce("CUSTOMER ONLY SQL")
@@ -179,7 +180,8 @@ describe("database migrations", () => {
       .mockResolvedValueOnce("SHIPPING SQL")
       .mockResolvedValueOnce("OPTION IMAGES SQL")
       .mockResolvedValueOnce("AGENT PROPOSALS SQL")
-      .mockResolvedValueOnce("OPERATIONS INTAKE SQL");
+      .mockResolvedValueOnce("OPERATIONS INTAKE SQL")
+      .mockResolvedValueOnce("AGENT OPERATIONS SQL");
     const { sql, tx } = connection();
     expect(await runPendingMigrations(sql, undefined, "customer")).toEqual([
       "20261112000000_customer_portal.sql",
@@ -197,6 +199,7 @@ describe("database migrations", () => {
       "20261124000001_gift_option_images.sql",
       "20261124000002_agent_proposals.sql",
       "20261124000003_operations_intake.sql",
+      "20261124000004_agent_operations.sql",
     ]);
     expect(tx.unsafe).toHaveBeenNthCalledWith(1, "CUSTOMER ONLY SQL");
     expect(tx.unsafe).toHaveBeenNthCalledWith(2, "ACCOUNT SQL");
@@ -213,7 +216,8 @@ describe("database migrations", () => {
     expect(tx.unsafe).toHaveBeenNthCalledWith(13, "OPTION IMAGES SQL");
     expect(tx.unsafe).toHaveBeenNthCalledWith(14, "AGENT PROPOSALS SQL");
     expect(tx.unsafe).toHaveBeenNthCalledWith(15, "OPERATIONS INTAKE SQL");
-    expect(read).toHaveBeenCalledTimes(15);
+    expect(tx.unsafe).toHaveBeenNthCalledWith(16, "AGENT OPERATIONS SQL");
+    expect(read).toHaveBeenCalledTimes(16);
   });
   it("fails closed instead of falling back to legacy SQL if the customer migration is missing", async () => {
     await expect(migrationFiles("customer")).rejects.toThrow(

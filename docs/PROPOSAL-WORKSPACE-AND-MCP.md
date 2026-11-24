@@ -2,6 +2,8 @@
 
 The owner requested multiple option images, drag-and-drop/clipboard entry, fast JSON or text filling, and an MCP connection so GPT can prepare options directly in GYVFT. These features operate on the gift-option object model and custom prices supplied by the owner.
 
+The subsequent [Agent Operations expansion](AGENT-OPERATIONS.md) adds twelve explicitly scoped tools for publication, customer approvals with proof, messages, payment requests/verified receipts, intake and Shopify handoff. The three original tools described here retain their original boundaries; existing grants require reconnection for additional permissions.
+
 ## Operations entry
 
 Open a real request → **Options**. A new option supports up to **six images**. Choose files, drop them into the image area, or focus that area and paste an image with Ctrl+V/⌘V. Before saving, remove unwanted selections and choose the cover. PNG, JPEG and WebP inputs may be up to 10 MB each; the app creates bounded previews for viewing. Original source artwork should be retained separately.
@@ -75,7 +77,7 @@ Tool inputs use the same rupee-based option shape as quick fill. Attached images
 
 Image ingestion accepts only HTTPS OpenAI file/storage hosts, rejects private/reserved addresses, pins the verified IPv4 address while preserving TLS/SNI and Host, revalidates redirects and bounds bytes/time. PNG/JPEG/WebP signatures are checked before decoding; pixel limits and preview conversion remove metadata. Downloads/processing finish before the atomic draft write. Existing saved images are appended to, not deleted or silently replaced.
 
-OAuth uses exact allowlisted ChatGPT callbacks, issuer identification, resource-bound tokens, S256 PKCE, five-minute single-use codes, fifteen-minute access tokens and rotating refresh tokens with a fixed thirty-day grant expiry. Grant/token secrets are stored only as hashes. The owner can revoke one connection or disable/revoke all from Operations. The JSON-RPC endpoint supports stateless Streamable HTTP requests and the advertised legacy/current protocol versions; it does not require an in-memory server session. Tools expose no publication, payment, order, arbitrary HTTP or SQL operation.
+OAuth uses exact allowlisted ChatGPT callbacks, issuer identification, resource-bound tokens, S256 PKCE, five-minute single-use codes, fifteen-minute access tokens and rotating refresh tokens with a fixed thirty-day grant expiry. Grant/token secrets are stored only as hashes. The owner can revoke one connection or disable/revoke all from Operations. The JSON-RPC endpoint supports stateless Streamable HTTP requests and the advertised legacy/current protocol versions; it does not require an in-memory server session. The original three tools expose no publication, payment or order action. Additional actions require the separately activated and explicitly granted scopes described in [AGENT-OPERATIONS.md](AGENT-OPERATIONS.md). No tool permits arbitrary HTTP or SQL.
 
 References: [OpenAI authentication](https://developers.openai.com/plugins/build/auth), [OpenAI file parameters](https://developers.openai.com/plugins/reference), [MCP Streamable HTTP](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports), [MCP 2026 per-request transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports). The legacy initialisation handshake and current per-request version, capability and HTTP-header checks are both covered.
 

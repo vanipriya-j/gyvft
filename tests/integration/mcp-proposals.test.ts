@@ -221,6 +221,26 @@ describe.skipIf(!uri)(
         code: "invalid_grant",
       });
     });
+    it("old read/draft connections cannot publish and receive a reauthorisation challenge", async () => {
+      const callback = await issue("gyvft:requests:read gyvft:options:write");
+      const token = await exchangeMcpToken(
+        params(callback.searchParams.get("code")!),
+      );
+      const response = await protocol(
+        {
+          jsonrpc: "2.0",
+          id: 77,
+          method: "tools/call",
+          params: { name: "publish_gift_option", arguments: {} },
+        },
+        token.access_token,
+      );
+      const body = await response.json();
+      expect(body.result.isError).toBe(true);
+      expect(body.result._meta["mcp/www_authenticate"][0]).toContain(
+        "gyvft:options:publish",
+      );
+    });
     it("rejects expired codes, expired refresh grants and altered access tokens", async () => {
       const callback = await issue(),
         code = callback.searchParams.get("code")!;
@@ -303,7 +323,9 @@ describe.skipIf(!uri)(
         )
       ).json();
       expect(
-        tools.result.tools.map((tool: { name: string }) => tool.name),
+        tools.result.tools
+          .slice(0, 3)
+          .map((tool: { name: string }) => tool.name),
       ).toEqual([
         "list_gift_requests",
         "get_gift_request",

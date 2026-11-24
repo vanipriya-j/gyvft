@@ -129,7 +129,7 @@ describe("customer portal trust boundaries", () => {
   });
 
   it("rechecks account ownership in the message insertion statement", async () => {
-    query.mockResolvedValueOnce([{ id: projectId }]).mockResolvedValueOnce([]);
+    query.mockResolvedValueOnce([{ id: projectId }]).mockResolvedValueOnce([{ id: projectId, customer_account_id: account.id, customer_email: account.email }]).mockResolvedValueOnce([]);
     const data = new FormData();
     data.set("body", "A question about my request");
     expect((await sendMessage(projectId, data)).ok).toBe(true);
@@ -187,7 +187,7 @@ describe("customer portal trust boundaries", () => {
   });
 
   it("does not accept a decision on an already decided or superseded approval", async () => {
-    query.mockResolvedValueOnce([{ id: projectId }]).mockResolvedValueOnce([]);
+    query.mockResolvedValueOnce([{ id: projectId }]).mockResolvedValueOnce([{ id: projectId, customer_account_id: account.id, customer_email: account.email }]).mockResolvedValueOnce([]);
     const data = new FormData();
     data.set("decision", "approved");
     expect(
@@ -200,10 +200,10 @@ describe("customer portal trust boundaries", () => {
       ).ok,
     ).toBe(false);
     const mutation = query.mock.calls[2][0].join("?");
-    expect(mutation).toContain("a.status = 'pending'");
-    expect(mutation).toContain("newer.version > a.version");
+    expect(mutation.replaceAll(" ", "")).toContain("a.status='pending'");
+    expect(mutation.replaceAll(" ", "")).toContain("newer.version>a.version");
     expect(mutation).toContain("INSERT INTO customer_project_events");
-    expect(mutation).toContain("customer_account_id =");
+    expect(mutation.replaceAll(" ", "")).toContain("customer_account_id=");
     expect(query.mock.calls[2].slice(1)).toContain(account.id);
   });
 

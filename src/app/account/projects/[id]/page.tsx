@@ -584,9 +584,14 @@ export default async function GiftPage({
                       )}
                       {p.upi_id || upi?.upi_id ? (
                         <UPIPayment
+                          key={`${id}-${total}-${paid}-${p.upi_id || upi?.upi_id}`}
                           id={id}
                           upiId={p.upi_id || upi.upi_id}
-                          payee={upi?.payee_name || "Aarla"}
+                          payee={
+                            !p.upi_id || p.upi_id === upi?.upi_id
+                              ? upi?.payee_name || "GYVFT"
+                              : "GYVFT"
+                          }
                           amount={
                             paid < Math.ceil(total / 2)
                               ? Math.ceil(total / 2) - paid

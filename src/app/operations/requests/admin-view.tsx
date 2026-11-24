@@ -27,6 +27,10 @@ import {
   OperationsCustomerIntake,
   CustomerSetupEmail,
 } from "@/components/operations/customer-intake";
+import {
+  OfflineApproval,
+  PaymentRequestAction,
+} from "@/components/operations/offline-approval";
 import { RequirementAttachments } from "@/components/customer/requirement-attachments";
 import { ShippingSettings } from "@/components/operations/shipping-settings";
 import { OperationsShipments } from "@/components/operations/shipments";
@@ -1078,7 +1082,12 @@ export function B2CAdmin({
                               </p>
                               {a.customer_response && (
                                 <p className="app-alert">
-                                  Customer: {a.customer_response}
+                                  {detail.offlineApprovals.some(
+                                    (record) => record.approval_id === a.id,
+                                  )
+                                    ? "Recorded customer approval: "
+                                    : "Customer: "}
+                                  {a.customer_response}
                                 </p>
                               )}
                               {a.has_image && (
@@ -1093,6 +1102,21 @@ export function B2CAdmin({
                           </article>
                         ))}
                     </section>
+                    <OfflineApproval
+                      key={p.id + tab}
+                      detail={detail}
+                      kind={tab === "design" ? "design" : "proposal"}
+                      busy={busy}
+                      perform={perform}
+                      preview={preview}
+                    />
+                    {tab === "quote" && (
+                      <PaymentRequestAction
+                        detail={detail}
+                        busy={busy}
+                        perform={perform}
+                      />
+                    )}
                     {!locked &&
                       !(
                         tab === "quote" &&

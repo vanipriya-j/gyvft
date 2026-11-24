@@ -3,6 +3,7 @@ import { getCustomerAccount } from "@/lib/customer/session";
 import { validSetupSecret } from "@/lib/security/setup-secret";
 import { uuidPattern } from "@/lib/customer/model";
 import { operationsIntakeReady } from "@/lib/customer/operations-intake";
+import { agentOperationsReady } from "@/lib/customer/agent-operations";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export async function GET(
@@ -21,6 +22,7 @@ export async function GET(
       "moment",
       "approval-draft",
       "requirement",
+      "offline-approval-proof",
     ].includes(kind)
   )
     return new Response(null, { status: 404 });
@@ -29,6 +31,21 @@ export async function GET(
   if (!operator && !account && kind !== "moment")
     return new Response(null, { status: 404 });
   const sql = getSql();
+  if (kind === "offline-approval-proof") {
+    if (!operator || !(await agentOperationsReady(sql)))
+      return new Response(null, { status: 404 });
+    const [file] =
+      await sql`SELECT image_data,image_type FROM gyvft_offline_approval_files WHERE id=${id}::uuid`;
+    if (!file) return new Response(null, { status: 404 });
+    return new Response(new Uint8Array(file.image_data), {
+      headers: {
+        "Content-Type": file.image_type,
+        "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; sandbox",
+      },
+    });
+  }
   if (kind === "requirement") {
     if (!(await operationsIntakeReady(sql)))
       return new Response(null, { status: 404 });

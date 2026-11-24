@@ -81,7 +81,7 @@ async function download(
           method: "GET",
           headers: {
             Host: url.host,
-            Accept: "image/png,image/jpeg,image/webp",
+            Accept: "image/png,image/jpeg,image/webp,application/pdf",
           },
           signal,
         },
@@ -201,6 +201,47 @@ export async function prepareMcpImages(raw: unknown, signal?: AbortSignal) {
           signal ? AbortSignal.any([signal, timeout]) : timeout,
         );
         output[index] = await optimiseMcpImage(bytes);
+      }
+    }),
+  );
+  return output;
+}
+export async function prepareMcpRequirementFiles(
+  raw: unknown,
+  signal?: AbortSignal,
+) {
+  const files = z
+    .array(openAiFileSchema)
+    .max(6)
+    .parse(raw ?? []);
+  const output = new Array<{ filename: string; mime: string; data: string }>(
+    files.length,
+  );
+  let cursor = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(2, files.length) }, async () => {
+      while (cursor < files.length) {
+        const index = cursor++,
+          file = files[index],
+          timeout = AbortSignal.timeout(12000);
+        const bytes = await download(
+          file.download_url,
+          signal ? AbortSignal.any([signal, timeout]) : timeout,
+        );
+        const filename = (file.file_name || `requirement-${index + 1}`)
+          .replace(/[\x00-\x1f\x7f/\\]/g, "_")
+          .slice(0, 160);
+        if (bytes.subarray(0, 5).toString() === "%PDF-") {
+          if (bytes.length > 2 * 1024 * 1024)
+            throw new McpImageError("Use PDFs under 2 MB each.");
+          output[index] = {
+            filename: filename.toLowerCase().endsWith(".pdf")
+              ? filename
+              : filename.slice(0, 156) + ".pdf",
+            mime: "application/pdf",
+            data: bytes.toString("base64"),
+          };
+        } else output[index] = { filename, ...(await optimiseMcpImage(bytes)) };
       }
     }),
   );

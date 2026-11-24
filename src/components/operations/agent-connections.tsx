@@ -51,8 +51,9 @@ export function AgentConnections({ post }: { post: Post }) {
         GPT & agent connections
       </h2>
       <p className="app-muted mt-2">
-        Let GPT read submitted briefs and prepare private gift options with
-        images. Your team reviews and publishes them here.
+        Let GPT prepare options and, with the permissions you authorise, carry
+        out explicit Operations instructions for publication, customer messages,
+        evidenced approvals, payments and Shopify handoff.
       </p>
       {!settings && !message && (
         <p className="mt-4 inline-flex items-center gap-2" role="status">
@@ -134,6 +135,17 @@ export function AgentConnections({ post }: { post: Post }) {
               issued to ChatGPT. Turning access off revokes existing
               connections.
             </p>
+            <p className="app-note mt-3">
+              Existing connections keep their original permissions. Refresh the
+              app’s tools and reconnect in ChatGPT to review and grant the
+              additional actions.
+            </p>
+            <a
+              className="app-button secondary mt-3 min-h-11"
+              href="/setup/agent-operations"
+            >
+              Review Operations actions setup
+            </a>
             <h3 className="mt-5 font-medium">Authorised connections</h3>
             {!settings.grants.length ? (
               <p className="app-muted mt-2">
@@ -161,6 +173,12 @@ export function AgentConnections({ post }: { post: Post }) {
                           timeZone: "Asia/Kolkata",
                         })}{" "}
                         IST
+                      </p>
+                      <p className="app-note mt-2 break-all">
+                        Permissions:{" "}
+                        {grant.scopes
+                          .map((scope) => scope.replace("gyvft:", ""))
+                          .join(", ")}
                       </p>
                     </div>
                     <button

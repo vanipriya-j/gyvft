@@ -53,6 +53,12 @@ import {
   GiftWorkspaceError,
 } from "@/lib/customer/gift-workspace";
 import { validImage } from "@/lib/customer/images";
+import {
+  recordOfflineApproval,
+  AgentOperationsError,
+} from "@/lib/customer/agent-operations";
+import { ApprovalDecisionError } from "@/lib/customer/approval-decisions";
+import { requestCustomerPayment } from "@/lib/customer/payment-requests";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const reply = (body: unknown, status = 200) =>
@@ -257,6 +263,54 @@ export async function POST(request: Request) {
       });
     }
     const id = z.string().uuid().parse(raw.id);
+    if (raw.op === "record_offline_approval") {
+      const recorded = await recordOfflineApproval(
+        {
+          request_id: raw.request_id,
+          project_id: id,
+          approval_id: raw.approval_id,
+          expected_version: raw.expected_version,
+          channel: raw.channel,
+          customer_approved_at: raw.customer_approved_at || null,
+          note: raw.note,
+          recorded_by: raw.recorded_by,
+          proof: raw.proof,
+        },
+        { source: "operations" },
+      );
+      revalidatePath(`/account/projects/${id}`);
+      return reply({
+        ok: true,
+        recorded,
+        message:
+          "The customer’s approval and private proof were recorded for this exact version. No customer email was sent.",
+      });
+    }
+    if (raw.op === "request_customer_payment") {
+      const payment = await requestCustomerPayment({
+        request_id: raw.request_id,
+        project_id: id,
+        approval_id: raw.approval_id,
+        expected_version: raw.expected_version,
+        phase: raw.phase,
+        expected_due_paise: raw.expected_due_paise,
+        expected_paid_paise: raw.expected_paid_paise,
+      });
+      let accepted = 0;
+      try {
+        accepted = (await deliverNotifications(id)).accepted;
+      } catch {
+        /* Existing outbox retains delivery failures. */
+      }
+      revalidatePath(`/account/projects/${id}`);
+      return reply({
+        ok: true,
+        payment,
+        message: accepted
+          ? "Payment request saved and email accepted by the provider. Inbox delivery is unconfirmed."
+          : "Payment request saved. Email is queued or needs a delivery check in Notifications.",
+      });
+    }
     if (raw.op === "shopify_customer") {
       const [p] =
         await getSql()`SELECT customer_account_id FROM customer_projects WHERE id=${id}::uuid`;
@@ -331,6 +385,11 @@ export async function POST(request: Request) {
       message: "Saved. Customer-visible details are updated.",
     });
   } catch (error) {
+    if (
+      error instanceof AgentOperationsError ||
+      error instanceof ApprovalDecisionError
+    )
+      return reply({ ok: false, message: error.message }, 409);
     if (error instanceof DelhiveryError)
       return reply(
         {
