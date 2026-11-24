@@ -1,7 +1,6 @@
 "use client";
 import { trackConversionEvent } from "@/components/analytics/AnalyticsProvider";
 import { useHydrated } from "@/hooks/use-hydrated";
-/* eslint-disable @next/next/no-img-element -- Private hamper photos are served through an ownership-checked endpoint. */
 import {
   useEffect,
   useLayoutEffect,
@@ -37,6 +36,7 @@ import {
   type GiftPricing,
 } from "@/lib/customer/gift-workspace-model";
 import { money } from "@/lib/customer/model";
+import { OptionImageGallery } from "./option-image-gallery";
 import {
   saveWorkspaceDraft,
   submitWorkspaceQuote,
@@ -575,13 +575,7 @@ export function GiftWorkspace({
                       change={() => void visibility(o.id, "curated", !o.hidden)}
                     />
                   </div>
-                  {o.has_image && (
-                    <img
-                      src={`/api/customer-assets/gift-option/${o.id}`}
-                      alt={`${o.title} hamper visual`}
-                      className="aspect-[4/3] w-full rounded-lg object-contain bg-surface"
-                    />
-                  )}
+                  <OptionImageGallery option={o} />
                   <p className="my-4 whitespace-pre-wrap text-sm text-muted-text">
                     {o.description}
                   </p>
@@ -695,13 +689,7 @@ export function GiftWorkspace({
           </div>
           <div className="app-grid">
             <figure>
-              {curated.has_image && (
-                <img
-                  className="app-image"
-                  src={`/api/customer-assets/gift-option/${curated.id}`}
-                  alt={curated.title}
-                />
-              )}
+              <OptionImageGallery option={curated} />
               <figcaption className="app-note">
                 Visual direction · production artwork follows
               </figcaption>
@@ -766,13 +754,7 @@ export function GiftWorkspace({
                 .filter((o) => !o.hidden || showHidden)
                 .map((o) => (
                   <article key={o.id} className="border-b border-border pb-4">
-                    {o.has_image && (
-                      <img
-                        className="mb-2 aspect-[4/3] w-full rounded-lg object-contain"
-                        src={`/api/customer-assets/gift-option/${o.id}`}
-                        alt={o.title}
-                      />
-                    )}
+                    <OptionImageGallery option={o} />
                     <h3 className="font-serif text-lg">{o.title}</h3>
                     <button
                       className={button + " mt-2"}

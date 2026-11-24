@@ -25,7 +25,7 @@ export async function operationsSnapshot() {
       (SELECT a.status FROM customer_project_approvals a WHERE a.project_id=p.id AND a.kind='design' ORDER BY a.version DESC LIMIT 1) AS design_status,
       EXISTS(SELECT 1 FROM customer_payment_submissions s WHERE s.project_id=p.id AND s.status='pending') AS pending_payment,
       EXISTS(SELECT 1 FROM gyvft_gift_selections s WHERE s.project_id=p.id) AS has_selection,
-      EXISTS(SELECT 1 FROM gyvft_gift_options o WHERE o.project_id=p.id AND NOT o.operator_hidden) AS visible_options
+      EXISTS(SELECT 1 FROM gyvft_gift_options o WHERE o.project_id=p.id AND o.published AND NOT o.operator_hidden) AS visible_options
       FROM customer_projects p WHERE NOT p.is_draft AND p.stage<10 AND COALESCE(p.submission_key,'') NOT LIKE 'gyvft-demo-%'
       ORDER BY pending_payment DESC,p.task_due_at NULLS LAST,p.delivery_date NULLS LAST,p.created_at LIMIT 6`,
     ]);

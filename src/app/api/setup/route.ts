@@ -80,16 +80,20 @@ export async function POST(request: Request) {
   if (
     body.action !== "status" &&
     body.action !== "migrate" &&
-    body.action !== "shipping-migrate"
+    body.action !== "shipping-migrate" &&
+    body.action !== "option-images-migrate" &&
+    body.action !== "agent-proposals-migrate"
   )
     return reply(
       { ok: false, message: "Choose check status or run migrations." },
       400,
     );
-  if (
-    (body.action === "migrate" || body.action === "shipping-migrate") &&
-    body.confirm !== true
-  )
+  const migrationAction =
+    body.action === "migrate" ||
+    body.action === "shipping-migrate" ||
+    body.action === "option-images-migrate" ||
+    body.action === "agent-proposals-migrate";
+  if (migrationAction && body.confirm !== true)
     return reply(
       {
         ok: false,
@@ -100,15 +104,20 @@ export async function POST(request: Request) {
   async function execute(onProgress?: (event: MigrationProgress) => void) {
     try {
       const sql = getSql();
-      const applied =
-        body.action === "migrate" || body.action === "shipping-migrate"
-          ? await runPendingMigrations(
-              sql,
-              onProgress,
-              body.action === "shipping-migrate" ? "shipping" : "customer",
-            )
-          : [];
-      if (body.action === "migrate" || body.action === "shipping-migrate") {
+      const applied = migrationAction
+        ? await runPendingMigrations(
+            sql,
+            onProgress,
+            body.action === "shipping-migrate"
+              ? "shipping"
+              : body.action === "option-images-migrate"
+                ? "option-images"
+                : body.action === "agent-proposals-migrate"
+                  ? "agent-proposals"
+                  : "customer",
+          )
+        : [];
+      if (migrationAction) {
         logger.info("Secret-protected setup migrations completed", {
           migrations: applied,
         });
@@ -134,8 +143,7 @@ export async function POST(request: Request) {
         };
       } catch (error) {
         // A committed migration batch must never be described as rolled back.
-        if (body.action !== "migrate" && body.action !== "shipping-migrate")
-          throw error;
+        if (!migrationAction) throw error;
         return {
           status: 200,
           result: {

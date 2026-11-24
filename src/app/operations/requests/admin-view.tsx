@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { OperationsPageHeader } from "@/components/operations/page-header";
 import { OperationsConversions } from "@/components/operations/conversions";
+import { AgentConnections } from "@/components/operations/agent-connections";
 import { OperationsNotifications } from "@/components/operations/notifications";
 import { ShippingSettings } from "@/components/operations/shipping-settings";
 import { OperationsShipments } from "@/components/operations/shipments";
@@ -431,7 +432,7 @@ export function B2CAdmin({
           ...p,
           has_selection: !!detail?.workspace.selections.length,
           visible_options: !!detail?.workspace.options.filter(
-            (o) => !o.operator_hidden,
+            (o) => o.published && !o.operator_hidden,
           ).length,
           pending_payment: detail?.payments.some((x) => x.status === "pending"),
           quote_status: q?.status,
@@ -2192,6 +2193,7 @@ export function B2CAdmin({
               />
             )}
             {area === "settings" && <OperationsNotifications post={post} />}
+            {area === "settings" && <AgentConnections post={post} />}
             {area === "settings" && <ShippingSettings post={post} />}
             {area === "settings" && (
               <div className="app-grid">

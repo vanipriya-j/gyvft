@@ -11,7 +11,17 @@ import {
 } from "./gift-workspace-model";
 import { validImage } from "./images";
 import { queueNotification } from "./notifications";
+import {
+  MAX_OPTION_IMAGES,
+  MAX_OPTION_PREVIEW_BYTES,
+  type OptionImage,
+} from "./option-image-model";
 export class GiftWorkspaceError extends Error {}
+export async function optionImagesAvailable(sql: Sql) {
+  const [table] =
+    await sql`SELECT to_regclass('gyvft_gift_option_images')::text AS name`;
+  return !!table?.name;
+}
 export async function giftWorkspace(projectId: string, accountId?: string) {
   const sql = getSql();
   if (accountId) {
@@ -30,15 +40,42 @@ export async function giftWorkspace(projectId: string, accountId?: string) {
       GiftSelection[]
     >`SELECT s.id,s.draft_id,s.draft_version,s.snapshot,s.created_at,EXISTS(SELECT 1 FROM customer_project_approvals a WHERE a.gift_selection_id=s.id) AS quoted FROM gyvft_gift_selections s WHERE s.project_id=${projectId}::uuid ORDER BY s.created_at DESC LIMIT 30`,
   ]);
+  const optionImagesReady = await optionImagesAvailable(sql);
+  const images = optionImagesReady
+    ? await sql<(OptionImage & { option_id: string })[]>`
+        SELECT i.id,i.option_id,i.position,'gift-option-image'::text AS kind
+        FROM gyvft_gift_option_images i JOIN gyvft_gift_options o ON o.id=i.option_id
+        WHERE o.project_id=${projectId}::uuid ORDER BY i.position,i.id`
+    : [];
+  const galleryOptions = options.map((o) => ({
+    ...o,
+    images: images
+      .filter((image) => image.option_id === o.id)
+      .map(({ id, kind, position }) => ({ id, kind, position })),
+  }));
+  const [agentTable] =
+    await sql`SELECT to_regclass('gyvft_mcp_settings')::text AS name`;
+  const optionDraftsReady = !!agentTable?.name;
+  const versions = optionDraftsReady
+    ? await sql`SELECT id,draft_version FROM gyvft_gift_options WHERE project_id=${projectId}::uuid`
+    : [];
   return {
+    optionImagesReady,
+    optionDraftsReady,
     options: accountId
-      ? options.filter((o) => !o.operator_hidden)
-      : options.map((o) => ({ ...o, hidden: !!o.operator_hidden })),
+      ? galleryOptions.filter((o) => !o.operator_hidden && o.published)
+      : galleryOptions.map((o) => ({
+          ...o,
+          draft_version: Number(
+            versions.find((v) => v.id === o.id)?.draft_version || 1,
+          ),
+          hidden: !!o.operator_hidden,
+        })),
     drafts,
     selections,
   };
 }
-async function editable(tx: Sql, projectId: string, accountId?: string) {
+export async function editable(tx: Sql, projectId: string, accountId?: string) {
   if (
     !uuidPattern.test(projectId) ||
     (accountId && !uuidPattern.test(accountId))
@@ -84,7 +121,7 @@ export async function saveGiftDraft(
       );
     const options = await tx<
       GiftOption[]
-    >`SELECT id,contents FROM gyvft_gift_options WHERE project_id=${projectId}::uuid`;
+    >`SELECT id,contents FROM gyvft_gift_options WHERE project_id=${projectId}::uuid AND published`;
     const doc = normaliseGiftDraft(raw, options);
     let result;
     if (version === 0) {
@@ -159,20 +196,38 @@ export async function publishGiftOption(
   if (!uuidPattern.test(requestId))
     throw new GiftWorkspaceError("Invalid action key.");
   const parsed = curatedOptionSchema.parse(raw);
-  const picture = raw.image as { data?: unknown; mime?: unknown } | undefined;
+  const pictures = raw.images === undefined ? [raw.image] : raw.images;
   if (
-    !picture ||
-    typeof picture.data !== "string" ||
-    picture.data.length > 2800000 ||
-    typeof picture.mime !== "string"
+    !Array.isArray(pictures) ||
+    pictures.length < 1 ||
+    pictures.length > MAX_OPTION_IMAGES
   )
-    throw new GiftWorkspaceError("Add one hamper image under 2 MB.");
-  const mime = picture.mime;
-  const bytes = Buffer.from(picture.data, "base64");
-  if (!validImage(bytes, picture.mime))
     throw new GiftWorkspaceError(
-      "Use a valid PNG, JPEG or WebP hamper image under 2 MB.",
+      `Add between 1 and ${MAX_OPTION_IMAGES} option images.`,
     );
+  const images = pictures.map((picture: unknown) => {
+    const image = picture as { data?: unknown; mime?: unknown } | undefined;
+    if (
+      !image ||
+      typeof image.data !== "string" ||
+      image.data.length > 2800000 ||
+      typeof image.mime !== "string"
+    )
+      throw new GiftWorkspaceError(
+        "Add valid PNG, JPEG or WebP option images.",
+      );
+    const data = Buffer.from(image.data, "base64");
+    if (!validImage(data, image.mime))
+      throw new GiftWorkspaceError(
+        "Use a valid PNG, JPEG or WebP image under 2 MB.",
+      );
+    if (pictures.length > 1 && data.length > MAX_OPTION_PREVIEW_BYTES)
+      throw new GiftWorkspaceError(
+        "Gallery previews are too large. Select the images again to optimise them.",
+      );
+    return { data, mime: image.mime };
+  });
+  const { data: bytes, mime } = images[0];
   return getSql().begin(async (txRaw) => {
     const tx = txRaw as unknown as Sql;
     const project = await editable(tx, projectId);
@@ -183,11 +238,18 @@ export async function publishGiftOption(
         throw new GiftWorkspaceError("Action key already used.");
       return;
     }
+    if (images.length > 1 && !(await optionImagesAvailable(tx)))
+      throw new GiftWorkspaceError(
+        "Multiple-image setup is not active yet. No option was published. Ask the owner to activate option images.",
+      );
     const [count] =
       await tx`SELECT count(*)::int AS n FROM gyvft_gift_options WHERE project_id=${projectId}::uuid`;
     if (count.n >= 24)
       throw new GiftWorkspaceError("This request already has 24 options.");
-    await tx`INSERT INTO gyvft_gift_options(project_id,title,description,contents,image_data,image_type,request_id,pricing) VALUES(${projectId}::uuid,${parsed.title},${parsed.description},${tx.json(parsed.contents)},${bytes},${mime},${requestId}::uuid,${tx.json(parsed.pricing)})`;
+    const [option] =
+      await tx`INSERT INTO gyvft_gift_options(project_id,title,description,contents,image_data,image_type,request_id,pricing) VALUES(${projectId}::uuid,${parsed.title},${parsed.description},${tx.json(parsed.contents)},${bytes},${mime},${requestId}::uuid,${tx.json(parsed.pricing)}) RETURNING id`;
+    for (let index = 1; index < images.length; index++)
+      await tx`INSERT INTO gyvft_gift_option_images(option_id,position,image_data,image_type) VALUES(${option.id}::uuid,${index + 1},${images[index].data},${images[index].mime})`;
     await tx`INSERT INTO customer_project_events(project_id,title,body) VALUES(${projectId}::uuid,'New gift option from GYVFT',${parsed.title})`;
     await tx`UPDATE customer_projects SET next_action='Your gift options are ready. Explore the options or build one of your own.' WHERE id=${projectId}::uuid`;
     await queueNotification(
