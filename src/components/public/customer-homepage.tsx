@@ -67,8 +67,8 @@ export function CustomerHomepage() {
           </p>
           <p className={styles.heroPractical}>
             <ResponsiveCopy
-              desktop="Keep their details and dates in GYVFT. Let Aarla help with the gift."
-              mobile="Keep their special days close. Let Aarla help with the gift."
+              desktop="Personal gifts and return gifts for your celebrations—planned in GYVFT, with Aarla’s help."
+              mobile="Gifts for your people. Return gifts for your celebrations."
             />
           </p>
           <div className={styles.heroActions}>
@@ -127,7 +127,7 @@ export function CustomerHomepage() {
       >
         <span>
           <CalendarDays size={18} aria-hidden="true" />
-          Keep their special days close
+          Plan your special occasions
         </span>
         <span>
           <Gift size={18} aria-hidden="true" />
@@ -231,7 +231,7 @@ export function CustomerHomepage() {
               <p>
                 <ResponsiveCopy
                   desktop="Tell us who it’s for, what they love, your budget and when you need it."
-                  mobile="The person, the occasion, your budget and date."
+                  mobile="Who it’s for, your occasion, budget and date."
                 />
               </p>
             </article>
@@ -489,11 +489,12 @@ export function CustomerHomepage() {
             </p>
           </details>
           <details>
-            <summary>Can I gift for just one person?</summary>
+            <summary>Can I plan return gifts for a function at home?</summary>
             <p>
-              Absolutely. Start with a gift for one person, or tell us about a
-              family gathering, community celebration or team. Share your
-              quantity and budget in your brief so we can explore what fits.
+              Yes. From a single personal gift to return gifts for a
+              housewarming, birthday or family function. Tell us about your
+              celebration, guest count and budget. We’ll help curate options for
+              your guests.
             </p>
           </details>
           <details>

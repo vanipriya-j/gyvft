@@ -282,9 +282,9 @@ export function WorkspacePreview() {
                 {
                   mon: "JAN",
                   day: "08",
-                  title: "Our book club turns five",
-                  subtitle: "Book club · Anniversary",
-                  letter: "BC",
+                  title: "Our housewarming",
+                  subtitle: "Home · Return gifts for our guests",
+                  letter: "US",
                   color: "peach",
                 },
               ].map((occasion) => (

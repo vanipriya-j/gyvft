@@ -1401,14 +1401,6 @@
   .mobileCopy {
     display: inline;
   }
-  .site h1,
-  .site h2,
-  .site h3,
-  .site h4 {
-    font-family: var(--font-body), sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.035em;
-  }
   .site h2 {
     font-size: 1.5rem;
     line-height: 1.25;
@@ -1434,10 +1426,6 @@
   .hero h1 {
     font-size: 2rem;
     line-height: 1.12;
-  }
-  .hero h1 em {
-    font-style: normal;
-    font-weight: 600;
   }
   .heroPractical {
     margin-top: 0.75rem;
