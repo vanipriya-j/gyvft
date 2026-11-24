@@ -116,7 +116,7 @@ test("mobile homepage shows concise copy, signup and the gift image in the first
   ).toBe(true);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(hero.getByRole("heading", { level: 1 })).toHaveText(
-    /You know them\..*Give something that feels like them\./s,
+    /You know them\.[\s\S]*Give something that feels like them\./,
     { useInnerText: true },
   );
   await expect(hero.getByRole("button", { name: /Why GYVFT/ })).toBeVisible();

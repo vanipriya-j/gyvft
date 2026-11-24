@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MotionReveal } from "@/components/public/MotionReveal";
 import { StoryMedia } from "@/components/public/StoryMedia";
-import { getStoriesByGroup, storyGroups } from "@/content/stories";
+import { getStoriesByGroup, getStoryBySlug, storyGroups } from "@/content/stories";
 
 export const metadata = {
   title: "Stories",
@@ -10,6 +10,7 @@ export const metadata = {
 };
 
 export default function StoriesPage() {
+  const featuredStory = getStoryBySlug("orient-star-diwali-hamper");
   return (
     <div className="editorial-shell">
       <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28">
@@ -35,8 +36,33 @@ export default function StoriesPage() {
         </MotionReveal>
       </section>
 
+      {featuredStory ? (
+        <section className="mx-auto max-w-7xl px-5 pb-12 lg:px-8 lg:pb-16" aria-labelledby="featured-story-heading">
+          <h2 id="featured-story-heading" className="mb-6 font-display text-3xl text-ink sm:text-4xl">Featured story</h2>
+          <Link className="group block" href={`/stories/${featuredStory.slug}`}>
+            <article className="grid overflow-hidden border border-border bg-paper transition group-hover:border-olive/40 md:grid-cols-[1.2fr_1fr]">
+              <div className="relative aspect-[3/2]">
+                <StoryMedia
+                  className="border-0"
+                  media={featuredStory.hero}
+                  priority
+                  sizes="(max-width: 767px) 100vw, 55vw"
+                  story={featuredStory}
+                />
+              </div>
+              <div className="flex flex-col justify-center px-5 py-6 md:p-8">
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-olive">Across Skies &amp; Seas</p>
+                <h3 className="mt-3 font-display text-3xl leading-tight text-ink">{featuredStory.title}</h3>
+                <p className="mt-4 text-base leading-7 text-muted-text">{featuredStory.summary}</p>
+                <p className="mt-6 text-sm font-medium text-olive-dark transition group-hover:text-ink">Read the story →</p>
+              </div>
+            </article>
+          </Link>
+        </section>
+      ) : null}
+
       {storyGroups.map((group, groupIndex) => {
-        const items = getStoriesByGroup(group.id);
+        const items = getStoriesByGroup(group.id).filter((story) => story.slug !== featuredStory?.slug);
         if (!items.length) return null;
         return (
           <section

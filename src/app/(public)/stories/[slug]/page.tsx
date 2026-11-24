@@ -49,10 +49,14 @@ export default async function StoryDetailPage({ params }: PageProps) {
           </p>
         </MotionReveal>
         <MotionReveal className="mt-6" delay={0.04}>
-          <div className="relative aspect-[16/9] w-full overflow-hidden">
+          <div
+            className="relative aspect-[16/9] w-full overflow-hidden"
+            style={story.hero.width && story.hero.height ? { aspectRatio: `${story.hero.width} / ${story.hero.height}` } : undefined}
+          >
             {/* TODO: hero media path lives in src/content/stories.ts → story.hero.src */}
             <StoryMedia media={story.hero} priority sizes="100vw" story={story} />
           </div>
+          {story.hero.caption ? <p className="mt-3 text-sm leading-6 text-muted-text">{story.hero.caption}</p> : null}
         </MotionReveal>
         <MotionReveal className="mt-10 max-w-3xl" delay={0.08}>
           <h1 className="font-display text-5xl leading-[1.05] tracking-[-0.02em] text-ink sm:text-6xl">
@@ -78,6 +82,61 @@ export default async function StoryDetailPage({ params }: PageProps) {
           </MotionReveal>
         </div>
       </section>
+
+      {story.gallery?.length ? (
+        <section
+          className="mx-auto max-w-7xl px-5 pb-12 lg:px-8 lg:pb-16"
+          aria-labelledby="gallery-heading"
+        >
+          <h2
+            id="gallery-heading"
+            className="font-display text-3xl text-ink sm:text-4xl"
+          >
+            The details, brought together
+          </h2>
+          <div className={`mt-6 grid items-start gap-8 ${story.gallery.length > 1 ? "md:grid-cols-2" : "max-w-5xl"}`}>
+            {story.gallery.map((media) => (
+              <figure className="min-w-0" key={media.src}>
+                <a
+                  className="focus-ring block"
+                  href={media.src}
+                  aria-label={`View full-size artwork: ${media.alt}`}
+                >
+                  <div
+                    className="relative aspect-square w-full overflow-hidden"
+                    style={
+                      media.width && media.height
+                        ? { aspectRatio: `${media.width} / ${media.height}` }
+                        : undefined
+                    }
+                  >
+                    <StoryMedia
+                      media={media}
+                      sizes="(max-width: 767px) 100vw, 50vw"
+                      story={story}
+                    />
+                  </div>
+                </a>
+                {media.caption ? (
+                  <figcaption className="mt-3 text-sm leading-6 text-muted-text">
+                    {media.caption}
+                  </figcaption>
+                ) : null}
+                {media.transcript ? (
+                  <details className="mt-2 text-sm text-ink">
+                    <summary className="focus-ring min-h-11 cursor-pointer py-3 font-medium text-olive-dark underline underline-offset-4">
+                      Read the greeting card
+                    </summary>
+                    <p className="whitespace-pre-line border-l-2 border-olive/30 pl-4 leading-7 text-muted-text">
+                      {media.transcript}
+                    </p>
+                  </details>
+                ) : null}
+              </figure>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {related.length ? (
         <section className="border-t border-border bg-surface/50 px-5 py-16 lg:px-8 lg:py-20">
