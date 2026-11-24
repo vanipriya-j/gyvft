@@ -38,6 +38,8 @@ Official references: [SPA measurement](https://developers.google.com/analytics/d
 
 Analytics loads only with the visitor’s analytics consent. Public and account routes share one provider, avoiding missed signup/account navigation or duplicate providers. Operator/Studio/setup/API/invitation routes are excluded. Account/gift/recipient IDs, reset tokens, full referrer URLs, names, emails, addresses, brief text, quoted amounts, coupon codes and payment details are not sent to Google. Page titles are generic; safe campaign tags remain usable. Revocation disables the Google tag and clears its analytics cookies without clearing the customer session. Subsequent automatic engagement events inherit the current sanitised page context.
 
+Google startup policy (`send_page_view:false`) and the sanitised page context must be queued globally **before** `gtag('js', ...)`, as well as disabling config page views. A live-runtime replay with all Google collection intercepted reproduced an early automatic view when those settings followed `js`; moving them before `js` produced exactly one sanitised view. A unit regression enforces this order. Do not move these settings back after startup.
+
 The optional existing `/api/events` sink now accepts consented, validated anonymous visitor/session IDs and bounded metadata. Its legacy Studio `analytics_events` table is not created by this release; an absent table does not block Google or the customer flow. Counts in GA are browser/device and consent based, not a count of identifiable people or every customer record.
 
 ## Operations

@@ -54,6 +54,16 @@ export function prepareGoogleAnalytics() {
         ad_user_data: "denied",
         ad_personalization: "denied",
       });
+      // Google's runtime can initialise a stream at the js command, before config.
+      // Set the manual-view policy and safe context before enabling that runtime.
+      w.gtag("set", {
+        send_page_view: false,
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false,
+        page_location: window.location.origin + page.path,
+        page_title: page.title,
+        page_referrer: safeReferrer(),
+      });
       w.gtag("consent", "update", {
         analytics_storage: "granted",
         ad_storage: "denied",
@@ -61,11 +71,6 @@ export function prepareGoogleAnalytics() {
         ad_personalization: "denied",
       });
       w.gtag("js", new Date());
-      w.gtag("set", {
-        page_location: window.location.origin + page.path,
-        page_title: page.title,
-        page_referrer: safeReferrer(),
-      });
       w.gtag("config", config.id, {
         send_page_view: false,
         allow_google_signals: false,
