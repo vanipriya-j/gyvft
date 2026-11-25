@@ -24,6 +24,9 @@ export default async function ProfilePage() {
             <h2>Your account</h2>
             <p>{a.email}</p>
             <div className="app-actions">
+              <Link className="app-button" href="/account/rewards">
+                Aarla rewards & my occasions
+              </Link>
               <Link className="app-button" href="/account/login?mode=forgot">
                 Password & access
               </Link>

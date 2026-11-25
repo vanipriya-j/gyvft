@@ -18,6 +18,8 @@ Customer signup/sign-in uses GYVFT-owned database accounts and secure session co
 
 ## Customer portal guides
 
+- [D2C rewards: GYVFT wallet, Aarla checkout and owner activation](docs/D2C-REWARDS.md)
+
 - [Operations customer onboarding and requirement files](docs/OPERATIONS-CUSTOMER-INTAKE.md)
 
 - [Option galleries, quick fill and connecting GPT through MCP](docs/PROPOSAL-WORKSPACE-AND-MCP.md)

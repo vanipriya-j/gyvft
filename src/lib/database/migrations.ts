@@ -1,3 +1,8 @@
+import {
+  rewardsFile,
+  rewardsChecksum,
+  rewardsPrerequisites,
+} from "./rewards-activation";
 import { createHash } from "crypto";
 import { readdir, readFile } from "fs/promises";
 import path from "path";
@@ -39,7 +44,8 @@ export type MigrationScope =
   | "option-images"
   | "agent-proposals"
   | "operations-intake"
-  | "agent-operations";
+  | "agent-operations"
+  | "rewards";
 const shippingFile = "20261120000001_shipping.sql";
 // Exact SQL approved on 20 November. A changed file needs a fresh review.
 const shippingChecksum =
@@ -78,6 +84,7 @@ export async function migrationFiles(scope: MigrationScope = "all") {
     .filter((file) => /^\d+_[a-zA-Z0-9_-]+\.sql$/.test(file))
     .sort();
   if (scope === "all") return files;
+  if (scope === "rewards") return [rewardsFile];
   for (const required of customerMigrations) {
     if (!files.includes(required))
       throw new Error(`Packaged customer migration missing: ${required}`);
@@ -136,15 +143,17 @@ export async function runPendingMigrations(
     })),
   );
   const prerequisites =
-    scope === "agent-operations"
-      ? [...agentOperationsPrerequisites]
-      : scope === "shipping"
-        ? (await migrationFiles("customer")).filter((id) => id < shippingFile)
-        : scope === "option-images" || scope === "agent-proposals"
-          ? [...optionImagesPrerequisites]
-          : scope === "operations-intake"
-            ? [...operationsIntakePrerequisites]
-            : [];
+    scope === "rewards"
+      ? [...rewardsPrerequisites]
+      : scope === "agent-operations"
+        ? [...agentOperationsPrerequisites]
+        : scope === "shipping"
+          ? (await migrationFiles("customer")).filter((id) => id < shippingFile)
+          : scope === "option-images" || scope === "agent-proposals"
+            ? [...optionImagesPrerequisites]
+            : scope === "operations-intake"
+              ? [...operationsIntakePrerequisites]
+              : [];
   if (
     scope === "agent-operations" &&
     (createHash("sha256").update(migrations[0].contents).digest("hex") !==
@@ -187,6 +196,14 @@ export async function runPendingMigrations(
     throw new MigrationPreconditionError(
       "The agent workspace SQL differs from the reviewed version. Nothing was applied; review the changed SQL first.",
     );
+  if (
+    scope === "rewards" &&
+    createHash("sha256").update(migrations[0].contents).digest("hex") !==
+      rewardsChecksum
+  )
+    throw new MigrationPreconditionError(
+      "Rewards SQL differs from the reviewed version. Review the exact SQL before applying.",
+    );
   const applied: string[] = [];
   await sql.begin(async (tx) => {
     await tx`SET LOCAL statement_timeout = '45s'`;
@@ -211,7 +228,7 @@ export async function runPendingMigrations(
     const missing = prerequisites.filter((id) => !seen.has(id));
     if (missing.length)
       throw new MigrationPreconditionError(
-        `${scope === "shipping" ? "Shipping" : scope === "agent-operations" ? "Agent Operations" : scope === "operations-intake" ? "Operations intake" : "Option images"} was not applied. Earlier updates need separate review: ` +
+        `${scope === "rewards" ? "Rewards" : scope === "shipping" ? "Shipping" : scope === "agent-operations" ? "Agent Operations" : scope === "operations-intake" ? "Operations intake" : "Option images"} was not applied. Earlier updates need separate review: ` +
           missing.join(", "),
       );
     const pending = migrations.filter((m) => !seen.has(m.id));
