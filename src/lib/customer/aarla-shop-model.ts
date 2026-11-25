@@ -43,7 +43,11 @@ export function aarlaShopHref(destination: string, enabled: boolean): string {
 }
 
 export function aarlaDiscountUrl(code: string, destination: string): string {
-  if (!/^GYVFT5-[A-F0-9]{24}-[A-Z0-9]{1,8}$/.test(code))
+  if (
+    !/^(?:GYVFT5-[A-F0-9]{24}-[A-Z0-9]{1,8}|GYVFT[RBA]-[A-F0-9]{32})$/.test(
+      code,
+    )
+  )
     throw Error("Invalid saving reference.");
   const url = new URL(`/discount/${code}`, origin);
   url.searchParams.set("redirect", aarlaDestination(destination));

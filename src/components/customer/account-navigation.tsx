@@ -2,7 +2,14 @@
 import Link from "@/components/ui/navigation-link";
 import { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { CalendarDays, Gift, House, Users, UserRound } from "lucide-react";
+import {
+  CalendarDays,
+  Gift,
+  House,
+  Users,
+  UserRound,
+  Sparkles,
+} from "lucide-react";
 import { BrandLogo } from "@/components/public/BrandLogo";
 import { signOut } from "@/app/account/actions";
 export function AccountNavigation({ email }: { email: string | null }) {
@@ -24,6 +31,7 @@ export function AccountNavigation({ email }: { email: string | null }) {
     { id: "requests", label: "My gifts", icon: Gift },
     { id: "occasions", label: "Occasions", icon: CalendarDays },
     { id: "circles", label: "Circles", icon: Users },
+    { id: "rewards", label: "Rewards", icon: Sparkles },
   ];
   return (
     <>
@@ -50,7 +58,9 @@ export function AccountNavigation({ email }: { email: string | null }) {
                             ? "/account/occasions"
                             : l.id === "circles"
                               ? "/account/circles"
-                              : `/account?view=${l.id}`
+                              : l.id === "rewards"
+                                ? "/account/rewards"
+                                : `/account?view=${l.id}`
                     }
                     aria-current={
                       (
@@ -64,12 +74,14 @@ export function AccountNavigation({ email }: { email: string | null }) {
                               ? path.startsWith("/account/occasions")
                               : l.id === "circles"
                                 ? path.startsWith("/account/circles")
-                                : path === "/account" && view === l.id
+                                : l.id === "rewards"
+                                  ? path.startsWith("/account/rewards")
+                                  : path === "/account" && view === l.id
                       )
                         ? "page"
                         : undefined
                     }
-                    className={`border-b-2 py-2 text-sm ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : l.id === "circles" ? path.startsWith("/account/circles") : path === "/account" && view === l.id) ? "border-b-2 border-olive-dark text-olive-dark" : "border-transparent text-muted-text"}`}
+                    className={`border-b-2 py-2 text-sm ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : l.id === "circles" ? path.startsWith("/account/circles") : l.id === "rewards" ? path.startsWith("/account/rewards") : path === "/account" && view === l.id) ? "border-b-2 border-olive-dark text-olive-dark" : "border-transparent text-muted-text"}`}
                   >
                     {l.label}
                   </Link>
@@ -170,7 +182,9 @@ export function AccountNavigation({ email }: { email: string | null }) {
                         ? "/account/occasions"
                         : l.id === "circles"
                           ? "/account/circles"
-                          : `/account?view=${l.id}`
+                          : l.id === "rewards"
+                            ? "/account/rewards"
+                            : `/account?view=${l.id}`
               }
               aria-current={
                 (
@@ -184,12 +198,14 @@ export function AccountNavigation({ email }: { email: string | null }) {
                         ? path.startsWith("/account/occasions")
                         : l.id === "circles"
                           ? path.startsWith("/account/circles")
-                          : path === "/account" && view === l.id
+                          : l.id === "rewards"
+                            ? path.startsWith("/account/rewards")
+                            : path === "/account" && view === l.id
                 )
                   ? "page"
                   : undefined
               }
-              className={`flex min-h-14 flex-col items-center justify-center gap-1 px-3 text-xs ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : l.id === "circles" ? path.startsWith("/account/circles") : path === "/account" && view === l.id) ? "text-olive-dark" : "border-transparent text-muted-text"}`}
+              className={`flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 text-[11px] ${(l.id === "profile" ? path.startsWith("/account/profile") || path.startsWith("/account/people") : l.id === "requests" ? path.startsWith("/account/gifts") || path.startsWith("/account/projects") : l.id === "occasions" ? path.startsWith("/account/occasions") : l.id === "circles" ? path.startsWith("/account/circles") : l.id === "rewards" ? path.startsWith("/account/rewards") : path === "/account" && view === l.id) ? "text-olive-dark" : "border-transparent text-muted-text"}`}
             >
               <l.icon size={18} />
               {l.label}

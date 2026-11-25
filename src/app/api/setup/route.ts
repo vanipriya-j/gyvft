@@ -78,6 +78,8 @@ export async function POST(request: Request) {
       503,
     );
   if (
+    body.action !== "rewards-status" &&
+    body.action !== "rewards-migrate" &&
     body.action !== "status" &&
     body.action !== "migrate" &&
     body.action !== "shipping-migrate" &&
@@ -91,6 +93,7 @@ export async function POST(request: Request) {
       400,
     );
   const migrationAction =
+    body.action === "rewards-migrate" ||
     body.action === "migrate" ||
     body.action === "shipping-migrate" ||
     body.action === "option-images-migrate" ||
@@ -112,17 +115,19 @@ export async function POST(request: Request) {
         ? await runPendingMigrations(
             sql,
             onProgress,
-            body.action === "agent-operations-migrate"
-              ? "agent-operations"
-              : body.action === "shipping-migrate"
-                ? "shipping"
-                : body.action === "option-images-migrate"
-                  ? "option-images"
-                  : body.action === "agent-proposals-migrate"
-                    ? "agent-proposals"
-                    : body.action === "operations-intake-migrate"
-                      ? "operations-intake"
-                      : "customer",
+            body.action === "rewards-migrate"
+              ? "rewards"
+              : body.action === "agent-operations-migrate"
+                ? "agent-operations"
+                : body.action === "shipping-migrate"
+                  ? "shipping"
+                  : body.action === "option-images-migrate"
+                    ? "option-images"
+                    : body.action === "agent-proposals-migrate"
+                      ? "agent-proposals"
+                      : body.action === "operations-intake-migrate"
+                        ? "operations-intake"
+                        : "customer",
           )
         : [];
       if (migrationAction) {
@@ -134,7 +139,12 @@ export async function POST(request: Request) {
         });
       }
       try {
-        const migrations = await listMigrations(sql, "customer");
+        const migrations = await listMigrations(
+          sql,
+          body.action === "rewards-status" || body.action === "rewards-migrate"
+            ? "rewards"
+            : "customer",
+        );
         return {
           status: 200,
           result: {

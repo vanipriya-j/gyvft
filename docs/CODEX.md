@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## D2C rewards — 25 November 2026
+
+See [D2C-REWARDS.md](D2C-REWARDS.md). GYVFT owns calculation, wallet, verified-email binding, historical preview/approval and native coupon issuance; Aarla handles checkout. Version one earns 2%, holds 14 days, expires after 365 days and caps redemption at 25% of eligible merchandise. No stacking and no earning on redemption orders. Own birthday/anniversary offers are annual ₹150/₹1,500 coupons. Daily updated-order pull is bounded/resumable; uncertain provider results retain the same reservation/code. Customer and Operations Rewards screens share domain services. The additive checksum-pinned rewards SQL is deliberately excluded from generic customer setup and requires owner activation at `/setup/rewards`; opening points need separate explicit snapshot approval. No production migration, points, price changes, emails or native coupons accompanied development. Redemption refunds still require manual review; do not claim automatic points restoration.
+
 ## Agent Operations expansion — 24 November 2026
 
 See [AGENT-OPERATIONS.md](AGENT-OPERATIONS.md). The owner authorised publication, customer messaging, offline customer approval with attached proof, payment requests/receipt recording and Shopify handoff through MCP. Fifteen tools now use granular OAuth scopes; existing read/draft grants never gain new privileges automatically. Offline decisions share the customer approval service and save proof atomically; evidence is Operations-only. Payment requests carry exact snapshots, suppress stale asks and link to locally generated amount-prefilled UPI QR. Existing Shopify B2C/single-line gates remain; agent creation never implicitly syncs an additional payment. Additive SQL03/04 require separate owner approval at `/setup/agent-operations`; no production SQL, real email or Shopify write was performed. Refresh/reconnect the ChatGPT app after activation. Tests and local production-build browser results are documented; direct dispatch to a user’s Dot is not provided by this MCP.

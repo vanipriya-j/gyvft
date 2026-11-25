@@ -10,6 +10,7 @@ import type { OperationsSnapshot } from "@/lib/customer/operations-snapshot";
 import { BrandLogo } from "@/components/public/BrandLogo";
 import {
   LayoutDashboard,
+  Gift,
   Inbox,
   Users,
   CalendarDays,
@@ -32,6 +33,7 @@ import {
   PaymentRequestAction,
 } from "@/components/operations/offline-approval";
 import { RequirementAttachments } from "@/components/customer/requirement-attachments";
+import { RewardsDesk } from "@/components/operations/rewards-desk";
 import { ShippingSettings } from "@/components/operations/shipping-settings";
 import { OperationsShipments } from "@/components/operations/shipments";
 import { deliveryLabel } from "@/lib/customer/notification-model";
@@ -172,7 +174,7 @@ export function B2CAdmin({
   initialArea = "dashboard",
 }: {
   initialId: string;
-  initialArea?: "dashboard" | "worklist" | "analytics";
+  initialArea?: "dashboard" | "worklist" | "analytics" | "rewards";
 }) {
   const hydrated = useHydrated();
   const imageOpener = useRef<HTMLElement | null>(null),
@@ -265,6 +267,27 @@ export function B2CAdmin({
       );
     return data;
   }, []);
+  const rewardsPost = useCallback(
+    async (payload: Record<string, unknown>, signal?: AbortSignal) => {
+      const response = await fetch("/api/operations/rewards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-setup-secret": secret.current,
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(60000)])
+          : AbortSignal.timeout(60000),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok)
+        throw Error(result.message || "Rewards unavailable.");
+      return result as Record<string, unknown>;
+    },
+    [],
+  );
   const intakePost = useCallback(
     async (payload: Record<string, unknown>, signal?: AbortSignal) => {
       const response = await fetch("/api/operations/intake", {
@@ -371,7 +394,7 @@ export function B2CAdmin({
     setMessage("");
     setBusy(true);
     try {
-      if (next === "analytics") {
+      if (next === "analytics" || next === "rewards") {
         setAnalyticsRevision((v) => v + 1);
       } else if (next === "dashboard") {
         const data = await post(
@@ -485,6 +508,7 @@ export function B2CAdmin({
     ["occasions", "Occasions"],
     ["stories", "Feedback & photos"],
     ["analytics", "Analytics & conversions"],
+    ["rewards", "Rewards"],
     ["reports", "Reports & health"],
     ["settings", "Settings & connections"],
   ];
@@ -496,6 +520,7 @@ export function B2CAdmin({
     occasions: CalendarDays,
     stories: MessageSquareQuote,
     analytics: BarChart3,
+    rewards: Gift,
     reports: BarChart3,
     settings: Settings,
   };
@@ -2208,6 +2233,9 @@ export function B2CAdmin({
                   </article>
                 ))}
               </section>
+            )}
+            {area === "rewards" && (
+              <RewardsDesk key={analyticsRevision} post={rewardsPost} />
             )}
             {area === "analytics" && (
               <OperationsConversions
