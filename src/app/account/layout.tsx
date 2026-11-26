@@ -1,6 +1,7 @@
 import Link from "@/components/ui/navigation-link";
 import "@/components/customer/application.css";
 import { Suspense } from "react";
+import { PrivateDetailsSync } from "@/components/customer/private-details-sync";
 import { AccountNavigation } from "@/components/customer/account-navigation";
 import { getCustomerAccount } from "@/lib/customer/session";
 import { BrandLogo } from "@/components/public/BrandLogo";
@@ -11,7 +12,12 @@ export const metadata = {
 };
 async function AccountHeader() {
   const account = await getCustomerAccount();
-  return <AccountNavigation email={account?.email || null} />;
+  return (
+    <>
+      <AccountNavigation email={account?.email || null} />
+      {account && <PrivateDetailsSync accountId={account.id} />}
+    </>
+  );
 }
 export default function AccountLayout({
   children,

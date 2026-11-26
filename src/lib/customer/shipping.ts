@@ -1,4 +1,6 @@
 import "server-only";
+import { demoProjectContext } from "./demo-feature-context";
+import { sampleShipping } from "./demo-feature-data";
 import type { Sql } from "postgres";
 import { z } from "zod";
 import { logger } from "@/lib/logging/logger";
@@ -97,6 +99,8 @@ export async function shipmentsForProject(
   if (accountId && !(await ownedProject(id, accountId)))
     throw shippingError("Request unavailable.");
   const sql = getSql();
+  const sample = await demoProjectContext(sql, id, accountId);
+  if (sample) return sampleShipping(sample.spec, Number(sample.project.stage));
   if (!(await shippingReady(sql)))
     return {
       available: false,

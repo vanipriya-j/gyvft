@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 export default async function PeoplePage({
   searchParams,
 }: {
-  searchParams: Promise<{ add?: string }>;
+  searchParams: Promise<{ add?: string; draft?: string }>;
 }) {
   const account = await requireCustomerAccount(),
     people = await peopleFor(account.id),
-    { add } = await searchParams;
+    { add, draft } = await searchParams;
   return (
     <>
       <div className="app-title">
@@ -26,7 +26,10 @@ export default async function PeoplePage({
       {add === "1" ? (
         <section className="app-panel">
           <h2>Someone worth knowing</h2>
-          <PersonForm id={randomUUID()} />
+          <PersonForm
+            accountId={account.id}
+            id={draft && /^[0-9a-f-]{36}$/i.test(draft) ? draft : randomUUID()}
+          />
           <Link className="app-button quiet" href="/account/people">
             Back to your people
           </Link>

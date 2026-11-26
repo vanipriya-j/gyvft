@@ -41,7 +41,7 @@ export default async function PersonPage({
       {edit === "1" ? (
         <section className="app-panel">
           <h2>Your private notes</h2>
-          <PersonForm id={id} person={p} />
+          <PersonForm accountId={a.id} id={id} person={p} />
         </section>
       ) : (
         <div className="app-grid">

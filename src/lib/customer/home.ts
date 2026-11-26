@@ -7,10 +7,10 @@ import { pageOf } from "./home-model";
 import { homeGifts, homeOccasions, homePayments } from "./home-data";
 import { homeInspiration } from "./home-content";
 import { savedIdeasFor } from "./saved-ideas";
-import { aarlaCatalogue } from "./catalogue";
+import { catalogueForAccount } from "./account-catalogue";
 import { aarlaSavingAvailable } from "./aarla-shop";
 import { aarlaShopHref } from "./aarla-shop-model";
-import { recordCustomerEvent } from "./observability";
+import { deferCustomerEvent } from "./deferred-events";
 export const homeQuery = z
   .object({
     section: z
@@ -39,7 +39,7 @@ async function section<T>(load: () => Promise<T>): Promise<HomeSection<T>> {
     const code =
       error && typeof error === "object" && "code" in error ? error.code : null;
     const setup = code === "42P01" || code === "42703";
-    await recordCustomerEvent("app.error", {
+    deferCustomerEvent("app.error", {
       metadata: {
         route: "/api/customer/home",
         operation: "home",
@@ -78,7 +78,7 @@ export async function customerHome(
       return { ...idea, saved: rows.length > 0 };
     },
     aarla: async () => {
-      const catalogue = await aarlaCatalogue();
+      const catalogue = await catalogueForAccount(account.id);
       if (!catalogue.available) throw new CatalogueUnavailable();
       let saved: { product_id: string }[] = [],
         savingAvailable = true;

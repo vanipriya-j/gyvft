@@ -3,7 +3,7 @@ import { aarlaShopHref } from "./aarla-shop-model";
 import { z } from "zod";
 import { getSql } from "@/lib/database/client";
 import { AppError } from "@/lib/errors/app-error";
-import { aarlaCatalogue } from "./catalogue";
+import { catalogueForAccount } from "./account-catalogue";
 import { publishedIdeas } from "./home-content";
 import type { SavedIdea } from "./home-model";
 import { pageOf } from "./home-model";
@@ -40,7 +40,7 @@ export async function setSavedIdea(
     // Removal works even when Aarla is down or the product has been retired.
     await sql`DELETE FROM gyvft_customer_saved_products WHERE account_id=${accountId}::uuid AND product_id=${input.id}`;
   } else {
-    const catalogue = await aarlaCatalogue();
+    const catalogue = await catalogueForAccount(accountId);
     if (!catalogue.available)
       throw new AppError(
         "INTEGRATION_ERROR",

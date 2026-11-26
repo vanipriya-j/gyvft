@@ -1,3 +1,9 @@
+import {
+  sampleGallerySource,
+  sampleRequirementSource,
+  sampleRequirementPdf,
+} from "@/lib/customer/demo-feature-data";
+import { demoProjectContext } from "@/lib/customer/demo-feature-context";
 import { getSql } from "@/lib/database/client";
 import { getCustomerAccount } from "@/lib/customer/session";
 import { validSetupSecret } from "@/lib/security/setup-secret";
@@ -31,6 +37,53 @@ export async function GET(
   if (!operator && !account && kind !== "moment")
     return new Response(null, { status: 404 });
   const sql = getSql();
+  if (kind === "requirement" || kind === "gift-option-image") {
+    const sample =
+      kind === "requirement"
+        ? sampleRequirementSource(id)
+        : sampleGallerySource(id);
+    if (sample && (operator || account?.id === sample.accountId)) {
+      const context = await demoProjectContext(
+        sql,
+        sample.projectId,
+        operator ? undefined : account!.id,
+      );
+      if (context) {
+        if (kind === "requirement")
+          return new Response(
+            new Uint8Array(
+              sampleRequirementPdf(
+                String(context.project.title),
+                String(context.project.brief),
+              ),
+            ),
+            {
+              headers: {
+                "Content-Type": "application/pdf",
+                "Content-Disposition":
+                  'attachment; filename="Sample requirement.pdf"',
+                "Cache-Control": "private, no-store",
+                "X-Content-Type-Options": "nosniff",
+                "Content-Security-Policy": "default-src 'none'; sandbox",
+                Vary: "Cookie",
+              },
+            },
+          );
+        const source = sampleGallerySource(id)!;
+        const [file] =
+          await sql`SELECT o.image_data,o.image_type FROM gyvft_gift_options o JOIN gyvft_gift_options root ON root.id=${source.optionId}::uuid AND root.project_id=o.project_id WHERE o.id=${source.sourceOptionId}::uuid AND o.project_id=${source.projectId}::uuid AND o.published AND root.published AND NOT o.operator_hidden AND NOT root.operator_hidden`;
+        if (file?.image_data)
+          return new Response(new Uint8Array(file.image_data), {
+            headers: {
+              "Content-Type": file.image_type,
+              "Cache-Control": "private, no-store",
+              "X-Content-Type-Options": "nosniff",
+              Vary: "Cookie",
+            },
+          });
+      }
+    }
+  }
   if (kind === "offline-approval-proof") {
     if (!operator || !(await agentOperationsReady(sql)))
       return new Response(null, { status: 404 });

@@ -1,4 +1,6 @@
 import "server-only";
+import { isDemoAccount } from "@/lib/customer/demo-accounts";
+import { demoRewardsFor } from "@/lib/customer/demo-rewards";
 import type { CustomerAccount } from "@/lib/customer/session";
 import { AppError } from "@/lib/errors/app-error";
 import { getSql, withTransaction } from "@/lib/database/client";
@@ -21,6 +23,7 @@ import {
 } from "@/services/shopify/rewards";
 import { issueReward, reconcileRewardCoupon } from "./coupons";
 export async function customerRewardView(account: CustomerAccount) {
+  if (isDemoAccount(account.id)) return demoRewardsFor(account);
   if (!(await rewardsReady()))
     return { installed: false, enabled: false, verified: false, wallet: null };
   const settings = await rewardSettings();

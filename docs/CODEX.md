@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Resilient saves and complete demos — 26 November 2026
+
+See [DATABASE-CAPACITY-AND-SAVES.md](DATABASE-CAPACITY-AND-SAVES.md). Private page prefetch is disabled, Circles readiness is render-cached, telemetry moves after the response, and the customer JSON API has bounded admission/backpressure. Profile/person/occasion submissions use an account-scoped tab outbox, coalesced retries and transaction-protected conflict/replay checks; never reuse that queue for approvals, money or provider actions. Four demo accounts gain local sample rewards/checkout/catalogue and owned attachment/gallery/delivery read models without live rewards activation, production SQL or real provider work. Existing credentials and customer rows are preserved. Local validation is recorded in the document; production traffic capacity remains unverified.
+
 ## Serverless database connection incident — 26 November 2026
 
 Live demo navigation and sign-in intermittently failed with Supabase `EMAXCONNSESSION` (`XX000`), the session pool’s 15-client ceiling. On Vercel, the shared database client now converts only managed Supabase session-pooler endpoints on port 5432 to the same host/project/credentials on transaction port 6543. Each process reuses one connection, releases idle connections after five seconds and keeps prepared statements off. Non-Supabase, explicit custom-port and development endpoints remain as configured. No schema/data/credential change or production migration accompanies this repair. See `src/lib/database/pooling.ts` and its endpoint-preservation tests.

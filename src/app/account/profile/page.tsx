@@ -17,7 +17,7 @@ export default async function ProfilePage() {
       <div className="app-grid">
         <section className="app-panel">
           <h2>Your profile</h2>
-          <ProfileForm profile={profile} />
+          <ProfileForm accountId={a.id} profile={profile} />
         </section>
         <aside className="app-stack">
           <section className="app-panel">

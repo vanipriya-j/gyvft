@@ -7,7 +7,7 @@ import {
   PaymentsPage,
 } from "@/components/customer/home-dashboard";
 import { customerHome, homeQuery } from "@/lib/customer/home";
-import { aarlaCatalogue } from "@/lib/customer/catalogue";
+import { catalogueForAccount } from "@/lib/customer/account-catalogue";
 
 import { projectsFor } from "@/lib/customer/data";
 import { requireCustomerAccount } from "@/lib/customer/session";
@@ -50,7 +50,7 @@ export default async function AccountPage({
   const [projects, extras, catalogue] = await Promise.all([
     projectsFor(account.id),
     dashboardExtrasFor(account.id),
-    aarlaCatalogue(),
+    catalogueForAccount(account.id),
   ]);
   const selected = [
     "private-diwali-hampers",

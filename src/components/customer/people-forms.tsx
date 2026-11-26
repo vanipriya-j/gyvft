@@ -1,14 +1,22 @@
-import { ActionForm } from "./action-form";
-import {
-  updatePerson,
-  updateOccasion,
-  updateProfile,
-} from "@/app/account/journey-actions";
+import { PrivateDetailsForm } from "./private-details-form";
+import { privateDetailsVersion } from "@/lib/customer/private-details";
 import type { Person, Occasion, Profile } from "@/lib/customer/journey-model";
-export function PersonForm({ id, person }: { id: string; person?: Person }) {
+export function PersonForm({
+  accountId,
+  id,
+  person,
+}: {
+  accountId: string;
+  id: string;
+  person?: Person;
+}) {
   return (
-    <ActionForm
-      action={updatePerson.bind(null, id)}
+    <PrivateDetailsForm
+      accountId={accountId}
+      kind="person"
+      id={id}
+      version={privateDetailsVersion("person", person)}
+      isNew={!person}
       successHref={`/account/people/${id}`}
       label="Save person"
     >
@@ -50,12 +58,24 @@ export function PersonForm({ id, person }: { id: string; person?: Person }) {
         These are your private notes. An invitation lets them share their own
         profile separately.
       </p>
-    </ActionForm>
+    </PrivateDetailsForm>
   );
 }
-export function ProfileForm({ profile }: { profile: Profile }) {
+export function ProfileForm({
+  accountId,
+  profile,
+}: {
+  accountId: string;
+  profile: Profile;
+}) {
   return (
-    <ActionForm action={updateProfile} label="Save my profile">
+    <PrivateDetailsForm
+      accountId={accountId}
+      kind="profile"
+      id={accountId}
+      version={privateDetailsVersion("profile", profile)}
+      label="Save my profile"
+    >
       {(["name", "about", "interests", "avoid"] as const).map((k) => (
         <label className="app-label" key={k}>
           {k === "name"
@@ -95,21 +115,27 @@ export function ProfileForm({ profile }: { profile: Profile }) {
         Your profile is private by default. Turn sharing off at any time; this
         also stops connected people from reading it.
       </p>
-    </ActionForm>
+    </PrivateDetailsForm>
   );
 }
 export function OccasionForm({
+  accountId,
   id,
   occasion,
   people,
 }: {
+  accountId: string;
   id: string;
   occasion?: Occasion;
   people: Person[];
 }) {
   return (
-    <ActionForm
-      action={updateOccasion.bind(null, id)}
+    <PrivateDetailsForm
+      accountId={accountId}
+      kind="occasion"
+      id={id}
+      version={privateDetailsVersion("occasion", occasion)}
+      isNew={!occasion}
       successHref={`/account/occasions/${id}`}
       label="Save occasion"
     >
@@ -181,6 +207,6 @@ export function OccasionForm({
         The occasion date and requested gift delivery date are separate. This
         stays in your private calendar.
       </p>
-    </ActionForm>
+    </PrivateDetailsForm>
   );
 }

@@ -49,7 +49,7 @@ export default async function OccasionPage({
       {edit === "1" ? (
         <section className="app-panel">
           <h2>Edit occasion</h2>
-          <OccasionForm id={id} occasion={o} people={people} />
+          <OccasionForm accountId={a.id} id={id} occasion={o} people={people} />
         </section>
       ) : (
         <div className="app-grid">

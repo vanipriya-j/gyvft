@@ -1,9 +1,13 @@
 import "server-only";
+import {
+  customerDatabaseQueue,
+  DatabaseBusyError,
+} from "@/lib/database/work-queue";
 import { getCustomerAccount, type CustomerAccount } from "./session";
 import { AppError } from "@/lib/errors/app-error";
 import { z } from "zod";
 import { assertPublicFormRateLimit } from "@/lib/security/memory-guards";
-import { recordCustomerEvent } from "./observability";
+import { deferCustomerEvent } from "./deferred-events";
 export const customerReply = (body: unknown, status = 200) =>
   Response.json(body, {
     status,
@@ -46,6 +50,32 @@ export async function customerJson(request: Request, maxBytes = 2048) {
 }
 /** Cookie-authenticated writes must originate from this app, unlike operator APIs. */
 export async function customerApi(
+  request: Request,
+  mutation: boolean,
+  handler: (account: CustomerAccount) => Promise<Response>,
+) {
+  try {
+    return await customerDatabaseQueue.run(
+      () => customerApiRunning(request, mutation, handler),
+      request.signal,
+    );
+  } catch (error) {
+    if (!(error instanceof DatabaseBusyError)) throw error;
+    const response = customerReply(
+      {
+        ok: false,
+        error: {
+          code: "BUSY",
+          message: "GYVFT is busy. Please try again shortly.",
+        },
+      },
+      503,
+    );
+    response.headers.set("Retry-After", "2");
+    return response;
+  }
+}
+async function customerApiRunning(
   request: Request,
   mutation: boolean,
   handler: (account: CustomerAccount) => Promise<Response>,
@@ -98,7 +128,7 @@ export async function customerApi(
     const code =
       error && typeof error === "object" && "code" in error ? error.code : null;
     const setup = code === "42P01" || code === "42703";
-    await recordCustomerEvent("app.error", {
+    deferCustomerEvent("app.error", {
       metadata: {
         route: new URL(request.url).pathname,
         operation: "home",
