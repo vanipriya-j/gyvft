@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "crypto";
-import type { JSONValue, Sql } from "postgres";
+import type { Sql } from "postgres";
+import type { JSONValue } from "@/lib/database/types";
 import { getSql, withTransaction } from "@/lib/database/client";
 import { AppError } from "@/lib/errors/app-error";
 import { logger } from "@/lib/logging/logger";

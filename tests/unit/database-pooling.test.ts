@@ -15,6 +15,11 @@ describe("serverless database pooling", () => {
     expect(after.search).toBe(before.search);
     expect(config.options).toMatchObject({
       max: 1,
+      max_pipeline: 1,
+      infer: true,
+      queue_timeout: 10,
+      query_timeout: 20,
+      cancel_timeout: 3,
       idle_timeout: 5,
       prepare: false,
     });

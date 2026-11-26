@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Supavisor driver compatibility — 26 November 2026
+
+Live checks after transaction-pool activation exposed Postgres.js 3.4.9's upstream Supavisor pipelining hang: isolated API reads succeeded while overlapping SSR reads never settled. The follow-up pins 4.1.1, uses `max_pipeline: 1`, keeps legacy parameter inference, and adds driver queue/query/cancel deadlines. No production schema/data changes accompany it. See [capacity/driver notes](DATABASE-CAPACITY-AND-SAVES.md#driver-compatibility-and-deadlines) and the guarded driver integration tests. Do not undo non-pipelined operation or set the v3 `max_pipeline: 0` workaround. Existing monetary side effects keep their reconciliation/idempotency boundaries.
+
 ## Resilient saves and complete demos — 26 November 2026
 
 See [DATABASE-CAPACITY-AND-SAVES.md](DATABASE-CAPACITY-AND-SAVES.md). Private page prefetch is disabled, Circles readiness is render-cached, telemetry moves after the response, and the customer JSON API has bounded admission/backpressure. Profile/person/occasion submissions use an account-scoped tab outbox, coalesced retries and transaction-protected conflict/replay checks; never reuse that queue for approvals, money or provider actions. Four demo accounts gain local sample rewards/checkout/catalogue and owned attachment/gallery/delivery read models without live rewards activation, production SQL or real provider work. Existing credentials and customer rows are preserved. Local validation is recorded in the document; production traffic capacity remains unverified.

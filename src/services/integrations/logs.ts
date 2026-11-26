@@ -1,5 +1,5 @@
 import "server-only";
-import type { JSONValue } from "postgres";
+import type { JSONValue } from "@/lib/database/types";
 import { getSql } from "@/lib/database/client";
 
 export async function createIntegrationLog(input: {
