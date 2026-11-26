@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { randomUUID } from "node:crypto";
 import type { Sql } from "postgres";
 import { z } from "zod";
@@ -23,12 +24,12 @@ import {
 } from "./circle-model";
 type Actor = { id: string; email: string };
 const uuid = z.string().uuid();
-export async function circlesReady(sql = getSql()) {
+export const circlesReady = cache(async (sql = getSql()) => {
   const [r] = await sql<
     { ready: boolean }[]
   >`SELECT to_regclass('public.gyvft_circles') IS NOT NULL AND to_regclass('public.gyvft_circle_members') IS NOT NULL AND to_regclass('public.gyvft_circle_organisations') IS NOT NULL AND to_regclass('public.gyvft_circle_recipients') IS NOT NULL AND to_regclass('public.gyvft_circle_invitations') IS NOT NULL AND to_regclass('public.gyvft_circle_occasions') IS NOT NULL AND to_regclass('public.gyvft_circle_events') IS NOT NULL AND (SELECT count(*)=2 FROM information_schema.columns WHERE table_schema='public' AND table_name='customer_projects' AND column_name IN ('circle_id','circle_occasion_id')) AS ready`;
   return r.ready;
-}
+});
 async function requireSchema() {
   if (!(await circlesReady()))
     throw new CircleError(

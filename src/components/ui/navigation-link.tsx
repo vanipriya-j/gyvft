@@ -30,13 +30,21 @@ function NavigationFeedback() {
   );
 }
 
-/** Keep native Link semantics and prefetching, with immediate click feedback. */
+/** Private screens do database work. Fetch them when opened, not merely visible. */
 export default function NavigationLink({
   children,
   ...props
 }: ComponentProps<typeof Link>) {
+  const pathname =
+    typeof props.href === "string" ? props.href : props.href.pathname || "";
+  const relative = !pathname.startsWith("/") && !/^https?:\/\//.test(pathname);
+  const privatePage =
+    relative || /^\/(account|operations|studio|setup)(\/|\?|$)/.test(pathname);
   return (
-    <Link {...props}>
+    <Link
+      {...props}
+      prefetch={props.prefetch ?? (privatePage ? false : undefined)}
+    >
       {children}
       <NavigationFeedback />
     </Link>

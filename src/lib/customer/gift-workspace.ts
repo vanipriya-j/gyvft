@@ -1,4 +1,6 @@
 import "server-only";
+import { demoProjectContext } from "./demo-feature-context";
+import { sampleGalleryImages } from "./demo-feature-data";
 import type { Sql } from "postgres";
 import { getSql } from "@/lib/database/client";
 import { uuidPattern } from "./model";
@@ -47,12 +49,16 @@ export async function giftWorkspace(projectId: string, accountId?: string) {
         FROM gyvft_gift_option_images i JOIN gyvft_gift_options o ON o.id=i.option_id
         WHERE o.project_id=${projectId}::uuid ORDER BY i.position,i.id`
     : [];
+  const sample = await demoProjectContext(sql, projectId, accountId);
   const galleryOptions = options.map((o) => ({
     ...o,
     images: images
       .filter((image) => image.option_id === o.id)
       .map(({ id, kind, position }) => ({ id, kind, position })),
   }));
+  for (const option of galleryOptions)
+    if (sample && !option.images.length && option.has_image)
+      option.images = sampleGalleryImages(projectId, option.id);
   const [agentTable] =
     await sql`SELECT to_regclass('gyvft_mcp_settings')::text AS name`;
   const optionDraftsReady = !!agentTable?.name;

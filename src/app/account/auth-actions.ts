@@ -21,7 +21,7 @@ import {
 } from "@/lib/customer/accounts";
 import { sendPublicResendEmail } from "@/services/email/public-resend";
 import { escapeHtml } from "@/lib/security/sanitize";
-import { recordCustomerEvent } from "@/lib/customer/observability";
+import { deferCustomerEvent } from "@/lib/customer/deferred-events";
 import { logger } from "@/lib/logging/logger";
 export type CustomerAuthResult = {
   ok: boolean;
@@ -79,7 +79,7 @@ async function reportAuthFailure(
   const fields = { requestId, operation, phase, code, status };
   if (limited) logger.warn("Customer authentication operation limited", fields);
   else logger.error("Customer authentication operation failed", fields);
-  await recordCustomerEvent("app.error", {
+  deferCustomerEvent("app.error", {
     requestId,
     metadata: { route: "/account/login", operation, code, status },
   });
@@ -109,7 +109,7 @@ export async function registerCustomerAction(
         message:
           "We couldn’t create this account. Try signing in or use Forgot password.",
       };
-    await recordCustomerEvent("account.created", {
+    deferCustomerEvent("account.created", {
       accountId: rows[0].id,
       metadata: { route: "/account/login", operation: "register", status: 201 },
     });
@@ -118,7 +118,7 @@ export async function registerCustomerAction(
     phase = "session";
     await createCustomerSession(rows[0].id);
     scheduleCustomerSync(rows[0].id);
-    await recordCustomerEvent("session.started", {
+    deferCustomerEvent("session.started", {
       accountId: rows[0].id,
       metadata: { route: "/account/login", operation: "register", status: 200 },
     });
@@ -156,7 +156,7 @@ export async function loginCustomerAction(
       account?.password_hash ?? fallback,
     );
     if (!account?.is_active || !valid) {
-      await recordCustomerEvent("session.failed", {
+      deferCustomerEvent("session.failed", {
         metadata: {
           route: "/account/login",
           operation: "login",
@@ -171,7 +171,7 @@ export async function loginCustomerAction(
     phase = "session";
     await createCustomerSession(account.id);
     scheduleCustomerSync(account.id);
-    await recordCustomerEvent("session.started", {
+    deferCustomerEvent("session.started", {
       accountId: account.id,
       metadata: { route: "/account/login", operation: "login", status: 200 },
     });

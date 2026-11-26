@@ -1,3 +1,5 @@
+import { isDemoAccount, demoRewardCommand } from "@/lib/customer/demo-rewards";
+import { AppError } from "@/lib/errors/app-error";
 import { z } from "zod";
 import { customerApi, customerJson, customerReply } from "@/lib/customer/api";
 import {
@@ -18,6 +20,10 @@ export async function GET(request: Request) {
   );
 }
 const command = z.discriminatedUnion("op", [
+  z.object({ op: z.literal("demo-reset") }).strict(),
+  z
+    .object({ op: z.literal("demo-checkout"), intent: z.string().uuid() })
+    .strict(),
   z.object({ op: z.literal("refresh") }).strict(),
   z.object({ op: z.literal("verify-email") }).strict(),
   z
@@ -48,6 +54,16 @@ const command = z.discriminatedUnion("op", [
 export async function POST(request: Request) {
   return customerApi(request, true, async (account) => {
     const input = command.parse(await customerJson(request));
+    if (isDemoAccount(account.id))
+      return customerReply({
+        ok: true,
+        ...(await demoRewardCommand(account, input)),
+      });
+    if (input.op === "demo-checkout" || input.op === "demo-reset")
+      throw new AppError(
+        "FORBIDDEN",
+        "Sample checkout is available only to demo accounts.",
+      );
     if (input.op === "refresh")
       return customerReply({
         ok: true,

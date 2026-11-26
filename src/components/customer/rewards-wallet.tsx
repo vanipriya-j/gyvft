@@ -38,6 +38,7 @@ type Wallet = {
   } | null;
 };
 type View = {
+  demo?: boolean;
   installed: boolean;
   enabled: boolean;
   verified: boolean;
@@ -155,9 +156,21 @@ export function RewardsWallet({ email }: { email: string }) {
             A little more, every time
           </p>
           <h1>Your Aarla rewards</h1>
+          {data?.demo && (
+            <span className="app-badge mt-2">
+              Sample rewards · fictional balance
+            </span>
+          )}
           <p>Good things come back around.</p>
         </div>
-        <Link className="app-button" href="/account/shop">
+        <Link
+          className="app-button"
+          href={
+            data?.demo
+              ? "/account/rewards/checkout?benefit=saving"
+              : "/account/shop"
+          }
+        >
           Shop with your 5% saving <ArrowUpRight size={16} />
         </Link>
       </div>
@@ -438,6 +451,22 @@ export function RewardsWallet({ email }: { email: string }) {
                 )}
               </section>
             </>
+          )}
+          {data.demo && (
+            <section className="app-panel">
+              <h2>Try another gifting story.</h2>
+              <p className="text-sm">
+                Reset only this sample wallet to explore another reward. No
+                customer or order record changes.
+              </p>
+              <button
+                className="app-button mt-4"
+                disabled={!!busy}
+                onClick={() => void command("demo-reset")}
+              >
+                Reset sample wallet
+              </button>
+            </section>
           )}
           <section className="app-panel">
             <h2>One good benefit at a time.</h2>

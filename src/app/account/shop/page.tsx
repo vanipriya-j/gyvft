@@ -1,3 +1,5 @@
+import { isDemoAccount } from "@/lib/customer/demo-accounts";
+import { SampleCheckout } from "@/components/customer/sample-checkout";
 import { notFound } from "next/navigation";
 import { requireCustomerAccount } from "@/lib/customer/session";
 import { aarlaDestination } from "@/lib/customer/aarla-shop-model";
@@ -18,5 +20,6 @@ export default async function ShopPage({
   const account = await requireCustomerAccount(
     `/account/shop?to=${encodeURIComponent(destination)}`,
   );
+  if (isDemoAccount(account.id)) return <SampleCheckout intent={null} saving />;
   return <AarlaShop destination={destination} email={account.email} />;
 }

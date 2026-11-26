@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { BrandLogo } from "@/components/public/BrandLogo";
+import { clearPrivateDetails } from "@/lib/customer/private-details-outbox";
 import { signOut } from "@/app/account/actions";
 export function AccountNavigation({ email }: { email: string | null }) {
   const profile = useRef<HTMLDetailsElement>(null);
@@ -144,7 +145,14 @@ export function AccountNavigation({ email }: { email: string | null }) {
                   >
                     Your occasions
                   </Link>
-                  <form action={signOut}>
+                  <form
+                    action={signOut}
+                    onSubmit={() => {
+                      try {
+                        clearPrivateDetails();
+                      } catch {}
+                    }}
+                  >
                     <button className="w-full rounded-lg px-2 py-2.5 text-left text-sm hover:bg-surface">
                       Sign out
                     </button>

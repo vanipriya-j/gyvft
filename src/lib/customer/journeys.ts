@@ -59,15 +59,24 @@ export async function occasionsFor(accountId: string) {
     Occasion[]
   >`SELECT id,title,occasion_date::text,repeats_annually,notes,relationship,person_id,photo_data IS NOT NULL AS has_photo FROM gyvft_customer_occasions WHERE account_id=${accountId}::uuid ORDER BY occasion_date,title`;
 }
-export async function saveProfile(accountId: string, raw: unknown) {
+export async function saveProfile(
+  accountId: string,
+  raw: unknown,
+  sql: Sql = getSql(),
+) {
   const p = profileSchema.parse(raw);
-  await getSql()`INSERT INTO gyvft_customer_profiles(account_id,name,about,interests,avoid,share_profile) VALUES(${accountId}::uuid,${p.name},${p.about},${p.interests},${p.avoid},${p.share_profile}) ON CONFLICT(account_id) DO UPDATE SET name=EXCLUDED.name,about=EXCLUDED.about,interests=EXCLUDED.interests,avoid=EXCLUDED.avoid,share_profile=EXCLUDED.share_profile,updated_at=now()`;
+  await sql`INSERT INTO gyvft_customer_profiles(account_id,name,about,interests,avoid,share_profile) VALUES(${accountId}::uuid,${p.name},${p.about},${p.interests},${p.avoid},${p.share_profile}) ON CONFLICT(account_id) DO UPDATE SET name=EXCLUDED.name,about=EXCLUDED.about,interests=EXCLUDED.interests,avoid=EXCLUDED.avoid,share_profile=EXCLUDED.share_profile,updated_at=now()`;
 }
-export async function savePerson(accountId: string, id: string, raw: unknown) {
+export async function savePerson(
+  accountId: string,
+  id: string,
+  raw: unknown,
+  sql: Sql = getSql(),
+) {
   if (!uuidPattern.test(id)) throw new JourneyError("Person unavailable.");
   const p = personSchema.parse(raw);
   const rows =
-    await getSql()`INSERT INTO gyvft_customer_people(id,account_id,name,relationship,about,likes,avoid,email) VALUES(${id}::uuid,${accountId}::uuid,${p.name},${p.relationship},${p.about},${p.likes},${p.avoid},${p.email.toLowerCase()}) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,relationship=EXCLUDED.relationship,about=EXCLUDED.about,likes=EXCLUDED.likes,avoid=EXCLUDED.avoid,email=EXCLUDED.email,linked_account_id=CASE WHEN gyvft_customer_people.email=EXCLUDED.email THEN gyvft_customer_people.linked_account_id ELSE NULL END,invitation_hash=CASE WHEN gyvft_customer_people.email=EXCLUDED.email THEN gyvft_customer_people.invitation_hash ELSE NULL END,updated_at=now() WHERE gyvft_customer_people.account_id=${accountId}::uuid RETURNING id`;
+    await sql`INSERT INTO gyvft_customer_people(id,account_id,name,relationship,about,likes,avoid,email) VALUES(${id}::uuid,${accountId}::uuid,${p.name},${p.relationship},${p.about},${p.likes},${p.avoid},${p.email.toLowerCase()}) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,relationship=EXCLUDED.relationship,about=EXCLUDED.about,likes=EXCLUDED.likes,avoid=EXCLUDED.avoid,email=EXCLUDED.email,linked_account_id=CASE WHEN gyvft_customer_people.email=EXCLUDED.email THEN gyvft_customer_people.linked_account_id ELSE NULL END,invitation_hash=CASE WHEN gyvft_customer_people.email=EXCLUDED.email THEN gyvft_customer_people.invitation_hash ELSE NULL END,updated_at=now() WHERE gyvft_customer_people.account_id=${accountId}::uuid RETURNING id`;
   if (!rows[0]) throw new JourneyError("Person unavailable.");
   return id;
 }
@@ -92,16 +101,18 @@ export async function saveOccasion(
   accountId: string,
   id: string,
   raw: unknown,
+  sql?: Sql,
 ) {
   if (!uuidPattern.test(id)) throw new JourneyError("Occasion unavailable.");
   const o = occasionSchema.parse(raw);
-  await getSql().begin(async (rawTx) => {
-    const tx = rawTx as unknown as Sql;
+  const write = async (tx: Sql) => {
     await ownedLinks(tx, accountId, null, o.person_id);
     const rows =
       await tx`INSERT INTO gyvft_customer_occasions(id,account_id,title,occasion_date,repeats_annually,notes,relationship,person_id) VALUES(${id}::uuid,${accountId}::uuid,${o.title},${o.occasion_date}::date,${o.repeats_annually},${o.notes},${o.relationship},${o.person_id}::uuid) ON CONFLICT(id) DO UPDATE SET title=EXCLUDED.title,occasion_date=EXCLUDED.occasion_date,repeats_annually=EXCLUDED.repeats_annually,notes=EXCLUDED.notes,relationship=EXCLUDED.relationship,person_id=EXCLUDED.person_id WHERE gyvft_customer_occasions.account_id=${accountId}::uuid RETURNING id`;
     if (!rows[0]) throw new JourneyError("Occasion unavailable.");
-  });
+  };
+  if (sql) await write(sql);
+  else await getSql().begin((tx) => write(tx as unknown as Sql));
   return id;
 }
 export async function saveGift(

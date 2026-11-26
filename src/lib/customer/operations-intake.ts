@@ -1,4 +1,7 @@
 import "server-only";
+import { demoProjectContext } from "./demo-feature-context";
+import { sampleRequirementPdf } from "./demo-feature-data";
+import { demoKey } from "./demo-fixtures";
 import {
   createHash,
   createHmac,
@@ -43,6 +46,21 @@ export async function requirementAttachmentsFor(
   projectId: string,
   sql: Sql = getSql(),
 ): Promise<RequirementAttachment[]> {
+  const sample = await demoProjectContext(sql, projectId);
+  if (sample) {
+    const bytes = sampleRequirementPdf(
+      String(sample.project.title),
+      String(sample.project.brief),
+    );
+    return [
+      {
+        id: demoKey(`${projectId}:demo-requirement`),
+        filename: "Sample requirement.pdf",
+        mime_type: "application/pdf",
+        size: bytes.length,
+      },
+    ];
+  }
   if (!(await operationsIntakeReady(sql))) return [];
   return sql<
     RequirementAttachment[]

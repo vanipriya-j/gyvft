@@ -9,10 +9,10 @@ export const dynamic = "force-dynamic";
 export default async function OccasionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ add?: string }>;
+  searchParams: Promise<{ add?: string; draft?: string }>;
 }) {
   const a = await requireCustomerAccount(),
-    { add } = await searchParams,
+    { add, draft } = await searchParams,
     [occasions, people] = await Promise.all([
       occasionsFor(a.id),
       peopleFor(a.id),
@@ -33,7 +33,11 @@ export default async function OccasionsPage({
       {add === "1" ? (
         <section className="app-panel">
           <h2>A day worth remembering</h2>
-          <OccasionForm id={randomUUID()} people={people} />
+          <OccasionForm
+            accountId={a.id}
+            id={draft && /^[0-9a-f-]{36}$/i.test(draft) ? draft : randomUUID()}
+            people={people}
+          />
           <Link className="app-button quiet" href="/account/occasions">
             Back to occasions
           </Link>
