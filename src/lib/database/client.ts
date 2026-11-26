@@ -1,5 +1,6 @@
 import "server-only";
 import postgres, { type Sql } from "postgres";
+import { databasePoolConfig } from "./pooling";
 import { requireDatabaseUrl } from "@/config/env";
 
 declare global {
@@ -8,14 +9,13 @@ declare global {
 
 export function getSql(): Sql {
   if (global.__gyvftSql) return global.__gyvftSql;
-  const sql = postgres(requireDatabaseUrl(), {
-    max: 5,
-    idle_timeout: 20,
-    connect_timeout: 10,
-    prepare: false,
-  });
-  // Reuse one bounded pool per server instance in production as well as dev.
-  // Creating a fresh pool per query exhausts serverless database connections.
+  const config = databasePoolConfig(
+    requireDatabaseUrl(),
+    process.env.VERCEL === "1",
+  );
+  const sql = postgres(config.url, config.options);
+  // One reused pool per process. Supabase transaction mode avoids the session
+  // pool's 15-client ceiling; a single local connection bounds each Vercel instance.
   global.__gyvftSql = sql;
   return sql;
 }

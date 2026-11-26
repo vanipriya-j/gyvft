@@ -189,7 +189,7 @@ GYVFT uses Supabase for Auth and Storage. The app also connects directly to Post
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...` from Settings → API Keys)
    - `SUPABASE_SECRET_KEY` (`sb_secret_...` from Settings → API Keys)
-   - `DATABASE_URL` (Session Pooler URI recommended for Vercel)
+   - `DATABASE_URL` (Supabase Transaction Pooler URI on port 6543 for Vercel; prepared statements stay disabled)
    - Legacy fallback only: `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`
 3. In Supabase Auth settings:
    - Set the Site URL to the production app URL, for example `https://gyvft.com`.
