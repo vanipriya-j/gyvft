@@ -81,28 +81,46 @@ export async function savePrivateDetails(
     )
       .trim()
       .toLowerCase();
-  return sql.begin(async (rawTx) => {
-    const tx = rawTx as unknown as Sql;
-    await tx`SELECT pg_advisory_xact_lock(hashtextextended(${`private-details:${input.kind}:${input.id}`},0))`;
-    const rows =
-      input.kind === "profile"
-        ? await tx`SELECT * FROM gyvft_customer_profiles WHERE account_id=${accountId}::uuid FOR UPDATE`
-        : input.kind === "person"
-          ? await tx`SELECT * FROM gyvft_customer_people WHERE id=${input.id}::uuid AND account_id=${accountId}::uuid FOR UPDATE`
-          : await tx`SELECT *,occasion_date::text AS occasion_date FROM gyvft_customer_occasions WHERE id=${input.id}::uuid AND account_id=${accountId}::uuid FOR UPDATE`;
-    const current = privateDetailsVersion(input.kind, rows[0]),
-      next = privateDetailsVersion(input.kind, document);
-    // A lost response can safely be replayed without creating another record.
-    if (current === next) return { version: next, id: input.id };
-    if (current !== input.version)
+  try {
+    return await sql.begin(async (rawTx) => {
+      const tx = rawTx as unknown as Sql;
+      await tx`SELECT pg_advisory_xact_lock(hashtextextended(${`private-details:${input.kind}:${input.id}`},0))`;
+      const rows =
+        input.kind === "profile"
+          ? await tx`SELECT * FROM gyvft_customer_profiles WHERE account_id=${accountId}::uuid FOR UPDATE`
+          : input.kind === "person"
+            ? await tx`SELECT * FROM gyvft_customer_people WHERE id=${input.id}::uuid AND account_id=${accountId}::uuid FOR UPDATE`
+            : await tx`SELECT *,occasion_date::text AS occasion_date FROM gyvft_customer_occasions WHERE id=${input.id}::uuid AND account_id=${accountId}::uuid FOR UPDATE`;
+      const current = privateDetailsVersion(input.kind, rows[0]),
+        next = privateDetailsVersion(input.kind, document);
+      // A lost response can safely be replayed without creating another record.
+      if (current === next) return { version: next, id: input.id };
+      if (current !== input.version)
+        throw new AppError(
+          "CONFLICT",
+          "This record changed elsewhere. Your draft is kept in this tab. Review the latest version before saving again.",
+        );
+      if (input.kind === "profile") await saveProfile(accountId, document, tx);
+      else if (input.kind === "person")
+        await savePerson(accountId, input.id, document, tx);
+      else await saveOccasion(accountId, input.id, document, tx);
+      return { version: next, id: input.id };
+    });
+  } catch (error) {
+    const code =
+      error && typeof error === "object" && "code" in error ? error.code : null;
+    if (code === "23505")
       throw new AppError(
         "CONFLICT",
-        "This record changed elsewhere. Your draft is kept in this tab. Review the latest version before saving again.",
+        input.kind === "occasion"
+          ? "This occasion is already in your calendar. Review your saved occasions before adding another."
+          : "An item with these details already exists. Review it before saving again.",
       );
-    if (input.kind === "profile") await saveProfile(accountId, document, tx);
-    else if (input.kind === "person")
-      await savePerson(accountId, input.id, document, tx);
-    else await saveOccasion(accountId, input.id, document, tx);
-    return { version: next, id: input.id };
-  });
+    if (code === "23503" || code === "23514")
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "A linked record or one of these details changed. Review the fields before saving again.",
+      );
+    throw error;
+  }
 }

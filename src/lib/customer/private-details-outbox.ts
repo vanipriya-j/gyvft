@@ -128,7 +128,9 @@ export async function syncDetails(account: string) {
         success = r.ok && result.ok === true;
         version = result.version ?? null;
         if (!success) {
-          blocked = ![429, 502, 503, 504].includes(r.status);
+          blocked =
+            result.error?.code === "SETUP_REQUIRED" ||
+            ![429, 502, 503, 504].includes(r.status);
           message =
             result.error?.message || "Review this draft before trying again.";
           const seconds = Number(r.headers.get("Retry-After"));

@@ -198,6 +198,9 @@ describe.skipIf(!uri)(
       const o = await savePrivateDetails(customer, input);
       expect(await savePrivateDetails(customer, input)).toEqual(o);
       await expect(
+        savePrivateDetails(customer, { ...input, id: randomUUID() }),
+      ).rejects.toThrow("already in your calendar");
+      await expect(
         savePrivateDetails(customer, {
           ...input,
           id: randomUUID(),
