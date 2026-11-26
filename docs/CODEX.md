@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Serverless database connection incident — 26 November 2026
+
+Live demo navigation and sign-in intermittently failed with Supabase `EMAXCONNSESSION` (`XX000`), the session pool’s 15-client ceiling. On Vercel, the shared database client now converts only managed Supabase session-pooler endpoints on port 5432 to the same host/project/credentials on transaction port 6543. Each process reuses one connection, releases idle connections after five seconds and keeps prepared statements off. Non-Supabase, explicit custom-port and development endpoints remain as configured. No schema/data/credential change or production migration accompanies this repair. See `src/lib/database/pooling.ts` and its endpoint-preservation tests.
+
 ## D2C rewards — 25 November 2026
 
 See [D2C-REWARDS.md](D2C-REWARDS.md). GYVFT owns calculation, wallet, verified-email binding, historical preview/approval and native coupon issuance; Aarla handles checkout. Version one earns 2%, holds 14 days, expires after 365 days and caps redemption at 25% of eligible merchandise. No stacking and no earning on redemption orders. Own birthday/anniversary offers are annual ₹150/₹1,500 coupons. Daily updated-order pull is bounded/resumable; uncertain provider results retain the same reservation/code. Customer and Operations Rewards screens share domain services. The additive checksum-pinned rewards SQL is deliberately excluded from generic customer setup and requires owner activation at `/setup/rewards`; opening points need separate explicit snapshot approval. No production migration, points, price changes, emails or native coupons accompanied development. Redemption refunds still require manual review; do not claim automatic points restoration.
