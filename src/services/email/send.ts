@@ -1,5 +1,5 @@
 import "server-only";
-import type { JSONValue } from "postgres";
+import type { JSONValue } from "@/lib/database/types";
 import { Resend } from "resend";
 import { getEnv } from "@/config/env";
 import { getSql } from "@/lib/database/client";

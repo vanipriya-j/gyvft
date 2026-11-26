@@ -8,6 +8,16 @@ All deployed application SQL comes from `src/lib/database/client.ts`, cached onc
 
 A database pool size is not a customer count. Supavisor shares database connections between transactions across independent Vercel instances. Long transactions, slow queries, locks and bursts can still cause queuing. Keep provider network requests outside SQL transactions. Do not implement session-level locks or rely on connection-local state with transaction pooling.
 
+## Driver compatibility and deadlines
+
+The first live transaction-pool deployment exposed a second problem: Postgres.js 3.4.9 could leave overlapping queries pending through Supavisor even while isolated health/Rewards API reads worked. This matches the upstream [Supavisor hang report](https://github.com/porsager/postgres/issues/970) and the maintainer’s [current pooling guidance](https://github.com/porsager/postgres#connection-details).
+
+The driver is pinned to Postgres.js 4.1.1, whose pool/transaction reservation handling was rewritten. `max_pipeline: 1` sends one query at a time per connection, as recommended for older Supavisor transaction poolers. Do not copy the v3 `max_pipeline: 0` workaround: that version also had a transaction-reservation bug. `infer: true` preserves the old parameter typing for booleans, dates, buffers and arrays; the SQL schemas remain unchanged. JSON type imports use the v4 driver namespace.
+
+The driver also bounds waiting for a connection to ten seconds, total query waiting/running to twenty seconds and unanswered cancellation to three seconds. These limits cover SQL beyond the customer API admission guard, including server-rendered identity reads. A timed-out or disconnected mutation can have an unknown outcome; financial actions still require their existing request IDs/reconciliation, and are never blindly replayed. The private-details outbox can replay its stable document/record/version safely.
+
+Local regression coverage includes repeated distinguishable parallel results, simultaneous transaction reservations, commits/rollbacks, expiry before execution and cancellation followed by a usable connection. Native Supavisor production behaviour still requires live verification after deployment; direct local Postgres alone does not reproduce the old pooler defect.
+
 ## Avoiding work
 
 Private Account, Operations, Studio and setup links no longer prefetch pages merely because the links are visible. Query-relative links are covered as well. Public page links retain normal Next behaviour. Click progress and native keyboard/link semantics remain.

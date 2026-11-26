@@ -1,4 +1,5 @@
-import type { JSONValue, Sql } from "postgres";
+import type { Sql } from "postgres";
+import type { JSONValue } from "@/lib/database/types";
 import { getSql } from "@/lib/database/client";
 
 export type AnalyticsEventRow = {

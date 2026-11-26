@@ -1,6 +1,6 @@
 import "server-only";
 import { createHmac, randomUUID } from "crypto";
-import type { JSONValue } from "postgres";
+import type { JSONValue } from "@/lib/database/types";
 import { getSql } from "@/lib/database/client";
 import { decryptSecret } from "@/lib/encryption/secrets";
 import { createIntegrationLog } from "@/services/integrations/logs";
