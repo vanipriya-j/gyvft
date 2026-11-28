@@ -191,14 +191,22 @@ export async function rewardWallet(customer: string) {
 export function fingerprint(rows: unknown) {
   return createHash("sha256").update(JSON.stringify(rows)).digest("hex");
 }
-async function openingSnapshot(tx: Sql) {
+export async function openingSnapshot(
+  tx: Sql,
+  customers: string[] | null = null,
+  orderIds: string[] | null = null,
+  includePending = false,
+) {
   const rows =
     await tx`SELECT id,customer_id,email,updated_at,snapshot_hash,is_historical,authorised,
   (COALESCE(paid_at,updated_at)<=now()-interval '14 days') AS matured,
   COALESCE(CASE WHEN reviewed_version=updated_at AND classification!='excluded' THEN reviewed_paise END,CASE WHEN classification='d2c' THEN eligible_paise ELSE 0 END)::bigint AS basis
-  FROM gyvft_reward_orders WHERE customer_id IS NOT NULL AND (authorised OR (is_historical AND (classification='d2c' OR reviewed_version=updated_at))) ORDER BY customer_id,created_at,id`;
+  FROM gyvft_reward_orders WHERE customer_id IS NOT NULL
+  AND (${customers}::text[] IS NULL OR customer_id=ANY(${customers}::text[]))
+  AND (authorised OR (is_historical AND (${orderIds}::text[] IS NULL OR id=ANY(${orderIds}::text[])) AND (classification='d2c' OR reviewed_version=updated_at))) ORDER BY customer_id,created_at,id`;
   const candidates = rows.filter(
-    (row) => row.is_historical && !row.authorised && row.matured,
+    (row) =>
+      row.is_historical && !row.authorised && (row.matured || includePending),
   );
   const totals = new Map<string, { before: number; after: number }>();
   for (const row of rows) {

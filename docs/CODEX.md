@@ -4,6 +4,10 @@
 
 Repo: `vanipriya-j/gyvft` · Branch of truth: `main` · Tagline: _Your story. Our telling._
 
+## Owner-run customer and rewards test — 28 November 2026
+
+See [CUSTOMER-REWARDS-PILOT.md](CUSTOMER-REWARDS-PILOT.md). The owner requested creating the first outreach customers and importing rewards from their Shopify orders using the existing secret-entered Operations workflow. `/setup/customer-pilot` accepts a local JSON roster (up to 20), checks each customer in a rolled-back database transaction, then applies a reviewed, version-bound account/order allocation per customer. It preserves existing account passwords, profiles, wallet verification, credited order facts and unrelated customers; exact replay and rechecking avoid duplicate points. New wallets still require customer email verification. No new migration, production SQL execution, programme activation, welcome bonus, invitation or Shopify mutation accompanies this change. Production use requires deployment, existing intake/rewards tables, the saved eligible retail collection and the owner's authenticated check/apply. Do not ask the owner to share their production secret with Codex for this workflow.
+
 ## Supavisor driver compatibility — 26 November 2026
 
 Live checks after transaction-pool activation exposed Postgres.js 3.4.9's upstream Supavisor pipelining hang: isolated API reads succeeded while overlapping SSR reads never settled. The follow-up pins 4.1.1, uses `max_pipeline: 1`, keeps legacy parameter inference, and adds driver queue/query/cancel deadlines. No production schema/data changes accompany it. See [capacity/driver notes](DATABASE-CAPACITY-AND-SAVES.md#driver-compatibility-and-deadlines) and the guarded driver integration tests. Do not undo non-pipelined operation or set the v3 `max_pipeline: 0` workaround. Existing monetary side effects keep their reconciliation/idempotency boundaries.
