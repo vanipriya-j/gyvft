@@ -237,6 +237,8 @@ describe.skipIf(!uri)(
         onnotice: () => {},
       });
       await sql.unsafe(`CREATE SCHEMA ${schema}`);
+      // Explicitly select the fixture schema; embedded wire servers may ignore startup settings.
+      await sql.unsafe(`SET search_path TO ${schema}`);
       for (const file of [
         "20261112000000_customer_portal.sql",
         "20261114000001_customer_accounts.sql",

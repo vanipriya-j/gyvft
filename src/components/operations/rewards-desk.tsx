@@ -188,6 +188,9 @@ export function RewardsDesk({ post }: { post: Post }) {
           Refresh
         </button>
       </div>
+      <Link className="app-button self-start" href="/setup/customer-pilot">
+        Test selected customers & order rewards
+      </Link>
       <div className="min-h-7" role="status" aria-live="polite">
         {busy && (
           <span className="inline-flex items-center gap-2">

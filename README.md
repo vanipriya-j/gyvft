@@ -18,6 +18,8 @@ Customer signup/sign-in uses GYVFT-owned database accounts and secure session co
 
 ## Customer portal guides
 
+- [Owner-run test: selected customers and Shopify order rewards](docs/CUSTOMER-REWARDS-PILOT.md)
+
 - [D2C rewards: GYVFT wallet, Aarla checkout and owner activation](docs/D2C-REWARDS.md)
 
 - [Operations customer onboarding and requirement files](docs/OPERATIONS-CUSTOMER-INTAKE.md)
